@@ -1,0 +1,122 @@
+#pragma kernel Init
+#pragma kernel Update
+#pragma kernel FlipUpdate
+//#pragma kernel Debug
+
+struct Cell
+{
+    int Alive;
+    int FlipAlive;
+    
+    int GetAlive(const bool flip)
+    {
+        return flip ? FlipAlive : Alive;
+    }
+    
+    void SetAlive(const bool flip, int value)
+    {
+        if(flip)
+            FlipAlive = value;
+        else
+            Alive = value;
+    }
+};
+
+RWStructuredBuffer<Cell> BufferCells;
+
+float Size;
+float Chance;
+
+RWTexture2D<float4> Rendered;
+RWTexture2D<float4> Heatmap;
+
+float rand(in float2 uv)
+{
+    float2 noise = (frac(sin(dot(uv, float2(12.9898, 78.233) * 2.0)) * 43758.5453));
+    return abs(noise.x + noise.y) * 0.5;
+}
+
+int index(in int x, in int y)
+{
+    return (x + 1) * Size + y + 1;
+}
+
+uint count_neighbors(in int i, bool flip)
+{
+    int n = 0;
+    
+    //For cells that were already updated, we neet to check their past value
+    //And for cells that were not updated yet, we neet to check their current value
+    n += BufferCells[i - Size - 1].GetAlive(flip);
+    n += BufferCells[i - Size].GetAlive(flip);
+    n += BufferCells[i - Size + 1].GetAlive(flip);
+    n += BufferCells[i - 1].GetAlive(flip);
+    n += BufferCells[i + 1].GetAlive(flip);
+    n += BufferCells[i + Size - 1].GetAlive(flip);
+    n += BufferCells[i + Size].GetAlive(flip);
+    n += BufferCells[i + Size + 1].GetAlive(flip);
+    
+    return n;
+}
+
+void update(uint3 id, const bool flip)
+{
+    int i = index(id.x, id.y);
+    
+    Cell cell = BufferCells[i];
+    
+    int lastFlip = 1 - flip;
+    int neighbors = count_neighbors(i, lastFlip); //Count the alive neighbors in previous frame
+    bool alive = (neighbors == 3) || (cell.GetAlive(lastFlip) && (neighbors == 2)); //calculate a new value
+    
+    cell.SetAlive(flip, alive); //Apply changes
+    BufferCells[i] = cell; 
+    Rendered[id.xy] = alive; //Refresh texture
+}
+
+/*float4 debug1(Cell cell, int x, int y)
+{
+    //return float4(cell.Alive, 0, cell.WasAlive, 0);
+    return float4(cell.Alive, cell.WasAlive, 0, 0);
+}
+
+float4 debug2(Cell cell, int x, int y)
+{
+    //return float4(cell.Alive, 0, cell.WasAlive, 0);
+    return float4(count_neighbors(index(x, y), cell.Frame) / float(6), 0, 0, 0);
+}*/
+
+[numthreads(8, 8, 1)]
+void Init(uint3 id : SV_DispatchThreadID)
+{
+    int i = index(id.x, id.y);
+    
+    Cell cell = BufferCells[i];
+    
+    //cell.Alive = rand(float2(id.x, id.y)) % 1 < Chance;
+    
+    Rendered[id.xy] = cell.Alive;
+}
+
+[numthreads(8, 8, 1)]
+void Update(uint3 id : SV_DispatchThreadID)
+{
+    update(id, false);
+}
+
+[numthreads(8, 8, 1)]
+void FlipUpdate(uint3 id : SV_DispatchThreadID)
+{
+    update(id, true);
+}
+
+/*[numthreads(8, 8, 1)]
+void Debug(uint3 id : SV_DispatchThreadID)
+{
+    int i = index(id.x, id.y);
+    
+    Cell cell = BufferCells[i];
+    
+    Rendered[id.xy] = debug1(cell, id.x, id.y); //cell.Alive
+    Heatmap[id.xy] = debug2(cell, id.x, id.y);
+}*/
