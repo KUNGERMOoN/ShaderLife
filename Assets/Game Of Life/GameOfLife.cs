@@ -13,6 +13,7 @@ public class GameOfLife : MonoBehaviour
     public Material Material;
 
     public List<Vector2Int> TestList;
+    public Material TestMaterial1, TestMaterial2;
 
     Cell[] Cells;
 
@@ -31,7 +32,8 @@ public class GameOfLife : MonoBehaviour
     [Range(0, 1)]
     public float Chance;
 
-    ComputeBuffer buffer;
+    ComputeBuffer boardBuffer;
+    ComputeBuffer debugBuffer;
 
     Vector3Int ThreadGroups;
 
@@ -44,8 +46,8 @@ public class GameOfLife : MonoBehaviour
 
     public Cell this[int x, int y]
     {
-        get => Cells[(x + 1) * Size + y + 1];
-        set => Cells[(x + 1) * Size + y + 1] = value;
+        get => Cells[(x + 1) * (Size + 2) + y + 1];
+        set => Cells[(x + 1) * (Size + 2) + y + 1] = value;
     }
 
     private void Awake()
@@ -69,7 +71,22 @@ public class GameOfLife : MonoBehaviour
     {
         int kernel = (int)(flip ? Kernel.FlipUpdateKernel : Kernel.UpdateKernel);
         Shader.Dispatch(kernel, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
-        buffer.GetData(Cells);
+        boardBuffer.GetData(Cells);
+
+        /*int[] debug = new int[(Size + 2) * (Size + 2)];
+        debugBuffer.GetData(debug);
+        for (int x = 0; x < Size + 2; x++)
+        {
+            for (int y = 0; y < Size + 2; y++)
+            {
+                bool b = debug[x * (Size + 1) + y + 1] != 100;
+
+                Transform p = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
+                p.position = new Vector3(x, y);
+                p.GetComponent<MeshRenderer>().material = b ? TestMaterial1 : TestMaterial2;
+                p.name = b ? "A" : "B";
+            }
+        }*/
 
         flip = !flip;
     }
@@ -80,29 +97,37 @@ public class GameOfLife : MonoBehaviour
 
         uint groupSizeX, groupSizeY, groupSizeZ;
         Shader.GetKernelThreadGroupSizes(0, out groupSizeX, out groupSizeY, out groupSizeZ);
-        ThreadGroups = new Vector3Int(Size / (int)groupSizeX, Size / (int)groupSizeY, Size / (int)groupSizeZ);
+        ThreadGroups = new Vector3Int(Size / (int)groupSizeX, Size / (int)groupSizeY, 1);
 
         //Initialize RenderTextures
         Texture = CreateComputeTexture(Size, "Rendered", allKernels);
         if (Material) Material.SetTexture("_MainTex", Texture);
 
-        HeatmapTexture = CreateComputeTexture(Size / HeatmapScale, "Heatmap", allKernels);
+        HeatmapTexture = CreateComputeTexture(Size / HeatmapScale + 2, "Heatmap", allKernels);
         if (Material) Material.SetTexture("_DensityTex", HeatmapTexture);
 
         //Set Compute Shader properties and buffers
-        Shader.SetFloat("Size", Size);
+        Shader.SetInt("Size", Size);
         Shader.SetFloat("Chance", Chance);
 
-        buffer = new ComputeBuffer(Cells.Length, sizeof(int) * 2);
-        buffer.SetData(Cells);
+        debugBuffer = new((Size + 2) * (Size + 2), sizeof(int));
+        debugBuffer.SetData(new int[(Size + 2) * (Size + 2)]);
+
+        boardBuffer = new ComputeBuffer(Cells.Length, sizeof(int) * 2);
+        boardBuffer.SetData(Cells);
         foreach (Kernel kernel in allKernels)
-            Shader.SetBuffer((int)kernel, "BufferCells", buffer);
+        {
+            Shader.SetBuffer((int)kernel, "BufferCells", boardBuffer);
+            Shader.SetBuffer((int)kernel, "debug", debugBuffer);
+        }
 
         //Initialize Compute Shader
         Shader.Dispatch((int)Kernel.InitKernel, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
-        buffer.GetData(Cells);
+        boardBuffer.GetData(Cells);
 
+        //Run the first frame
         flip = true;
+        UpdateBoard();
     }
 
     RenderTexture CreateComputeTexture(int size, string ComputeShaderPropertyName, Kernel[] kernels)
@@ -121,6 +146,6 @@ public class GameOfLife : MonoBehaviour
 
     private void OnApplicationQuit()
     {
-        buffer?.Release();
+        boardBuffer?.Release();
     }
 }
