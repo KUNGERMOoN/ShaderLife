@@ -304,17 +304,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Shader: {fileID: 7200000, guid: cc09f7390a9a85e459cce8a01718250c, type: 3}
-  Texture: {fileID: 0}
-  HeatmapTexture: {fileID: 0}
-  HeatmapScale: 1
-  Material: {fileID: 2100000, guid: eae4068e4c3ce52428fa7d2f6af5a091, type: 2}
-  TestList:
-  - {x: 4, y: 4}
-  - {x: 5, y: 4}
-  - {x: 6, y: 4}
-  - {x: 6, y: 5}
-  - {x: 5, y: 6}
-  TestMaterial1: {fileID: 2100000, guid: f91aaed34128c0f43886a10f0440e128, type: 2}
-  TestMaterial2: {fileID: 2100000, guid: 01f6afc9e4b21a244852924b3b833d76, type: 2}
-  SizeExponent: 4
-  Chance: 0.268
+  material: {fileID: 2100000, guid: eae4068e4c3ce52428fa7d2f6af5a091, type: 2}
+  SizeExponent: 11
+  RandomSeed: 1
+  seed: 1337
+  RandomiseOnAwake: 1
+  chance: 0.2
+  AliveOnStartup: []
+  UpdateInRealtime: 1
+  BoardUpdateRate: 10
+  RefreshRate: 2

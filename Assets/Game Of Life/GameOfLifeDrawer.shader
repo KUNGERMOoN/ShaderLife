@@ -1,9 +1,8 @@
-Shader "Unlit/GameOfLifeDRawer"
+Shader "Unlit/GameOfLifeDrawer"
 {
     Properties
     {
         _MainTex ("Main Texture", 2D) = "black" {}
-        _DensityTex ("Density Heatmap Texture", 2D) = "black" {}
         _Interp ("Interpolation", Range(0, 1)) = 0
     }
     SubShader
@@ -32,7 +31,6 @@ Shader "Unlit/GameOfLifeDRawer"
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
-            sampler2D _DensityTex;
             float _Interp;
 
             v2f vert (appdata v)
@@ -47,8 +45,7 @@ Shader "Unlit/GameOfLifeDRawer"
             {
                 // sample the texture
                 fixed4 col1 = tex2D(_MainTex, i.uv);
-                fixed4 col2 = tex2D(_DensityTex, i.uv);
-                return lerp(col1, col2, _Interp);
+                return col1;
             }
             ENDCG
         }

@@ -14,27 +14,53 @@ struct Cell
 RWStructuredBuffer<Cell> CellsBuffer;
 RWStructuredBuffer<Cell> FlipCellsBuffer;
 
+Buffer<int> Configurations;
+
 int Size;
 int Seed;
 float Chance;
 
 RWTexture2D<float4> Rendered;
 
-
-int GetAlive(const bool flip, int i)
+Cell Get(const bool flip, int i)
 {
     if (flip)
-        return FlipCellsBuffer[i].Alive;
+        return FlipCellsBuffer[i];
     else
-        return CellsBuffer[i].Alive;
+        return CellsBuffer[i];
 }
 
-void SetAlive(const bool flip, int i, bool value)
+void Set(const bool flip, int i, Cell cell)
 {
     if (flip)
-        FlipCellsBuffer[i].Alive = value;
+        FlipCellsBuffer[i] = cell;
     else
-        CellsBuffer[i].Alive = value;
+        CellsBuffer[i] = cell;
+}
+
+void SetAlive(const bool flip, int i, bool alive)
+{
+    if (flip)
+        FlipCellsBuffer[i].Alive = alive;
+    else
+        CellsBuffer[i].Alive = alive;
+}
+
+void SetNeighbours(const bool flip, int i, int value)
+{
+    if (flip)
+        FlipCellsBuffer[i].Neighbours = value;
+    else
+        CellsBuffer[i].Neighbours = value;
+}
+
+
+void AddNeighbour(const bool flip, bool value, int i)
+{
+    if (flip)
+        FlipCellsBuffer[i].Neighbours += value;
+    else
+        CellsBuffer[i].Neighbours += value;
 }
 
 // Hash function from H. Schechter & R. Bridson, goo.gl/RXiKaH
@@ -59,51 +85,44 @@ int index(in int x, in int y)
     return (x + 1) * (Size + 2) + y + 1;
 }
 
-uint count_neighbours(in int i, const bool flip)
+void update_neighbours(const bool flip, in int i, bool value)
 {
-    int n = 0;
-    
-    //For cells that were already updated, we neet to check their past value
-    //And for cells that were not updated yet, we neet to check their current value
-    n += GetAlive(flip, i - Size - 3);
-    n += GetAlive(flip, i - Size - 2);
-    n += GetAlive(flip, i - Size - 1);
-    n += GetAlive(flip, i - 1);
-    n += GetAlive(flip, i + 1);
-    n += GetAlive(flip, i + Size + 1);
-    n += GetAlive(flip, i + Size + 2);
-    n += GetAlive(flip, i + Size + 3);
-    
-    return n;
+    AddNeighbour(flip, value, i - Size - 3);
+    AddNeighbour(flip, value, i - Size - 2);
+    AddNeighbour(flip, value, i - Size - 1);
+    AddNeighbour(flip, value, i - 1);
+    AddNeighbour(flip, value, i + 1);
+    AddNeighbour(flip, value, i + Size + 1);
+    AddNeighbour(flip, value, i + Size + 2);
+    AddNeighbour(flip, value, i + Size + 3);
 }
 
-void update(uint3 id, bool flip)
+void update(uint3 id, const bool flip)
 {
-    //We always display the results of the calculations in the last frame
-    //And calculate values for the next frame
-    //That's why what the user sees and what we refer to as the 'current frame' is actually the previous frame
-    
     int i = index(id.x, id.y);
     
-    int wasAlive = GetAlive(!flip, i);
-    int neighbors = count_neighbours(i, !flip); //Count the alive neighbors in the last frame
+    Cell lastCell = Get(!flip, i);
     
-    //Render values from the last frame
-    Rendered[id.xy] = wasAlive;
+    bool alive = (lastCell.Neighbours == 3) || (lastCell.Alive && (lastCell.Neighbours == 2)); //Configurations[lastCell.Neighbours * 2 + lastCell.Alive];
+    update_neighbours(flip, i, alive);
     
-    //Calculate values for the next frame
-    bool alive = (neighbors == 3) || (wasAlive && (neighbors == 2));
-    
-    //Apply changes
     SetAlive(flip, i, alive);
+    SetNeighbours(!flip, i, 0);
+    
+    Rendered[id.xy] = alive;
 }
 
-void randomise(uint3 id, bool flip)
+void randomise(uint3 id, const bool flip)
 {
-    //Note that to see the changes you need to call Update afterwards
     int i = index(id.x, id.y);
     
-    SetAlive(flip, i, random(i + Seed) <= Chance);
+    bool alive = random(i + Seed) <= Chance;
+    update_neighbours(flip, i, alive);
+    
+    SetAlive(flip, i, alive);
+    SetNeighbours(!flip, i, 0);
+    
+    Rendered[id.xy] = alive;
 }
 
 

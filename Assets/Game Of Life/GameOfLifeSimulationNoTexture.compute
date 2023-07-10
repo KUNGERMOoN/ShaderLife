@@ -18,7 +18,7 @@ int Size;
 int Seed;
 float Chance;
 
-RWTexture2D<float4> Rendered;
+//RWTexture2D<float4> Rendered;
 
 
 int GetAlive(const bool flip, int i)
@@ -89,7 +89,7 @@ void update(uint3 id, bool flip)
     int neighbors = count_neighbours(i, !flip); //Count the alive neighbors in the last frame
     
     //Render values from the last frame
-    Rendered[id.xy] = wasAlive;
+    //Rendered[id.xy] = wasAlive;
     
     //Calculate values for the next frame
     bool alive = (neighbors == 3) || (wasAlive && (neighbors == 2));
@@ -139,7 +139,7 @@ void setPixel(int2 offset, const bool flip)
     int2 pos = TargetPixel + offset;
     int i = index(pos.x, pos.y);
     SetAlive(flip, i, true);
-    Rendered[pos] = true;
+    //Rendered[pos] = true;
 }
 
 [numthreads(1, 1, 1)]

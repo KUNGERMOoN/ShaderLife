@@ -3,132 +3,228 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
+using Random = UnityEngine.Random;
+using ReadOnlyAttribute = Sirenix.OdinInspector.ReadOnlyAttribute;
 
 public class GameOfLife : MonoBehaviour
 {
+    #region Inspector
+
+    [Header("References"), Required]
     public ComputeShader Shader;
-    public RenderTexture Texture;
-    public RenderTexture HeatmapTexture;
-    public int HeatmapScale = 4;
-    public Material Material;
 
-    public List<Vector2Int> TestList;
-    public Material TestMaterial1, TestMaterial2;
+    [SerializeField, PropertySpace(SpaceBefore = 0, SpaceAfter = 8f)]
+    Material material;
+    Material lastMaterial;
+    public Material Material
+    {
+        get => material;
+        set
+        {
+            material = value;
+            if (Application.isPlaying)
+            {
+                if (lastMaterial != null)
+                {
+                    lastMaterial.mainTexture = null;
+                }
+                if (material != null)
+                {
+                    material.mainTexture = Texture;
+                }
 
-    Cell[] Cells;
+                lastMaterial = material;
+            }
+        }
+    }
 
+
+    [FoldoutGroup("Board"), InfoBox("$InspectorBoardSize")]
+    public int SizeExponent = 8;
     string InspectorBoardSize()
     {
-        decimal d = Size * Size;
+        decimal d = (1 << SizeExponent) * (1 << SizeExponent);
         var f = new NumberFormatInfo { NumberGroupSeparator = " ", NumberDecimalDigits = 0 };
 
         return $"Board size: {d.ToString("n", f)} cells";
     }
 
-    [Space, InfoBox("$InspectorBoardSize")]
-    public int SizeExponent = 8;
-    public int Size => 1 << SizeExponent;
+    [FoldoutGroup("Board")]
+    public bool RandomSeed = true;
+    [FoldoutGroup("Board"), SerializeField, DisableIf("RandomSeed")]
+    int seed = 1337;
+    public int Seed
+    {
+        get => seed;
+        set
+        {
+            seed = value;
+            if (Application.isPlaying) Shader?.SetInt("Seed", seed);
+        }
+    }
 
-    [Range(0, 1)]
-    public float Chance;
+    [VerticalGroup("Board/button"), Space, DisableInPlayMode]
+    public bool RandomiseOnAwake = true;
+    [VerticalGroup("Board/button"), Button("Randomise")]
+    void InspectorRandomise()
+    {
+        if (Application.isPlaying) Randomise();
+    }
+    [FoldoutGroup("Board"), SerializeField, Range(0, 1)]
+    float chance = 0.2f;
+    public float Chance
+    {
+        get => chance;
+        set
+        {
+            chance = Mathf.Clamp01(value);
+            if (Application.isPlaying) Shader.SetFloat("Chance", chance);
+        }
+    }
+
+    [FoldoutGroup("Board"), Space]
+    public List<Vector2Int> AliveOnStartup;
+
+
+    [FoldoutGroup("Simulation")]
+    public bool UpdateInRealtime;
+    [FoldoutGroup("Simulation"), EnableIf("UpdateInRealtime")]
+    public int BoardUpdateRate = 10;
+    [FoldoutGroup("Simulation"), Button("UpdateBoard"), DisableInEditorMode]
+    void InspectorUpdateBoard()
+    {
+        if (Application.isPlaying) UpdateBoard();
+    }
+
+
+    [FoldoutGroup("FPS Counter")]
+    public float RefreshRate = 2;
+    [FoldoutGroup("FPS Counter"), ShowInInspector, ReadOnly]
+    public float FPS { get; private set; }
+    [FoldoutGroup("FPS Counter"), ShowInInspector, ReadOnly]
+    public float RealBoardUpdateRate { get; private set; }
+    [FoldoutGroup("FPS Counter"), ShowInInspector, ReadOnly]
+    public float AverageBoardUpdatePerformance { get; private set; }
+
+    private void OnValidate()
+    {
+        Chance = chance;
+        Seed = seed;
+        Material = material;
+    }
+
+    #endregion Inspector
+
+
+    //Variables
+    FlipBoard<Cell> Board;
+
+    RenderTexture Texture;
 
     ComputeBuffer boardBuffer;
-    ComputeBuffer debugBuffer;
+    ComputeBuffer flipBoardBuffer;
+    ComputeBuffer lookupBuffer;
+
+    //AsyncGPUReadbackRequest BufferRequest; //TODO: Read data back from buffer asynchronically
 
     Vector3Int ThreadGroups;
 
-    enum Kernel
+    public enum Kernel
     {
-        InitKernel = 0,
-        UpdateKernel = 1,
-        FlipUpdateKernel = 2,
+        Update = 0,
+        FlipUpdate = 1,
+        Randomise = 2,
+        FlipRandomise = 3,
+        SetPixels = 4,
+        FlipSetPixels = 5
     }
+    public Kernel[] AllKernels { get; private set; } = (Kernel[])Enum.GetValues(typeof(Kernel));
 
-    public Cell this[int x, int y]
+
+    float timeSinceCounterRefresh;
+    int framesSinceCounterRefresh;
+    private void Update()
     {
-        get => Cells[(x + 1) * (Size + 2) + y + 1];
-        set => Cells[(x + 1) * (Size + 2) + y + 1] = value;
+        timeSinceCounterRefresh += Time.deltaTime;
+        framesSinceCounterRefresh++;
+
+        if (timeSinceCounterRefresh > (1 / RefreshRate)) //Counter refresh
+        {
+            FPS = framesSinceCounterRefresh / timeSinceCounterRefresh;
+        }
+
+        if (UpdateInRealtime) //TODO: use update rate
+        {
+            UpdateBoard();
+        }
     }
 
     private void Awake()
     {
-        Cells = new Cell[(Size + 2) * (Size + 2)];
+        int[] configurations = GenerateConfigurations();
 
-        foreach (var cell in TestList)
-            this[cell.x, cell.y] = Cell.On;
-
-        StartCompute();
-    }
-
-    /*private void Update()
-    {
-        Shader.Dispatch((int)Kernel.DebugKernel, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
-    }*/
-
-    bool flip;
-    [Button]
-    public void UpdateBoard()
-    {
-        int kernel = (int)(flip ? Kernel.FlipUpdateKernel : Kernel.UpdateKernel);
-        Shader.Dispatch(kernel, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
-        boardBuffer.GetData(Cells);
-
-        /*int[] debug = new int[(Size + 2) * (Size + 2)];
-        debugBuffer.GetData(debug);
-        for (int x = 0; x < Size + 2; x++)
-        {
-            for (int y = 0; y < Size + 2; y++)
-            {
-                bool b = debug[x * (Size + 1) + y + 1] != 100;
-
-                Transform p = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
-                p.position = new Vector3(x, y);
-                p.GetComponent<MeshRenderer>().material = b ? TestMaterial1 : TestMaterial2;
-                p.name = b ? "A" : "B";
-            }
-        }*/
-
-        flip = !flip;
-    }
-
-    private void StartCompute()
-    {
-        Kernel[] allKernels = (Kernel[])Enum.GetValues(typeof(Kernel));
+        Board = new FlipBoard<Cell>(SizeExponent, true);
 
         uint groupSizeX, groupSizeY, groupSizeZ;
         Shader.GetKernelThreadGroupSizes(0, out groupSizeX, out groupSizeY, out groupSizeZ);
-        ThreadGroups = new Vector3Int(Size / (int)groupSizeX, Size / (int)groupSizeY, 1);
+        ThreadGroups = new Vector3Int(Board.Size / (int)groupSizeX, Board.Size / (int)groupSizeY, 1);
 
-        //Initialize RenderTextures
-        Texture = CreateComputeTexture(Size, "Rendered", allKernels);
-        if (Material) Material.SetTexture("_MainTex", Texture);
-
-        HeatmapTexture = CreateComputeTexture(Size / HeatmapScale + 2, "Heatmap", allKernels);
-        if (Material) Material.SetTexture("_DensityTex", HeatmapTexture);
+        //Initialize RenderTexture
+        Texture = CreateComputeTexture(Board.Size, "Rendered", AllKernels);
+        if (Material != null) Material.mainTexture = Texture;
 
         //Set Compute Shader properties and buffers
-        Shader.SetInt("Size", Size);
+        Shader.SetInt("Size", Board.Size);
         Shader.SetFloat("Chance", Chance);
 
-        debugBuffer = new((Size + 2) * (Size + 2), sizeof(int));
-        debugBuffer.SetData(new int[(Size + 2) * (Size + 2)]);
 
-        boardBuffer = new ComputeBuffer(Cells.Length, sizeof(int) * 2);
-        boardBuffer.SetData(Cells);
-        foreach (Kernel kernel in allKernels)
+        lookupBuffer = new ComputeBuffer(configurations.Length, sizeof(int));
+        lookupBuffer.SetData(configurations);
+
+        boardBuffer = new ComputeBuffer(Board.BufferSize, sizeof(int) * 2);
+        boardBuffer.SetData(Board.GetCells());
+
+        flipBoardBuffer = new ComputeBuffer(Board.BufferSize, sizeof(int) * 2);
+        flipBoardBuffer.SetData(Board.GetCells());
+        foreach (Kernel kernel in AllKernels)
         {
-            Shader.SetBuffer((int)kernel, "BufferCells", boardBuffer);
-            Shader.SetBuffer((int)kernel, "debug", debugBuffer);
+            Shader.SetBuffer((int)kernel, "CellsBuffer", boardBuffer);
+            Shader.SetBuffer((int)kernel, "FlipCellsBuffer", flipBoardBuffer);
+            Shader.SetBuffer((int)kernel, "Configurations", lookupBuffer);
         }
 
-        //Initialize Compute Shader
-        Shader.Dispatch((int)Kernel.InitKernel, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
-        boardBuffer.GetData(Cells);
+        if (RandomSeed) RandomiseSeed();
 
-        //Run the first frame
-        flip = true;
-        UpdateBoard();
+        //Optionally randomise
+        if (RandomiseOnAwake)
+            Randomise();
+
+        foreach (Vector2Int pos in AliveOnStartup)
+        {
+            Shader.SetInts("TargetPixel", pos.x, pos.y);
+            Shader.Dispatch((int)Kernel.SetPixels, 1, 1, 1);
+        }
     }
+
+    public void UpdateBoard()
+    {
+        int kernel = (int)(Board.Flipped ? Kernel.FlipUpdate : Kernel.Update);
+
+        Shader.Dispatch(kernel, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
+        Board.Flip();
+    }
+
+    public void Randomise()
+    {
+        if (RandomSeed) RandomiseSeed();
+
+        int kernel = (int)(Board.Flipped ? Kernel.FlipRandomise : Kernel.Randomise);
+
+        Shader.Dispatch(kernel, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
+        Board.Flip();
+    }
+
+    public void RandomiseSeed() => Seed = Random.Range(int.MinValue / 2, int.MaxValue / 2);
 
     RenderTexture CreateComputeTexture(int size, string ComputeShaderPropertyName, Kernel[] kernels)
     {
@@ -144,8 +240,23 @@ public class GameOfLife : MonoBehaviour
         return texture;
     }
 
-    private void OnApplicationQuit()
+    int[] GenerateConfigurations()
+    {
+        int[] result = new int[18];
+        for (int i = 0; i <= 8; i++)
+        {
+            result[i * 2 + 0] = (i == 3) ? 1 : 0;
+            result[i * 2 + 1] = (i == 3 || i == 2) ? 1 : 0;
+        }
+
+        return result;
+    }
+
+    private void OnDestroy()
     {
         boardBuffer?.Release();
+        flipBoardBuffer?.Release();
+        lookupBuffer?.Release();
+        Board.Dispose();
     }
 }

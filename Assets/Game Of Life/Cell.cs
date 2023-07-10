@@ -1,7 +1,6 @@
 public struct Cell
 {
     public int Alive;
-    public int FlipAlive;
 
     public static readonly Cell On;
     public static readonly Cell Off;
