@@ -252,6 +252,14 @@ public class GameOfLife : MonoBehaviour
         return result;
     }*/
 
+    private void OnDestroy()
+    {
+        boardBuffer?.Release();
+        flipBoardBuffer?.Release();
+        lookupBuffer?.Release();
+        Board.Dispose();
+    }
+
     public void UpdateBoard()
     {
         int kernel = (int)(Board.Flipped ? Kernel.FlipUpdate : Kernel.Update);
