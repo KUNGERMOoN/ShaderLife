@@ -206,51 +206,7 @@ public class GameOfLife : MonoBehaviour
             Shader.SetInts("TargetPixel", pos.x, pos.y);
             Shader.Dispatch((int)Kernel.SetPixels, 1, 1, 1);
         }
-
-
-
-
-
-        /*//DEBUG
-        const int beforeNumber = 82696; //<- input
-        const int beforeRows = 4;
-        const int beforeColumns = 6;
-        const int afterRows = 2;
-        const int afterColumns = 4;
-
-        bool[,] beforeCells = ToCells(beforeNumber, beforeRows, beforeColumns);
-
-        byte afterNumber = SimulateConfiguration(beforeNumber,
-            new int[] { 3 }, new int[] { 2, 3 },
-            beforeRows, beforeColumns);
-
-        bool[,] afterCells = ToCells(afterNumber, afterRows, afterColumns);
-
-        Debug.Log($"\n" +
-            $"Before:\n" +
-            $"  Number: {beforeNumber}\n" +
-            $"  Cells:\n" +
-            $"  {debugConfiguration(beforeCells)}\n" +
-            $"  \n" +
-            $"After:\n" +
-            $"  Number: {afterNumber}\n" +
-            $"  Cells:\n" +
-            $"  {debugConfiguration(afterCells)}\n");*/
     }
-
-    /*string debugConfiguration(bool[,] cells)
-    {
-        string result = "\n";
-        for (int y = 0; y < cells.GetLength(1); y++)
-        {
-            for (int x = 0; x < cells.GetLength(0); x++)
-            {
-                result += (cells[x, y] ? 1 : 0) + " ";
-            }
-            result += "\n";
-        }
-        return result;
-    }*/
 
     private void OnDestroy()
     {
