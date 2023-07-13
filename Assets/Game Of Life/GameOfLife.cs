@@ -386,12 +386,4 @@ public class GameOfLife : MonoBehaviour
         }
         return result;
     }
-
-    private void OnDestroy()
-    {
-        boardBuffer?.Release();
-        flipBoardBuffer?.Release();
-        lookupBuffer?.Release();
-        Board.Dispose();
-    }
 }
