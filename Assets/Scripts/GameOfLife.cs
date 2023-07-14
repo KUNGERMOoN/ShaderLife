@@ -2,7 +2,6 @@ using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using ReadOnlyAttribute = Sirenix.OdinInspector.ReadOnlyAttribute;
@@ -250,104 +249,5 @@ public class GameOfLife : MonoBehaviour
             Shader.SetTexture((int)kernel, ComputeShaderPropertyName, texture);
 
         return texture;
-    }
-
-    Packed4Bytes[] GenerateLookupTable(int[] bornCount, int[] surviveCount)
-    {
-        const int rows = 4;
-        const int columns = 6;
-
-        //Amount of all possible configurations (1 byte each)
-        const int configurations = 1 << (rows * columns);
-
-        //Amount of elements required to store all possible configurations when they are packed into ints
-        //(each int contains exacly 4 configurations)
-        const int packedConfigurations = configurations / 4;
-
-        //We pack our configurations
-        Packed4Bytes[] result = new Packed4Bytes[1 << packedConfigurations];
-        for (int i = 0; i < packedConfigurations; i++)
-        {
-            byte configuration1 = SimulateConfiguration(i * 4, bornCount, surviveCount, rows, columns);
-            byte configuration2 = SimulateConfiguration(i * 4 + 1, bornCount, surviveCount, rows, columns);
-            byte configuration3 = SimulateConfiguration(i * 4 + 2, bornCount, surviveCount, rows, columns);
-            byte configuration4 = SimulateConfiguration(i * 4 + 3, bornCount, surviveCount, rows, columns);
-
-            Packed4Bytes packed = new()
-            {
-                Byte1 = configuration1,
-                Byte2 = configuration2,
-                Byte3 = configuration3,
-                Byte4 = configuration4
-            };
-
-            result[i] = packed;
-        }
-
-        return result;
-    }
-
-    byte SimulateConfiguration(int asNumber, int[] bornCount, int[] surviveCount, int rows, int columns)
-    {
-        int newRows = rows - 2;
-        int newColumns = columns - 2;
-
-        bool[,] cells = ToCells(asNumber, rows, columns);
-        bool[,] newCells = new bool[newColumns, newRows];
-        for (int y = 0; y < newRows; y++)
-        {
-            for (int x = 0; x < newColumns; x++)
-            {
-                bool wasAlive = cells[x + 1, y + 1];
-                int neighbours = countNeighbours(cells, x + 1, y + 1);
-                newCells[x, y] =
-                    bornCount.Contains(neighbours) ||
-                    (surviveCount.Contains(neighbours) && wasAlive);
-            }
-        }
-        return (byte)ToNumber(newCells, newRows, newColumns);
-    }
-
-    int countNeighbours(bool[,] cells, int x, int y)
-    {
-        int count = 0;
-        count += cells[x - 1, y - 1] ? 1 : 0;
-        count += cells[x - 1, y] ? 1 : 0;
-        count += cells[x - 1, y + 1] ? 1 : 0;
-        count += cells[x, y - 1] ? 1 : 0;
-        count += cells[x, y + 1] ? 1 : 0;
-        count += cells[x + 1, y - 1] ? 1 : 0;
-        count += cells[x + 1, y] ? 1 : 0;
-        count += cells[x + 1, y + 1] ? 1 : 0;
-
-        return count;
-    }
-
-    bool[,] ToCells(int number, int rows, int columns)
-    {
-        bool[,] result = new bool[columns, rows];
-        for (int y = 0; y < rows; y++)
-        {
-            for (int x = 0; x < columns; x++)
-            {
-                result[columns - x - 1, rows - y - 1] = number % 2 == 1;
-                number /= 2;
-            }
-        }
-
-        return result;
-    }
-
-    int ToNumber(bool[,] cells, int rows, int columns)
-    {
-        int result = 0;
-        for (int y = 0; y < rows; y++)
-        {
-            for (int x = 0; x < columns; x++)
-            {
-                result = (result << 1) + (cells[x, y] ? 1 : 0);
-            }
-        }
-        return result;
     }
 }
