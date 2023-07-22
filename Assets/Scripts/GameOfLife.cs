@@ -12,6 +12,7 @@ public class GameOfLife : MonoBehaviour
 
     [Header("References"), Required]
     public ComputeShader Shader;
+    public Texture LookupTexture;
 
     [SerializeField, PropertySpace(SpaceBefore = 0, SpaceAfter = 8f)]
     Material material;
@@ -117,7 +118,7 @@ public class GameOfLife : MonoBehaviour
 
 
     //Variables
-    FlipBoard<Cell> Board;
+    DoubleBoard<int> Board;
 
     RenderTexture Texture;
 
@@ -161,10 +162,7 @@ public class GameOfLife : MonoBehaviour
 
     private void Awake()
     {
-        Packed4Bytes[] lookupTable = GenerateLookupTable(new int[] { 3 }, new int[] { 2, 3 });
-        //TODO: allow customization of bornCount and SurviveCount
-
-        Board = new FlipBoard<Cell>(SizeExponent, true);
+        Board = new DoubleBoard<int>(SizeExponent, true);
 
         uint groupSizeX, groupSizeY;
         Shader.GetKernelThreadGroupSizes(0, out groupSizeX, out groupSizeY, out _);
@@ -178,10 +176,6 @@ public class GameOfLife : MonoBehaviour
         Shader.SetInt("Size", Board.Size);
         Shader.SetFloat("Chance", Chance);
 
-
-        lookupBuffer = new ComputeBuffer(lookupTable.Length, sizeof(byte) * 4);
-        lookupBuffer.SetData(lookupTable);
-
         boardBuffer = new ComputeBuffer(Board.BufferSize, sizeof(int) * 2);
         boardBuffer.SetData(Board.GetCells());
 
@@ -189,9 +183,9 @@ public class GameOfLife : MonoBehaviour
         flipBoardBuffer.SetData(Board.GetCells());
         foreach (Kernel kernel in AllKernels)
         {
-            Shader.SetBuffer((int)kernel, "CellsBuffer", boardBuffer);
-            Shader.SetBuffer((int)kernel, "FlipCellsBuffer", flipBoardBuffer);
-            Shader.SetBuffer((int)kernel, "Configurations", lookupBuffer);
+            Shader.SetBuffer((int)kernel, "cellsA", boardBuffer);
+            Shader.SetBuffer((int)kernel, "cellsB", flipBoardBuffer);
+            Shader.SetTexture((int)kernel, "LookupTexture", LookupTexture);
         }
 
         if (RandomSeed) RandomiseSeed();
