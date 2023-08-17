@@ -13,11 +13,11 @@ public class LUTBuilder
     public const int columns = 6;
 
     //Amount of all possible configurations (1 byte each)
-    const int configurations = 1 << (rows * columns); //2^24
+    public const int configurations = 1 << (rows * columns); //2^24
 
     //Amount of elements needed to store all possible configurations when they are packed
     //into 4-byte object (so it can be sent as a buffer to the compute shader)
-    const int packedLength = configurations / 4; //2^6
+    public const int packedLength = configurations / 4; //2^6
 
 
     public static string FileExtension = "lut";
@@ -220,7 +220,7 @@ public class LUTBuilder
         return (byte)ToNumber(newCells, rows - 2, columns - 2);
     }
 
-    static int CountNeighbours(bool[,] cells, int x, int y)
+    public static int CountNeighbours(bool[,] cells, int x, int y)
     {
         int count = 0;
         count += cells[x - 1, y - 1] ? 1 : 0;
@@ -235,7 +235,7 @@ public class LUTBuilder
         return count;
     }
 
-    static bool[,] ToCells(int number, int rows, int columns)
+    public static bool[,] ToCells(int number, int rows, int columns)
     {
         bool[,] result = new bool[columns, rows];
         for (int y = 0; y < rows; y++)
@@ -250,7 +250,7 @@ public class LUTBuilder
         return result;
     }
 
-    static int ToNumber(bool[,] cells, int rows, int columns)
+    public static int ToNumber(bool[,] cells, int rows, int columns)
     {
         int result = 0;
         for (int y = 0; y < rows; y++)
@@ -262,18 +262,4 @@ public class LUTBuilder
         }
         return result;
     }
-
-    /*static string debugConfiguration(bool[,] cells)
-    {
-        string result = "\n";
-        for (int y = 0; y < cells.GetLength(1); y++)
-        {
-            for (int x = 0; x < cells.GetLength(0); x++)
-            {
-                result += (cells[x, y] ? 1 : 0) + " ";
-            }
-            result += "\n";
-        }
-        return result;
-    }*/
 }

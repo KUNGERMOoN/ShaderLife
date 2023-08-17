@@ -185,7 +185,7 @@ public class GameOfLife : MonoBehaviour
         {
             Shader.SetBuffer((int)kernel, "cellsA", boardBuffer);
             Shader.SetBuffer((int)kernel, "cellsB", flipBoardBuffer);
-            Shader.SetTexture((int)kernel, "LookupTexture", LookupTexture);
+            //Shader.SetTexture((int)kernel, "LookupTexture", LookupTexture);
         }
 
         if (RandomSeed) RandomiseSeed();

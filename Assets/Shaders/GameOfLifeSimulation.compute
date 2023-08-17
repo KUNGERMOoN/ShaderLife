@@ -11,8 +11,8 @@ struct Cell
     int Neighbours;
 };
 
-RWStructuredBuffer<Cell> CellsBuffer;
-RWStructuredBuffer<Cell> FlipCellsBuffer;
+RWStructuredBuffer<Cell> cellsA;
+RWStructuredBuffer<Cell> cellsB;
 
 int Size;
 int Seed;
@@ -24,17 +24,17 @@ RWTexture2D<float4> Rendered;
 int GetAlive(const bool flip, int i)
 {
     if (flip)
-        return FlipCellsBuffer[i].Alive;
+        return cellsB[i].Alive;
     else
-        return CellsBuffer[i].Alive;
+        return cellsA[i].Alive;
 }
 
 void SetAlive(const bool flip, int i, bool value)
 {
     if (flip)
-        FlipCellsBuffer[i].Alive = value;
+        cellsB[i].Alive = value;
     else
-        CellsBuffer[i].Alive = value;
+        cellsA[i].Alive = value;
 }
 
 // Hash function from H. Schechter & R. Bridson, goo.gl/RXiKaH

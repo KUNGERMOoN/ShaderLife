@@ -11,8 +11,8 @@ struct Cell
     int Neighbours;
 };
 
-RWStructuredBuffer<Cell> CellsBuffer;
-RWStructuredBuffer<Cell> FlipCellsBuffer;
+RWStructuredBuffer<Cell> cellsA;
+RWStructuredBuffer<Cell> cellsB;
 
 Buffer<int> Configurations;
 
@@ -25,42 +25,42 @@ RWTexture2D<float4> Rendered;
 Cell Get(const bool flip, int i)
 {
     if (flip)
-        return FlipCellsBuffer[i];
+        return cellsB[i];
     else
-        return CellsBuffer[i];
+        return cellsA[i];
 }
 
 void Set(const bool flip, int i, Cell cell)
 {
     if (flip)
-        FlipCellsBuffer[i] = cell;
+        cellsB[i] = cell;
     else
-        CellsBuffer[i] = cell;
+        cellsA[i] = cell;
 }
 
 void SetAlive(const bool flip, int i, bool alive)
 {
     if (flip)
-        FlipCellsBuffer[i].Alive = alive;
+        cellsB[i].Alive = alive;
     else
-        CellsBuffer[i].Alive = alive;
+        cellsA[i].Alive = alive;
 }
 
 void SetNeighbours(const bool flip, int i, int value)
 {
     if (flip)
-        FlipCellsBuffer[i].Neighbours = value;
+        cellsB[i].Neighbours = value;
     else
-        CellsBuffer[i].Neighbours = value;
+        cellsA[i].Neighbours = value;
 }
 
 
 void AddNeighbour(const bool flip, bool value, int i)
 {
     if (flip)
-        FlipCellsBuffer[i].Neighbours += value;
+        cellsB[i].Neighbours += value;
     else
-        CellsBuffer[i].Neighbours += value;
+        cellsA[i].Neighbours += value;
 }
 
 // Hash function from H. Schechter & R. Bridson, goo.gl/RXiKaH
