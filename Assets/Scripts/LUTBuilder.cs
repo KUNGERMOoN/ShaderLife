@@ -8,12 +8,15 @@ using UnityEngine;
 
 public class LUTBuilder
 {
+    public const int outputRows = 2;
+    public const int outputColumns = 4;
+
     //Size of each configuration
-    public const int rows = 4;
-    public const int columns = 6;
+    public const int inputRows = 4;
+    public const int inputColumns = 6;
 
     //Amount of all possible configurations (1 byte each)
-    public const int configurations = 1 << (rows * columns); //2^24
+    public const int configurations = 1 << (inputRows * inputColumns); //2^24
 
     //Amount of elements needed to store all possible configurations when they are packed
     //into 4-byte object (so it can be sent as a buffer to the compute shader)
@@ -200,10 +203,10 @@ public class LUTBuilder
 
     byte GenerateConfiguration(int startingConfiguration)
     {
-        int newRows = rows - 2;
-        int newColumns = columns - 2;
+        int newRows = inputRows - 2;
+        int newColumns = inputColumns - 2;
 
-        bool[,] cells = ToCells(startingConfiguration, rows, columns);
+        bool[,] cells = ToCells(startingConfiguration, inputRows, inputColumns);
         bool[,] newCells = new bool[newColumns, newRows];
         for (int y = 0; y < newRows; y++)
         {
@@ -217,7 +220,7 @@ public class LUTBuilder
                     BirthCount.Contains(neighbours);
             }
         }
-        return (byte)ToNumber(newCells, rows - 2, columns - 2);
+        return (byte)ToNumber(newCells, inputRows - 2, inputColumns - 2);
     }
 
     public static int CountNeighbours(bool[,] cells, int x, int y)

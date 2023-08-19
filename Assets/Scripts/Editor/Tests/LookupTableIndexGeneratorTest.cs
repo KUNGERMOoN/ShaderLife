@@ -3,8 +3,54 @@ using UnityEngine;
 
 public class LookupTableIndexGeneratorTest
 {
-    const int chunkRows = LUTBuilder.rows - 2;
-    const int chunkColumns = LUTBuilder.columns - 2;
+    [Test]
+    public void TestMany()
+    {
+        for (int i = 0; i < 1 << (LUTBuilder.inputRows * LUTBuilder.inputColumns); i++)
+        {
+            int[,] nums3x3 = new int[3, 3];
+
+            bool[,][,] cells3x3 = new bool[3, 3][,];
+
+            for (int chunkX = 0; chunkX < 3; chunkX++)
+            {
+                for (int chunkY = 0; chunkY < 3; chunkY++)
+                {
+                    cells3x3[chunkX, chunkY] = new bool[LUTBuilder.outputColumns, LUTBuilder.outputRows];
+                }
+            }
+
+            for (int x = 3, j = i; x < 9; x++)
+            {
+                for (int y = 1; y < 5; y++)
+                {
+                    int chunkX = x / LUTBuilder.outputColumns;
+                    int chunkY = y / LUTBuilder.outputRows;
+
+                    int localX = x - chunkX * LUTBuilder.outputColumns;
+                    int localY = y - chunkY * LUTBuilder.outputRows;
+
+                    cells3x3[chunkX, chunkY][localX, localY] = j % 2 == 1;
+                    j /= 2;
+                }
+            }
+
+            for (int chunkX = 0; chunkX < 3; chunkX++)
+            {
+                for (int chunkY = 0; chunkY < 3; chunkY++)
+                {
+                    nums3x3[chunkX, chunkY] = LUTBuilder.ToNumber(
+                        cells3x3[chunkX, chunkY],
+                        LUTBuilder.outputRows,
+                        LUTBuilder.outputColumns);
+                }
+            }
+
+            TestOnConfiguration(nums3x3, out int outputA, out int outputB);
+
+            Assert.AreEqual(outputA, outputB);
+        }
+    }
 
     [Test]
     public void TestSample()
@@ -24,7 +70,7 @@ public class LookupTableIndexGeneratorTest
     [Test]
     public void TestRandom()
     {
-        const int configurations = 1 << (chunkRows * chunkColumns);
+        const int configurations = 1 << (LUTBuilder.outputRows * LUTBuilder.outputColumns);
 
         int[,] nums3x3 = new int[3, 3];
         for (int x = 0; x < 3; x++)
@@ -40,49 +86,39 @@ public class LookupTableIndexGeneratorTest
         Assert.AreEqual(outputA, outputB);
     }
 
-    /*// A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
-    // `yield return null;` to skip a frame.
-    [UnityTest]
-    public IEnumerator LookupTableIndexGeneratorTestWithEnumeratorPasses()
-    {
-        // Use the Assert class to test conditions.
-        // Use yield to skip a frame.
-        yield return null;
-    }*/
-
     static void TestOnConfiguration(int[,] nums3x3, out int outputA, out int outputB)
     {
         //Calculated manually
-        bool[,] cells3x3 = new bool[3 * chunkColumns, 3 * chunkRows];
+        bool[,] cells3x3 = new bool[3 * LUTBuilder.outputColumns, 3 * LUTBuilder.outputRows];
 
-        for (int x_ = 0; x_ < 3; x_++)
+        for (int chunkX = 0; chunkX < 3; chunkX++)
         {
-            for (int y_ = 0; y_ < 3; y_++)
+            for (int chunkY = 0; chunkY < 3; chunkY++)
             {
-                bool[,] chunk = LUTBuilder.ToCells(nums3x3[x_, y_],
-                    chunkRows,
-                    chunkColumns);
+                bool[,] chunk = LUTBuilder.ToCells(nums3x3[chunkX, chunkY],
+                    LUTBuilder.outputRows,
+                    LUTBuilder.outputColumns);
 
-                for (int u = 0; u < chunkColumns; u++)
+                for (int u = 0; u < LUTBuilder.outputColumns; u++)
                 {
-                    for (int v = 0; v < chunkRows; v++)
+                    for (int v = 0; v < LUTBuilder.outputRows; v++)
                     {
-                        cells3x3[chunkColumns * x_ + u, chunkRows * y_ + v] = chunk[u, v];
+                        cells3x3[LUTBuilder.outputColumns * chunkX + u, LUTBuilder.outputRows * chunkY + v] = chunk[u, v];
                     }
                 }
             }
         }
 
-        bool[,] data = new bool[LUTBuilder.columns, LUTBuilder.rows];
+        bool[,] data = new bool[LUTBuilder.inputColumns, LUTBuilder.inputRows];
 
-        for (int x_ = 3; x_ < 3 * chunkColumns - 3; x_++)
+        for (int x_ = 3; x_ < 3 * LUTBuilder.outputColumns - 3; x_++)
         {
-            for (int y_ = 1; y_ < 3 * chunkRows - 1; y_++)
+            for (int y_ = 1; y_ < 3 * LUTBuilder.outputRows - 1; y_++)
             {
                 data[x_ - 3, y_ - 1] = cells3x3[x_, y_];
             }
         }
-        outputA = LUTBuilder.ToNumber(data, LUTBuilder.rows, LUTBuilder.columns);
+        outputA = LUTBuilder.ToNumber(data, LUTBuilder.inputRows, LUTBuilder.inputColumns);
 
         int x = nums3x3[1, 1];
         int a = nums3x3[0, 0];
