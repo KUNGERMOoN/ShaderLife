@@ -23,18 +23,17 @@ public class LUTBuilder
     public const int packedLength = configurations / 4; //2^6
 
 
-    public static string FileExtension = "lut";
+    public const string FileExtension = "lut";
 
 
     public bool Generated { get; private set; }
-    public float GenerationProgress => GeneratedConfigurations / packedLength;
     public byte[] Bytes { get; private set; }
-    public Packed4Bytes[] Packed { get; private set; }
+    public int[] Packed { get; private set; }
 
     public readonly int[] BirthCount, SurviveCount;
 
 
-    int GeneratedConfigurations;
+    public int GeneratedConfigurations { get; private set; }
 
     public LUTBuilder(int[] birthCount, int[] surviveCount)
     {
@@ -42,20 +41,21 @@ public class LUTBuilder
         SurviveCount = surviveCount;
     }
 
-    public void WriteToFile(string fileName, string folderInDataPath, Func<bool> overwriteCheck)
+    public bool WriteToFile(string fileName, string folderInDataPath)
     {
         fileName = $"{fileName.Split('.')[0]}.{FileExtension}";
-        string path = $"{Application.dataPath}/{folderInDataPath}/{fileName}";
-
-        if (File.Exists(path))
-        {
-            if (overwriteCheck() == false)
-                return;
-        }
+        string path = $"{Application.dataPath}/{folderInDataPath}/{fileName.Split('.')[0]}.{FileExtension}";
 
         try
         {
-            if (Generated == false) GenerateLUT();
+            if (Generated == false)
+            {
+                Debug.LogError($"Cannot write Lookup Table \"{fileName}\" to file: " +
+                    $"the Lookup Table's contents didn't get generated. " +
+                    "Make sure you run Generate() (or BeginGenerate() and UpdateGenerate()) " +
+                    "to generate the content before calling WriteToFile()");
+                return false;
+            }
 
             Directory.CreateDirectory(Path.GetDirectoryName(path));
             using FileStream stream = new(path, FileMode.Create);
@@ -75,24 +75,27 @@ public class LUTBuilder
             AssetDatabase.ImportAsset($"Assets/{folderInDataPath}/{fileName}");
 #endif
 
-            Debug.Log($"Building Lookup Table \"{fileName}\" in {folderInDataPath} completed successfully.");
+            Debug.Log($"Building Lookup Table \"{fileName}\" in " +
+                $"{folderInDataPath} completed successfully.");
+            return true;
         }
         catch (Exception error)
         {
             Debug.LogError($"Building Lookup Table \"{fileName}\" in {folderInDataPath} " +
                 "failed with the following error: " + error.ToString());
             DeleteLUTFile(fileName, folderInDataPath);
+            return false;
         }
     }
 
-    public void GenerateLUT()
+    public void Generate()
     {
         Bytes = new byte[configurations];
-        Packed = new Packed4Bytes[packedLength];
+        Packed = new int[packedLength];
 
         for (int i = 0; i < packedLength; i++)
         {
-            Generate4Configurations(i);
+            GeneratePackedConfigurations(i);
         }
 
         Generated = true;
@@ -101,16 +104,23 @@ public class LUTBuilder
     public void BeginGenerate()
     {
         Bytes = new byte[configurations];
-        Packed = new Packed4Bytes[packedLength];
+        Packed = new int[packedLength];
         GeneratedConfigurations = 0;
     }
 
-    public void UpdateGenerate()
+    public bool UpdateGenerate()
     {
         if (GeneratedConfigurations < packedLength)
         {
-            Generate4Configurations(GeneratedConfigurations);
+            GeneratePackedConfigurations(GeneratedConfigurations);
             GeneratedConfigurations++;
+
+            return false;
+        }
+        else
+        {
+            Generated = true;
+            return true;
         }
     }
 
@@ -140,7 +150,7 @@ public class LUTBuilder
             };
 
             builder.Bytes = new byte[configurations];
-            builder.Packed = new Packed4Bytes[packedLength];
+            builder.Packed = new int[packedLength];
             for (int i = 0; i < packedLength; i++)
             {
                 byte byte1 = reader.ReadByte();
@@ -153,13 +163,7 @@ public class LUTBuilder
                 builder.Bytes[i * 4 + 2] = byte3;
                 builder.Bytes[i * 4 + 3] = byte4;
 
-                builder.Packed[i] = new()
-                {
-                    Byte1 = byte1,
-                    Byte2 = byte2,
-                    Byte3 = byte3,
-                    Byte4 = byte4
-                };
+                builder.Packed[i] = PackBytes(byte1, byte2, byte3, byte4);
             }
 
             return builder;
@@ -180,7 +184,7 @@ public class LUTBuilder
             $"{fileName.Split('.')[0]}.{FileExtension}");
     }
 
-    void Generate4Configurations(int packedIndex)
+    void GeneratePackedConfigurations(int packedIndex)
     {
         byte byte1 = GenerateConfiguration(packedIndex * 4);
         byte byte2 = GenerateConfiguration(packedIndex * 4 + 1);
@@ -192,14 +196,14 @@ public class LUTBuilder
         Bytes[packedIndex * 4 + 2] = byte3;
         Bytes[packedIndex * 4 + 3] = byte4;
 
-        Packed[packedIndex] = new()
-        {
-            Byte1 = byte1,
-            Byte2 = byte2,
-            Byte3 = byte3,
-            Byte4 = byte4
-        };
+        Packed[packedIndex] = PackBytes(byte1, byte2, byte3, byte4);
     }
+
+    static int PackBytes(byte byte1, byte byte2, byte byte3, byte byte4) =>
+        (byte1 << 0) +
+        (byte2 << 8) +
+        (byte3 << 16) +
+        (byte4 << 24);
 
     byte GenerateConfiguration(int startingConfiguration)
     {

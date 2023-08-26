@@ -1,41 +1,17 @@
 #pragma kernel Update
-#pragma kernel FlipUpdate
 #pragma kernel Randomise
-#pragma kernel FlipRandomise
 #pragma kernel SetPixels
-#pragma kernel FlipSetPixels
 
-struct Cell
-{
-    int Alive;
-    int Neighbours;
-};
+#pragma multi_compile __ FLIP_BUFFER
 
-RWStructuredBuffer<Cell> cellsA;
-RWStructuredBuffer<Cell> cellsB;
+RWStructuredBuffer<int> cells;
+RWStructuredBuffer<int> flipCells;
 
 int Size;
 int Seed;
 float Chance;
 
-RWTexture2D<float4> Rendered;
-
-
-int GetAlive(const bool flip, int i)
-{
-    if (flip)
-        return cellsB[i].Alive;
-    else
-        return cellsA[i].Alive;
-}
-
-void SetAlive(const bool flip, int i, bool value)
-{
-    if (flip)
-        cellsB[i].Alive = value;
-    else
-        cellsA[i].Alive = value;
-}
+Buffer<int> LookupTable;
 
 // Hash function from H. Schechter & R. Bridson, goo.gl/RXiKaH
 uint hash(uint s)
@@ -49,9 +25,9 @@ uint hash(uint s)
     return s;
 }
 
-float random(uint seed)
+int randomConfiguration(uint seed)
 {
-    return float(hash(seed)) / 4294967295.0; // 2^32-1
+    return hash(seed) % 256;
 }
 
 int index(in int x, in int y)
@@ -59,97 +35,74 @@ int index(in int x, in int y)
     return (x + 1) * (Size + 2) + y + 1;
 }
 
-uint count_neighbours(in int i, const bool flip)
+int Get(int i)
 {
-    int n = 0;
-    
-    //For cells that were already updated, we neet to check their past value
-    //And for cells that were not updated yet, we neet to check their current value
-    n += GetAlive(flip, i - Size - 3);
-    n += GetAlive(flip, i - Size - 2);
-    n += GetAlive(flip, i - Size - 1);
-    n += GetAlive(flip, i - 1);
-    n += GetAlive(flip, i + 1);
-    n += GetAlive(flip, i + Size + 1);
-    n += GetAlive(flip, i + Size + 2);
-    n += GetAlive(flip, i + Size + 3);
-    
-    return n;
+    if (FLIP_BUFFER)
+    {
+        return flipCells[i];
+    }
+    else
+    {
+        return cells[i];
+    }
 }
 
-void update(uint3 id, bool flip)
+void Set(int i, int value)
 {
-    //We always display the results of the calculations in the last frame
-    //And calculate values for the next frame
-    //That's why what the user sees and what we refer to as the 'current frame' is actually the previous frame
-    
-    int i = index(id.x, id.y);
-    
-    int wasAlive = GetAlive(!flip, i);
-    int neighbors = count_neighbours(i, !flip); //Count the alive neighbors in the last frame
-    
-    //Render values from the last frame
-    Rendered[id.xy] = wasAlive;
-    
-    //Calculate values for the next frame
-    bool alive = (neighbors == 3) || (wasAlive && (neighbors == 2));
-    
-    //Apply changes
-    SetAlive(flip, i, alive);
+    if (FLIP_BUFFER)
+    {
+        flipCells[i] = value;
+    }
+    else
+    {
+        cells[i] = value;
+    }
 }
-
-void randomise(uint3 id, bool flip)
-{
-    //Note that to see the changes you need to call Update afterwards
-    int i = index(id.x, id.y);
-    
-    SetAlive(flip, i, random(i + Seed) <= Chance);
-}
-
 
 [numthreads(8, 8, 1)]
 void Randomise(uint3 id : SV_DispatchThreadID)
 {
-    randomise(id, false);
+    int i = index(id.x, id.y);
+    
+    Set(i, randomConfiguration(i + Seed));
 }
-
-[numthreads(8, 8, 1)]
-void FlipRandomise(uint3 id : SV_DispatchThreadID)
-{
-    randomise(id, true);
-}
-
 
 [numthreads(8, 8, 1)]
 void Update(uint3 id : SV_DispatchThreadID)
 {
-    update(id, false);
-}
+    int i = index(id.x, id.y);
+    
+    int x = Get(i);
+    int a = Get(i - Size - 3);
+    int b = Get(i - 1);
+    int c = Get(i + Size + 1);
+    int d = Get(i - Size - 2);
+    int e = Get(i + Size + 2);
+    int f = Get(i - Size - 1);
+    int g = Get(i + 1);
+    int h = Get(i + Size + 3);
+    
+    int input = 
+        ((a << 23) & 8388608) +
+		((b << 19) & 7864320) +
+		((c << 15) & 262144) +
+		((d << 13) & 131072) +
+		((d << 11) & 2048) +
+		((e << 5) & 4096) +
+		((e << 3) & 64) +
+		((f << 1) & 32) +
+		((g >> 3) & 30) +
+		((h >> 7) & 1) +
+		((x << 9) & 122880) +
+		((x << 7) & 1920);
 
-[numthreads(8, 8, 1)]
-void FlipUpdate(uint3 id : SV_DispatchThreadID)
-{
-    update(id, true);
+    
+    Set(i, input);
 }
 
 int2 TargetPixel = int2(0, 0);
-
-void setPixel(int2 offset, const bool flip)
-{
-    int2 pos = TargetPixel + offset;
-    int i = index(pos.x, pos.y);
-    SetAlive(flip, i, true);
-    Rendered[pos] = true;
-}
-
 [numthreads(1, 1, 1)]
 void SetPixels(uint3 id : SV_DispatchThreadID)
 {
-    setPixel(id.xy, false);
-}
-
-[numthreads(1, 1, 1)]
-void FlipSetPixels(uint3 id : SV_DispatchThreadID)
-{
-    setPixel(id.xy, true);
+    //TODO
 }

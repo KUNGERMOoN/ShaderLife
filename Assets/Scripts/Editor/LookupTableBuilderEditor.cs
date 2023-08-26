@@ -1,5 +1,6 @@
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -45,20 +46,40 @@ public class LookupTableBuilderEditor : OdinEditorWindow
     public void BuildLookupTable()
     {
         if (IsValidFileName() == false) return;
+        string fileName = FileName;
 
+        if (File.Exists($"{Application.dataPath}/{Path}/{fileName.Split('.')[0]}.{LUTBuilder.FileExtension}"))
+        {
+            if (EditorUtility.DisplayDialog(
+                    "File overwrite warning",
+                    $"File \"{fileName}.{LUTBuilder.FileExtension}\" already exists in {Path}.\n" +
+                    $"Do you want to overwrite it?",
+                    "Yes",
+                    "Nah") == false)
+                return;
+        }
+
+        //Generate LUT file
         LUTBuilder builder = new(BirthCount, SurviveCount);
+        builder.BeginGenerate();
 
-        //TODO: EditorUtility.DisplayProgressBar
+        while (builder.UpdateGenerate() == false)
+        {
+            float progress = (float)builder.GeneratedConfigurations / LUTBuilder.packedLength;
+            EditorUtility.DisplayProgressBar(
+                $"Generating Lookup Table \"{fileName}\"",
+                $"Generating...  {Mathf.Round(progress * 100)}%",
+                progress);
+        }
 
-        builder.WriteToFile(
-            FileName,
-            Path,
-            () => EditorUtility.DisplayDialog(
-                "File overwrite warning",
-                $"File \"{FileName}.{LUTBuilder.FileExtension}\" already exists in {Path}.\n" +
-                $"Do you want to overwrite it?",
-                "Yes",
-                "Nah"));
+        EditorUtility.DisplayProgressBar(
+                $"Generating Lookup Table \"{fileName}\"",
+                $"Writing to file...",
+                1);
+
+        builder.WriteToFile(FileName, Path);
+
+        EditorUtility.ClearProgressBar();
     }
 
     private string GenerateFileName()

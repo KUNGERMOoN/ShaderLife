@@ -311,16 +311,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34f190be5ec14854ba751ce3effca24a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Shader: {fileID: 7200000, guid: cc09f7390a9a85e459cce8a01718250c, type: 3}
-  LookupTexture: {fileID: 2800000, guid: e320c675c0eab514cacddccafb4ea563, type: 3}
+  Shader: {fileID: 7200000, guid: b33be95b30b36914e87fa054dc3f2c83, type: 3}
+  LookupTable: Lookup Tables/Life.lut
   material: {fileID: 2100000, guid: eae4068e4c3ce52428fa7d2f6af5a091, type: 2}
-  SizeExponent: 11
+  sizeExponent: 10
   RandomSeed: 1
   seed: 1337
   RandomiseOnAwake: 1
   chance: 0.2
   AliveOnStartup: []
-  UpdateInRealtime: 1
+  UpdateInRealtime: 0
   BoardUpdateRate: 10
   RefreshRate: 2
 --- !u!1660057539 &9223372036854775807

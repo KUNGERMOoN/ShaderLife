@@ -2,6 +2,7 @@ using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using ReadOnlyAttribute = Sirenix.OdinInspector.ReadOnlyAttribute;
@@ -12,26 +13,28 @@ public class GameOfLife : MonoBehaviour
 
     [Header("References"), Required]
     public ComputeShader Shader;
-    public Texture LookupTexture;
+    [FilePath(AbsolutePath = false, ParentFolder = "Assets", Extensions = ".lut")]
+    public string LookupTable;
 
     [SerializeField, PropertySpace(SpaceBefore = 0, SpaceAfter = 8f)]
     Material material;
-    Material lastMaterial;
+    Material lastMaterial; //TODO: we shouldn't need this
     public Material Material
     {
         get => material;
         set
         {
             material = value;
-            if (Application.isPlaying)
+            if (Application.isPlaying && boardBuffer != null && flipBoardBuffer != null)
             {
                 if (lastMaterial != null)
                 {
-                    lastMaterial.mainTexture = null;
+                    lastMaterial.SetBuffer("cells", (ComputeBuffer)null);
                 }
                 if (material != null)
                 {
-                    material.mainTexture = Texture;
+                    material.SetBuffer("cells", Board.Flipped ? flipBoardBuffer : boardBuffer);
+                    UpdateMaterialSize();
                 }
 
                 lastMaterial = material;
@@ -40,8 +43,21 @@ public class GameOfLife : MonoBehaviour
     }
 
 
-    [FoldoutGroup("Board"), InfoBox("$InspectorBoardSize")]
-    public int SizeExponent = 8;
+    [FoldoutGroup("Board"), InfoBox("$InspectorBoardSize"), SerializeField]
+    int sizeExponent = 8;
+    void UpdateMaterialSize()
+    {
+        if (material != null) material.SetInteger("_size", 1 << sizeExponent);
+    }
+    public int SizeExponent
+    {
+        get => sizeExponent;
+        set
+        {
+            sizeExponent = value;
+            UpdateMaterialSize();
+        }
+    }
     string InspectorBoardSize()
     {
         decimal d = (1 << SizeExponent) * (1 << SizeExponent);
@@ -112,6 +128,7 @@ public class GameOfLife : MonoBehaviour
         Chance = chance;
         Seed = seed;
         Material = material;
+        SizeExponent = sizeExponent;
     }
 
     #endregion Inspector
@@ -119,8 +136,6 @@ public class GameOfLife : MonoBehaviour
 
     //Variables
     DoubleBoard<int> Board;
-
-    RenderTexture Texture;
 
     ComputeBuffer boardBuffer;
     ComputeBuffer flipBoardBuffer;
@@ -133,11 +148,8 @@ public class GameOfLife : MonoBehaviour
     public enum Kernel
     {
         Update = 0,
-        FlipUpdate = 1,
-        Randomise = 2,
-        FlipRandomise = 3,
-        SetPixels = 4,
-        FlipSetPixels = 5
+        Randomise = 1,
+        SetPixels = 2,
     }
     public Kernel[] AllKernels { get; private set; } = (Kernel[])Enum.GetValues(typeof(Kernel));
 
@@ -164,36 +176,51 @@ public class GameOfLife : MonoBehaviour
     {
         Board = new DoubleBoard<int>(SizeExponent, true);
 
+        //Set up Compute Shader's thread groups
         uint groupSizeX, groupSizeY;
         Shader.GetKernelThreadGroupSizes(0, out groupSizeX, out groupSizeY, out _);
         ThreadGroups = new Vector3Int(Board.Size / (int)groupSizeX, Board.Size / (int)groupSizeY, 1);
 
-        //Initialize RenderTexture
-        Texture = CreateComputeTexture(Board.Size, "Rendered", AllKernels);
-        if (Material != null) Material.mainTexture = Texture;
-
-        //Set Compute Shader properties and buffers
+        //Set up the Compute Shader 
         Shader.SetInt("Size", Board.Size);
         Shader.SetFloat("Chance", Chance);
 
+        //Set up the material
+        UpdateMaterialSize();
+
+        //Load Lookup Table
+        LUTBuilder lookupTable = LUTBuilder.LoadFromFile(Path.GetFileName(LookupTable), Path.GetDirectoryName(LookupTable));
+        lookupBuffer = new ComputeBuffer(LUTBuilder.packedLength, sizeof(byte) * 4);
+        lookupBuffer.SetData(lookupTable.Packed);
+
+        //Create buffers
         boardBuffer = new ComputeBuffer(Board.BufferSize, sizeof(int) * 2);
         boardBuffer.SetData(Board.GetCells());
 
         flipBoardBuffer = new ComputeBuffer(Board.BufferSize, sizeof(int) * 2);
         flipBoardBuffer.SetData(Board.GetCells());
+
+        //Link Buffers to Shaders
         foreach (Kernel kernel in AllKernels)
         {
-            Shader.SetBuffer((int)kernel, "cellsA", boardBuffer);
-            Shader.SetBuffer((int)kernel, "cellsB", flipBoardBuffer);
-            //Shader.SetTexture((int)kernel, "LookupTexture", LookupTexture);
+            Shader.SetBuffer((int)kernel, "cells", boardBuffer);
+            Shader.SetBuffer((int)kernel, "flipCells", flipBoardBuffer);
+            Shader.SetBuffer((int)kernel, "LookupTable", lookupBuffer);
+        }
+        if (Material != null)
+        {
+            Material.SetBuffer("cells", boardBuffer);
+            Material.SetBuffer("flipCells", flipBoardBuffer);
         }
 
+        //Randomise the seed
         if (RandomSeed) RandomiseSeed();
 
         //Optionally randomise
         if (RandomiseOnAwake)
             Randomise();
 
+        //TODO: get rid of this
         foreach (Vector2Int pos in AliveOnStartup)
         {
             Shader.SetInts("TargetPixel", pos.x, pos.y);
@@ -211,20 +238,31 @@ public class GameOfLife : MonoBehaviour
 
     public void UpdateBoard()
     {
-        int kernel = (int)(Board.Flipped ? Kernel.FlipUpdate : Kernel.Update);
-
-        Shader.Dispatch(kernel, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
-        Board.Flip();
+        FlipBuffer();
+        Shader.Dispatch((int)Kernel.Update, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
     }
 
     public void Randomise()
     {
         if (RandomSeed) RandomiseSeed();
 
-        int kernel = (int)(Board.Flipped ? Kernel.FlipRandomise : Kernel.Randomise);
+        FlipBuffer();
+        Shader.Dispatch((int)Kernel.Randomise, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
+    }
 
-        Shader.Dispatch(kernel, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
+    void FlipBuffer()
+    {
         Board.Flip();
+        if (Board.Flipped)
+        {
+            Shader.EnableKeyword("FLIP_BUFFER");
+            Material?.EnableKeyword("FLIP_BUFFER");
+        }
+        else
+        {
+            Shader.DisableKeyword("FLIP_BUFFER");
+            Material?.DisableKeyword("FLIP_BUFFER");
+        }
     }
 
     public void RandomiseSeed() => Seed = Random.Range(int.MinValue / 2, int.MaxValue / 2);
