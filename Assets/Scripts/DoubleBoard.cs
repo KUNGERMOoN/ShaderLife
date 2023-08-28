@@ -1,5 +1,6 @@
 using System;
 using Unity.Collections;
+using UnityEngine;
 
 public class DoubleBoard<T> : IDisposable where T : struct
 {
@@ -8,8 +9,7 @@ public class DoubleBoard<T> : IDisposable where T : struct
 
     Board<T> CurrentBoard;
 
-    public readonly int SizeExponent;
-    public readonly int Size;
+    public readonly Vector2Int Size;
     public readonly int BufferSize;
 
     public readonly bool Spacing;
@@ -31,17 +31,16 @@ public class DoubleBoard<T> : IDisposable where T : struct
     public ref NativeArray<T> GetCells() => ref CurrentBoard.GetCells();
     public void SetCells(NativeArray<T> data) => CurrentBoard.SetCells(data);
 
-    public DoubleBoard(int sizeExponent, bool spacing)
+    public DoubleBoard(Vector2Int size, bool spacing)
     {
         Spacing = spacing;
         spacingOffset = Spacing ? 0 : 1;
 
-        SizeExponent = sizeExponent;
-        Size = 1 << SizeExponent;
-        BufferSize = (Size + spacingOffset * 2) * (Size + spacingOffset * 2);
+        Size = size;
+        BufferSize = (Size.x + spacingOffset * 2) * (Size.y + spacingOffset * 2);
 
-        boardA = new Board<T>(SizeExponent, Spacing);
-        boardB = new Board<T>(SizeExponent, Spacing);
+        boardA = new Board<T>(size, Spacing);
+        boardB = new Board<T>(size, Spacing);
 
         Flipped = false;
         CurrentBoard = boardA;

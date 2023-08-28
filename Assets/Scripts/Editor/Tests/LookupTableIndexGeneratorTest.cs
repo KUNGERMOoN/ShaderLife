@@ -144,18 +144,4 @@ public class LookupTableIndexGeneratorTest
             ((x << 09) & 122880) +
             ((x << 07) & 1920);
     }
-
-    static string DebugConfiguration(bool[,] cells)
-    {
-        string result = "\n";
-        for (int y = cells.GetLength(1) - 1; y >= 0; y--)
-        {
-            for (int x = 0; x < cells.GetLength(0); x++)
-            {
-                result += (cells[x, y] ? 1 : 0) + " ";
-            }
-            result += "\n";
-        }
-        return result;
-    }
 }

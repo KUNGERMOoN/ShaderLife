@@ -1,7 +1,6 @@
 using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -44,26 +43,41 @@ public class GameOfLife : MonoBehaviour
 
 
     [FoldoutGroup("Board"), InfoBox("$InspectorBoardSize"), SerializeField]
-    int sizeExponent = 8;
+    int sizeLevel = 8;
     void UpdateMaterialSize()
     {
-        if (material != null) material.SetInteger("_size", 1 << sizeExponent);
+        if (material != null)
+        {
+            Shader.GetKernelThreadGroupSizes(0, out uint groupSizeX, out _, out _);
+            material.SetInteger("_size", 4 * (int)groupSizeX * SizeLevel);
+        }
     }
-    public int SizeExponent
+    public int SizeLevel
     {
-        get => sizeExponent;
+        get => sizeLevel;
         set
         {
-            sizeExponent = value;
+            sizeLevel = value;
             UpdateMaterialSize();
         }
     }
     string InspectorBoardSize()
     {
-        decimal d = (1 << SizeExponent) * (1 << SizeExponent);
+        /*decimal d = (1 << SizeExponent) * (1 << SizeExponent);
         var f = new NumberFormatInfo { NumberGroupSeparator = " ", NumberDecimalDigits = 0 };
 
-        return $"Board size: {d.ToString("n", f)} cells";
+        return $"Board size: {d.ToString("n", f)} cells";*/
+
+        Shader.GetKernelThreadGroupSizes(0, out uint groupSizeX, out uint groupSizeY, out _);
+        int size = 4 * (int)groupSizeX * SizeLevel;
+
+        return $@"Each thread simulates 4x2 cells.
+Each group has {groupSizeX}x{groupSizeY} threads.
+So, in total we are simulating {4 * groupSizeX}x{2 * groupSizeY} in each thread group.
+SizeLevel = {SizeLevel}, so we create {SizeLevel}x{SizeLevel * 2} thread groups
+(to make sure the board is square),
+which gives us {4 * groupSizeX * SizeLevel}x{2 * groupSizeY * SizeLevel * 2} cells.
+({4 * groupSizeX * SizeLevel * 2 * groupSizeY * SizeLevel * 2} in total)";
     }
 
     [FoldoutGroup("Board")]
@@ -128,7 +142,7 @@ public class GameOfLife : MonoBehaviour
         Chance = chance;
         Seed = seed;
         Material = material;
-        SizeExponent = sizeExponent;
+        SizeLevel = sizeLevel;
     }
 
     #endregion Inspector
@@ -141,9 +155,12 @@ public class GameOfLife : MonoBehaviour
     ComputeBuffer flipBoardBuffer;
     ComputeBuffer lookupBuffer;
 
+    ComputeBuffer debugBuffer; //TODO: Remove this when we finish
+
     //AsyncGPUReadbackRequest BufferRequest; //TODO: Read data back from buffer asynchronically
 
     Vector3Int ThreadGroups;
+    Vector3Int GroupSize;
 
     public enum Kernel
     {
@@ -174,15 +191,16 @@ public class GameOfLife : MonoBehaviour
 
     private void Awake()
     {
-        Board = new DoubleBoard<int>(SizeExponent, true);
+        Shader.GetKernelThreadGroupSizes(0, out uint groupSizeX, out uint groupSizeY, out uint groupSizeZ);
+        GroupSize = new Vector3Int((int)groupSizeX, (int)groupSizeY, (int)groupSizeZ);
+        ThreadGroups = new Vector3Int(sizeLevel, sizeLevel * 2, 1);
 
-        //Set up Compute Shader's thread groups
-        uint groupSizeX, groupSizeY;
-        Shader.GetKernelThreadGroupSizes(0, out groupSizeX, out groupSizeY, out _);
-        ThreadGroups = new Vector3Int(Board.Size / (int)groupSizeX, Board.Size / (int)groupSizeY, 1);
+        //Set up the CPU-side board
+        Board = new(new Vector2Int(GroupSize.x * ThreadGroups.x, GroupSize.y * ThreadGroups.y), true);
+        Debug.Log($"Board size: {Board.Size}");
 
         //Set up the Compute Shader 
-        Shader.SetInt("Size", Board.Size);
+        Shader.SetInts("Size", Board.Size.x, Board.Size.y);
         Shader.SetFloat("Chance", Chance);
 
         //Set up the material
@@ -200,12 +218,15 @@ public class GameOfLife : MonoBehaviour
         flipBoardBuffer = new ComputeBuffer(Board.BufferSize, sizeof(int) * 2);
         flipBoardBuffer.SetData(Board.GetCells());
 
+        debugBuffer = new ComputeBuffer(2, sizeof(int) * 3, ComputeBufferType.Append);
+
         //Link Buffers to Shaders
         foreach (Kernel kernel in AllKernels)
         {
             Shader.SetBuffer((int)kernel, "cells", boardBuffer);
             Shader.SetBuffer((int)kernel, "flipCells", flipBoardBuffer);
             Shader.SetBuffer((int)kernel, "LookupTable", lookupBuffer);
+            Shader.SetBuffer((int)kernel, "debugBuffer", debugBuffer);
         }
         if (Material != null)
         {
@@ -240,6 +261,17 @@ public class GameOfLife : MonoBehaviour
     {
         FlipBuffer();
         Shader.Dispatch((int)Kernel.Update, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
+
+        DebugMessage[] messages = new DebugMessage[2];
+        debugBuffer.GetData(messages);
+        for (int i = 0; i < messages.Length; i++)
+        {
+            DebugMessage message = messages[i];
+
+            Debug.Log($@"Cells data in chunk {message.x}, {message.y}:
+{LUTBuilder.PrintConfiguration(LUTBuilder.ToCells(message.message, 4, 6))}");
+        }
+
     }
 
     public void Randomise()

@@ -1,5 +1,6 @@
 using System;
 using Unity.Collections;
+using UnityEngine;
 
 public class Board<T> : IDisposable where T : struct
 {
@@ -13,8 +14,7 @@ public class Board<T> : IDisposable where T : struct
         Disposed = false;
     }
 
-    public readonly int SizeExponent;
-    public readonly int Size;
+    public readonly Vector2Int Size;
     public readonly int BufferSize;
 
     public readonly bool Spacing;
@@ -28,16 +28,15 @@ public class Board<T> : IDisposable where T : struct
         set => Cells[Index(x, y)] = value;
     }
 
-    int Index(int x, int y) => (x + spacingOffset) * (Size + spacingOffset * 2) + y + spacingOffset;
+    int Index(int x, int y) => (x + spacingOffset) * (Size.y + spacingOffset * 2) + y + spacingOffset;
 
-    public Board(int sizeExponent, bool spacing)
+    public Board(Vector2Int size, bool spacing)
     {
         Spacing = spacing;
         spacingOffset = Spacing ? 0 : 1;
 
-        SizeExponent = sizeExponent;
-        Size = 1 << SizeExponent;
-        BufferSize = (Size + spacingOffset * 2) * (Size + spacingOffset * 2);
+        Size = size;
+        BufferSize = (Size.x + spacingOffset * 2) * (Size.y + spacingOffset * 2);
 
         Cells = new NativeArray<T>(BufferSize, Allocator.Persistent);
         Disposed = false;

@@ -269,4 +269,18 @@ public class LUTBuilder
         }
         return result;
     }
+
+    public static string PrintConfiguration(bool[,] cells)
+    {
+        string result = "\n";
+        for (int y = cells.GetLength(1) - 1; y >= 0; y--)
+        {
+            for (int x = 0; x < cells.GetLength(0); x++)
+            {
+                result += (cells[x, y] ? 1 : 0) + " ";
+            }
+            result += "\n";
+        }
+        return result;
+    }
 }

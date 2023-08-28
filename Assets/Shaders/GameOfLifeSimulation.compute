@@ -7,7 +7,17 @@
 RWStructuredBuffer<int> cells;
 RWStructuredBuffer<int> flipCells;
 
-int Size;
+struct DebugMessage
+{
+    int message;
+    int x;
+    int y;
+};
+
+AppendStructuredBuffer<DebugMessage> debugBuffer;
+
+
+int2 Size;
 int Seed;
 float Chance;
 
@@ -32,22 +42,22 @@ int randomConfiguration(uint seed)
 
 int index(in int x, in int y)
 {
-    return (x + 1) * (Size + 2) + y + 1;
+    return (x + 1) * (Size.y + 2) + y + 1;
 }
 
-int Get(int i)
+int GetPrevious(int i)
 {
     if (FLIP_BUFFER)
     {
-        return flipCells[i];
+        return cells[i];
     }
     else
     {
-        return cells[i];
+        return flipCells[i];
     }
 }
 
-void Set(int i, int value)
+void SetNext(int i, int value)
 {
     if (FLIP_BUFFER)
     {
@@ -59,30 +69,22 @@ void Set(int i, int value)
     }
 }
 
-[numthreads(8, 8, 1)]
-void Randomise(uint3 id : SV_DispatchThreadID)
-{
-    int i = index(id.x, id.y);
-    
-    Set(i, randomConfiguration(i + Seed));
-}
-
-[numthreads(8, 8, 1)]
+[numthreads(8, 8, 1)] //TODO: Replace with (8, 8, 1)
 void Update(uint3 id : SV_DispatchThreadID)
 {
     int i = index(id.x, id.y);
     
-    int x = Get(i);
-    int a = Get(i - Size - 3);
-    int b = Get(i - 1);
-    int c = Get(i + Size + 1);
-    int d = Get(i - Size - 2);
-    int e = Get(i + Size + 2);
-    int f = Get(i - Size - 1);
-    int g = Get(i + 1);
-    int h = Get(i + Size + 3);
+    int x = GetPrevious(i);
+    int a = GetPrevious(i - Size.y - 3);
+    int b = GetPrevious(i - 1);
+    int c = GetPrevious(i + Size.y + 1);
+    int d = GetPrevious(i - Size.y - 2);
+    int e = GetPrevious(i + Size.y + 2);
+    int f = GetPrevious(i - Size.y - 1);
+    int g = GetPrevious(i + 1);
+    int h = GetPrevious(i + Size.y + 3);
     
-    int input = 
+    int input =
         ((a << 23) & 8388608) +
 		((b << 19) & 7864320) +
 		((c << 15) & 262144) +
@@ -95,13 +97,26 @@ void Update(uint3 id : SV_DispatchThreadID)
 		((h >> 7) & 1) +
 		((x << 9) & 122880) +
 		((x << 7) & 1920);
-
     
-    Set(i, input);
+    DebugMessage message;
+    message.message = input;
+    message.x = id.x;
+    message.y = id.y;
+    debugBuffer.Append(message);
+    
+    SetNext(i, input);
+}
+
+[numthreads(8, 8, 1)] //TODO: Replace with (8, 8, 1)
+void Randomise(uint3 id : SV_DispatchThreadID)
+{
+    int i = index(id.x, id.y);
+    
+    SetNext(i, randomConfiguration(i + Seed));
 }
 
 int2 TargetPixel = int2(0, 0);
-[numthreads(1, 1, 1)]
+[numthreads(8, 8, 1)]
 void SetPixels(uint3 id : SV_DispatchThreadID)
 {
     //TODO
