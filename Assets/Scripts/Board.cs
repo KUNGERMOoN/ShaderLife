@@ -30,10 +30,10 @@ public class Board<T> : IDisposable where T : struct
 
     int Index(int x, int y) => (x + spacingOffset) * (Size.y + spacingOffset * 2) + y + spacingOffset;
 
-    public Board(Vector2Int size, bool spacing)
+    public Board(Vector2Int size, bool spacing = true)
     {
         Spacing = spacing;
-        spacingOffset = Spacing ? 0 : 1;
+        spacingOffset = Spacing ? 1 : 0;
 
         Size = size;
         BufferSize = (Size.x + spacingOffset * 2) * (Size.y + spacingOffset * 2);

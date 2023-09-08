@@ -9,6 +9,7 @@ using ReadOnlyAttribute = Sirenix.OdinInspector.ReadOnlyAttribute;
 public class GameOfLife : MonoBehaviour
 {
     #region Inspector
+#pragma warning disable IDE0051
 
     [Header("References"), Required]
     public ComputeShader Shader;
@@ -33,7 +34,7 @@ public class GameOfLife : MonoBehaviour
                 if (material != null)
                 {
                     material.SetBuffer("cells", Board.Flipped ? flipBoardBuffer : boardBuffer);
-                    UpdateMaterialSize();
+                    UpdateBoardSize();
                 }
 
                 lastMaterial = material;
@@ -42,14 +43,16 @@ public class GameOfLife : MonoBehaviour
     }
 
 
-    [FoldoutGroup("Board"), InfoBox("$InspectorBoardSize"), SerializeField]
+    [FoldoutGroup("Board"), InfoBox("$InspectorBoardSizeInfo"), SerializeField]
     int sizeLevel = 8;
-    void UpdateMaterialSize()
+    void UpdateBoardSize()
     {
         if (material != null)
         {
-            Shader.GetKernelThreadGroupSizes(0, out uint groupSizeX, out _, out _);
-            material.SetInteger("_size", 4 * (int)groupSizeX * SizeLevel);
+            Vector2Int size = BoardChunks;
+            material.SetInteger("_sizeX", size.x);
+            material.SetInteger("_sizeY", size.y);
+            Shader.SetInts("Size", size.x, size.y);
         }
     }
     public int SizeLevel
@@ -58,26 +61,21 @@ public class GameOfLife : MonoBehaviour
         set
         {
             sizeLevel = value;
-            UpdateMaterialSize();
+            UpdateBoardSize();
         }
     }
-    string InspectorBoardSize()
+    string InspectorBoardSizeInfo()
     {
-        /*decimal d = (1 << SizeExponent) * (1 << SizeExponent);
-        var f = new NumberFormatInfo { NumberGroupSeparator = " ", NumberDecimalDigits = 0 };
-
-        return $"Board size: {d.ToString("n", f)} cells";*/
-
         Shader.GetKernelThreadGroupSizes(0, out uint groupSizeX, out uint groupSizeY, out _);
-        int size = 4 * (int)groupSizeX * SizeLevel;
 
         return $@"Each thread simulates 4x2 cells.
 Each group has {groupSizeX}x{groupSizeY} threads.
 So, in total we are simulating {4 * groupSizeX}x{2 * groupSizeY} in each thread group.
 SizeLevel = {SizeLevel}, so we create {SizeLevel}x{SizeLevel * 2} thread groups
 (to make sure the board is square),
-which gives us {4 * groupSizeX * SizeLevel}x{2 * groupSizeY * SizeLevel * 2} cells.
-({4 * groupSizeX * SizeLevel * 2 * groupSizeY * SizeLevel * 2} in total)";
+which gives us {groupSizeX * SizeLevel}x{groupSizeY * SizeLevel * 2} threads or
+{4 * groupSizeX * SizeLevel}x{2 * groupSizeY * SizeLevel * 2} cells.
+({4 * groupSizeX * SizeLevel * 2 * groupSizeY * SizeLevel * 2} cells in total)";
     }
 
     [FoldoutGroup("Board")]
@@ -90,7 +88,7 @@ which gives us {4 * groupSizeX * SizeLevel}x{2 * groupSizeY * SizeLevel * 2} cel
         set
         {
             seed = value;
-            if (Application.isPlaying) Shader?.SetInt("Seed", seed);
+            if (Application.isPlaying && Shader != null) Shader.SetInt("Seed", seed);
         }
     }
 
@@ -137,6 +135,7 @@ which gives us {4 * groupSizeX * SizeLevel}x{2 * groupSizeY * SizeLevel * 2} cel
     [FoldoutGroup("FPS Counter"), ShowInInspector, ReadOnly]
     public float AverageBoardUpdatePerformance { get; private set; }
 
+
     private void OnValidate()
     {
         Chance = chance;
@@ -145,8 +144,22 @@ which gives us {4 * groupSizeX * SizeLevel}x{2 * groupSizeY * SizeLevel * 2} cel
         SizeLevel = sizeLevel;
     }
 
+#pragma warning restore IDE0051
     #endregion Inspector
 
+    public Vector3Int ThreadGroupSize
+    {
+        get
+        {
+            Shader.GetKernelThreadGroupSizes(0, out uint groupSizeX, out uint groupSizeY, out uint groupSizeZ);
+            return new Vector3Int((int)groupSizeX, (int)groupSizeY, (int)groupSizeZ);
+        }
+    }
+
+    public Vector3Int ThreadGroups => new(sizeLevel, sizeLevel * 2, 1);
+
+    public Vector2Int BoardChunks
+        => new(ThreadGroupSize.x * ThreadGroups.x, ThreadGroupSize.y * ThreadGroups.y);
 
     //Variables
     DoubleBoard<int> Board;
@@ -158,9 +171,6 @@ which gives us {4 * groupSizeX * SizeLevel}x{2 * groupSizeY * SizeLevel * 2} cel
     ComputeBuffer debugBuffer; //TODO: Remove this when we finish
 
     //AsyncGPUReadbackRequest BufferRequest; //TODO: Read data back from buffer asynchronically
-
-    Vector3Int ThreadGroups;
-    Vector3Int GroupSize;
 
     public enum Kernel
     {
@@ -191,20 +201,13 @@ which gives us {4 * groupSizeX * SizeLevel}x{2 * groupSizeY * SizeLevel * 2} cel
 
     private void Awake()
     {
-        Shader.GetKernelThreadGroupSizes(0, out uint groupSizeX, out uint groupSizeY, out uint groupSizeZ);
-        GroupSize = new Vector3Int((int)groupSizeX, (int)groupSizeY, (int)groupSizeZ);
-        ThreadGroups = new Vector3Int(sizeLevel, sizeLevel * 2, 1);
-
         //Set up the CPU-side board
-        Board = new(new Vector2Int(GroupSize.x * ThreadGroups.x, GroupSize.y * ThreadGroups.y), true);
-        Debug.Log($"Board size: {Board.Size}");
+        Board = new(BoardChunks, true);
+        Debug.Log($"Board size: {BoardChunks}");
 
-        //Set up the Compute Shader 
-        Shader.SetInts("Size", Board.Size.x, Board.Size.y);
+        //Set up the Compute Shader and Material
         Shader.SetFloat("Chance", Chance);
-
-        //Set up the material
-        UpdateMaterialSize();
+        UpdateBoardSize();
 
         //Load Lookup Table
         LUTBuilder lookupTable = LUTBuilder.LoadFromFile(Path.GetFileName(LookupTable), Path.GetDirectoryName(LookupTable));
@@ -218,7 +221,7 @@ which gives us {4 * groupSizeX * SizeLevel}x{2 * groupSizeY * SizeLevel * 2} cel
         flipBoardBuffer = new ComputeBuffer(Board.BufferSize, sizeof(int) * 2);
         flipBoardBuffer.SetData(Board.GetCells());
 
-        debugBuffer = new ComputeBuffer(2, sizeof(int) * 3, ComputeBufferType.Append);
+        debugBuffer = new ComputeBuffer(Board.BufferSize, sizeof(int));
 
         //Link Buffers to Shaders
         foreach (Kernel kernel in AllKernels)
@@ -232,6 +235,7 @@ which gives us {4 * groupSizeX * SizeLevel}x{2 * groupSizeY * SizeLevel * 2} cel
         {
             Material.SetBuffer("cells", boardBuffer);
             Material.SetBuffer("flipCells", flipBoardBuffer);
+            Material.SetBuffer("debugBuffer", debugBuffer);
         }
 
         //Randomise the seed
@@ -254,6 +258,7 @@ which gives us {4 * groupSizeX * SizeLevel}x{2 * groupSizeY * SizeLevel * 2} cel
         boardBuffer?.Release();
         flipBoardBuffer?.Release();
         lookupBuffer?.Release();
+        debugBuffer?.Release();
         Board.Dispose();
     }
 
@@ -262,16 +267,37 @@ which gives us {4 * groupSizeX * SizeLevel}x{2 * groupSizeY * SizeLevel * 2} cel
         FlipBuffer();
         Shader.Dispatch((int)Kernel.Update, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
 
-        DebugMessage[] messages = new DebugMessage[2];
+        /*DebugMessage[] messages = new DebugMessage[ThreadGroups.x * ThreadGroups.y];
         debugBuffer.GetData(messages);
-        for (int i = 0; i < messages.Length; i++)
+        for (int x = 0; x < ThreadGroups.x; x++)
         {
-            DebugMessage message = messages[i];
-
-            Debug.Log($@"Cells data in chunk {message.x}, {message.y}:
-{LUTBuilder.PrintConfiguration(LUTBuilder.ToCells(message.message, 4, 6))}");
-        }
-
+            for (int y = 0; y < ThreadGroups.y; y++)
+            {
+                DebugMessage message = messages[x * ThreadGroups.y + y];
+                Debug.Log($"Thread {x}, {y}: " +
+                    $"cells from {message.startX}, {message.startY} to {message.endX}, {message.endY}");
+            }
+        }*/
+        /*int[] result = new int[Board.BufferSize];
+        debugBuffer.GetData(result);
+        Vector2Int size = BoardChunks;
+        int i = 0;
+        for (int x = 0; x < size.x + 2; x++)
+        {
+            for (int y = 0; y < size.y + 2; y++)
+            {
+                bool simulated = result[i] != 0;
+                if (!simulated)
+                {
+                    if (x == 0 || y == 0 || x == size.x + 1 || y == size.y + 1)
+                        Debug.Log($"Cell correctly not simulated at ({x}, {y}), i = {i}");
+                    else
+                        Debug.LogError($"Cell uncorrectly not simulated at ({x}, {y}), i = {i}");
+                }
+                i++;
+            }
+        }*/
+        //Debug.Log($"i: {i}, BufferSize: {Board.BufferSize}");
     }
 
     public void Randomise()
@@ -288,18 +314,18 @@ which gives us {4 * groupSizeX * SizeLevel}x{2 * groupSizeY * SizeLevel * 2} cel
         if (Board.Flipped)
         {
             Shader.EnableKeyword("FLIP_BUFFER");
-            Material?.EnableKeyword("FLIP_BUFFER");
+            if (Material != null) Material.EnableKeyword("FLIP_BUFFER");
         }
         else
         {
             Shader.DisableKeyword("FLIP_BUFFER");
-            Material?.DisableKeyword("FLIP_BUFFER");
+            if (Material != null) Material.DisableKeyword("FLIP_BUFFER");
         }
     }
 
     public void RandomiseSeed() => Seed = Random.Range(int.MinValue / 2, int.MaxValue / 2);
 
-    RenderTexture CreateComputeTexture(int size, string ComputeShaderPropertyName, Kernel[] kernels)
+    /*RenderTexture CreateComputeTexture(int size, string ComputeShaderPropertyName, Kernel[] kernels)
     {
         RenderTexture texture = new(size, size, 24)
         {
@@ -313,5 +339,5 @@ which gives us {4 * groupSizeX * SizeLevel}x{2 * groupSizeY * SizeLevel * 2} cel
             Shader.SetTexture((int)kernel, ComputeShaderPropertyName, texture);
 
         return texture;
-    }
+    }*/
 }

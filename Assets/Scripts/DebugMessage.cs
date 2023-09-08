@@ -1,6 +1,7 @@
 public struct DebugMessage
 {
-    public int message;
-    public int x;
-    public int y;
+    public int startX;
+    public int startY;
+    public int endX;
+    public int endY;
 };

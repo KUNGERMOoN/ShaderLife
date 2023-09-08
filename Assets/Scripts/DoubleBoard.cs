@@ -31,10 +31,10 @@ public class DoubleBoard<T> : IDisposable where T : struct
     public ref NativeArray<T> GetCells() => ref CurrentBoard.GetCells();
     public void SetCells(NativeArray<T> data) => CurrentBoard.SetCells(data);
 
-    public DoubleBoard(Vector2Int size, bool spacing)
+    public DoubleBoard(Vector2Int size, bool spacing = true)
     {
         Spacing = spacing;
-        spacingOffset = Spacing ? 0 : 1;
+        spacingOffset = Spacing ? 1 : 0;
 
         Size = size;
         BufferSize = (Size.x + spacingOffset * 2) * (Size.y + spacingOffset * 2);

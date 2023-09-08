@@ -7,16 +7,17 @@
 RWStructuredBuffer<int> cells;
 RWStructuredBuffer<int> flipCells;
 
-struct DebugMessage
+/*struct DebugMessage
 {
-    int message;
-    int x;
-    int y;
-};
+    int startX;
+    int startY;
+    int endX;
+    int endY;
+};*/
 
-AppendStructuredBuffer<DebugMessage> debugBuffer;
+RWStructuredBuffer<int> debugBuffer;
 
-
+//Size of the board, in chunks
 int2 Size;
 int Seed;
 float Chance;
@@ -40,7 +41,7 @@ int randomConfiguration(uint seed)
     return hash(seed) % 256;
 }
 
-int index(in int x, in int y)
+uint index(in uint x, in uint y)
 {
     return (x + 1) * (Size.y + 2) + y + 1;
 }
@@ -73,6 +74,7 @@ void SetNext(int i, int value)
 void Update(uint3 id : SV_DispatchThreadID)
 {
     int i = index(id.x, id.y);
+    debugBuffer[i] = 100;
     
     int x = GetPrevious(i);
     int a = GetPrevious(i - Size.y - 3);
@@ -98,11 +100,7 @@ void Update(uint3 id : SV_DispatchThreadID)
 		((x << 9) & 122880) +
 		((x << 7) & 1920);
     
-    DebugMessage message;
-    message.message = input;
-    message.x = id.x;
-    message.y = id.y;
-    debugBuffer.Append(message);
+    //debugBuffer[i] = i + 1;
     
     SetNext(i, input);
 }
