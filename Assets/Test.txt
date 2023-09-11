@@ -1,0 +1,2 @@
+- loaded LUTBuilder contains the correct byte data
+- neighbours connecting algorithm works correctly in compute shader

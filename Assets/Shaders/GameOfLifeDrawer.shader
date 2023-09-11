@@ -68,6 +68,9 @@ Shader "Unlit/GameOfLifeDrawer"
 
 				return (chunkData >> (7 - local.x - 4 * local.y)) & 1;
 
+				//TODO: Make the board more pretty (gray lines between cells etc.)
+				//TODO: Make a heatmap shader
+
 				//return fixed4(chunk.x % 7 == 0, ((chunk.x % 2 == 0) || (chunk.y % 2 == 0)) * 0.2, chunk.y % 7 == 0, 0);
 
 				/*fixed4 col1 = (chunkData >> (7 - local.x - 4 * local.y)) & 1;

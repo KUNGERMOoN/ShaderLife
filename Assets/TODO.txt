@@ -1,1 +1,7 @@
-TODO: Documentation
+TODO: 
+Documentation
+Stuff in other TODOS
+Make a video about it
+Learn how to import excel files in unity correctly
+Clean up the Excel sheet
+Get rid of Odin and make custom editors

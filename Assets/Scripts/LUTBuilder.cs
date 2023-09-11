@@ -186,26 +186,26 @@ public class LUTBuilder
 
     void GeneratePackedConfigurations(int packedIndex)
     {
-        byte byte1 = GenerateConfiguration(packedIndex * 4);
-        byte byte2 = GenerateConfiguration(packedIndex * 4 + 1);
-        byte byte3 = GenerateConfiguration(packedIndex * 4 + 2);
-        byte byte4 = GenerateConfiguration(packedIndex * 4 + 3);
+        byte byte0 = Simulate(packedIndex * 4);
+        byte byte1 = Simulate(packedIndex * 4 + 1);
+        byte byte2 = Simulate(packedIndex * 4 + 2);
+        byte byte3 = Simulate(packedIndex * 4 + 3);
 
-        Bytes[packedIndex * 4] = byte1;
-        Bytes[packedIndex * 4 + 1] = byte2;
-        Bytes[packedIndex * 4 + 2] = byte3;
-        Bytes[packedIndex * 4 + 3] = byte4;
+        Bytes[packedIndex * 4] = byte0;
+        Bytes[packedIndex * 4 + 1] = byte1;
+        Bytes[packedIndex * 4 + 2] = byte2;
+        Bytes[packedIndex * 4 + 3] = byte3;
 
-        Packed[packedIndex] = PackBytes(byte1, byte2, byte3, byte4);
+        Packed[packedIndex] = PackBytes(byte0, byte1, byte2, byte3);
     }
 
-    static int PackBytes(byte byte1, byte byte2, byte byte3, byte byte4) =>
-        (byte1 << 0) +
-        (byte2 << 8) +
-        (byte3 << 16) +
-        (byte4 << 24);
+    static int PackBytes(byte byte0, byte byte1, byte byte2, byte byte3) =>
+        (byte0 << 0) +
+        (byte1 << 8) +
+        (byte2 << 16) +
+        (byte3 << 24);
 
-    byte GenerateConfiguration(int startingConfiguration)
+    public byte Simulate(int startingConfiguration)
     {
         int newRows = inputRows - 2;
         int newColumns = inputColumns - 2;
@@ -270,7 +270,7 @@ public class LUTBuilder
         return result;
     }
 
-    public static string PrintConfiguration(bool[,] cells)
+    public static string LogConfiguration(bool[,] cells)
     {
         string result = "\n";
         for (int y = cells.GetLength(1) - 1; y >= 0; y--)

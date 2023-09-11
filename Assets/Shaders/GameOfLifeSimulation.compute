@@ -4,18 +4,12 @@
 
 #pragma multi_compile __ FLIP_BUFFER
 
+//TODO: We only need one byte for each chunk - maybe we could pack 4 of them into one int?
+//(see LUTBilder.cs)
 RWStructuredBuffer<int> cells;
 RWStructuredBuffer<int> flipCells;
 
-/*struct DebugMessage
-{
-    int startX;
-    int startY;
-    int endX;
-    int endY;
-};*/
-
-RWStructuredBuffer<int> debugBuffer;
+RWStructuredBuffer<uint> debugBuffer;
 
 //Size of the board, in chunks
 int2 Size;
@@ -36,6 +30,7 @@ uint hash(uint s)
     return s;
 }
 
+//TODO: Use actual chance
 int randomConfiguration(uint seed)
 {
     return hash(seed) % 256;
@@ -70,23 +65,30 @@ void SetNext(int i, int value)
     }
 }
 
-[numthreads(8, 8, 1)] //TODO: Replace with (8, 8, 1)
+int Lookup(uint index)
+{
+    return (LookupTable[index / 4]
+            >> ((index % 4) * 8))
+            & 255;
+}
+
+[numthreads(8, 8, 1)] //TODO: Replace with 8, 8, 1 when we finish testing
 void Update(uint3 id : SV_DispatchThreadID)
 {
-    int i = index(id.x, id.y);
-    debugBuffer[i] = 100;
+    uint i = index(id.x, id.y);
     
-    int x = GetPrevious(i);
-    int a = GetPrevious(i - Size.y - 3);
-    int b = GetPrevious(i - 1);
-    int c = GetPrevious(i + Size.y + 1);
-    int d = GetPrevious(i - Size.y - 2);
-    int e = GetPrevious(i + Size.y + 2);
-    int f = GetPrevious(i - Size.y - 1);
-    int g = GetPrevious(i + 1);
-    int h = GetPrevious(i + Size.y + 3);
+    //TODO: Use hex literals for readability (also change it in other places, including excel sheet)
+    uint x = GetPrevious(i);
+    uint a = GetPrevious(i - Size.y - 3);
+    uint b = GetPrevious(i - 1);
+    uint c = GetPrevious(i + Size.y + 1);
+    uint d = GetPrevious(i - Size.y - 2);
+    uint e = GetPrevious(i + Size.y + 2);
+    uint f = GetPrevious(i - Size.y - 1);
+    uint g = GetPrevious(i + 1);
+    uint h = GetPrevious(i + Size.y + 3);
     
-    int input =
+    uint input =
         ((a << 23) & 8388608) +
 		((b << 19) & 7864320) +
 		((c << 15) & 262144) +
@@ -100,12 +102,13 @@ void Update(uint3 id : SV_DispatchThreadID)
 		((x << 9) & 122880) +
 		((x << 7) & 1920);
     
-    //debugBuffer[i] = i + 1;
+    debugBuffer[i] = input;
     
-    SetNext(i, input);
+    SetNext(i, Lookup(input));
+    //SetNext(i, GetPrevious(i)); //TODO: Use the one above when we finish testing
 }
 
-[numthreads(8, 8, 1)] //TODO: Replace with (8, 8, 1)
+[numthreads(8, 8, 1)] //TODO: Replace with 8, 8, 1 when we finish testing
 void Randomise(uint3 id : SV_DispatchThreadID)
 {
     int i = index(id.x, id.y);
@@ -114,7 +117,7 @@ void Randomise(uint3 id : SV_DispatchThreadID)
 }
 
 int2 TargetPixel = int2(0, 0);
-[numthreads(8, 8, 1)]
+[numthreads(1, 1, 1)]
 void SetPixels(uint3 id : SV_DispatchThreadID)
 {
     //TODO

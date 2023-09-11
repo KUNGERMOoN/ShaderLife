@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 
 public static class LifeUtils
@@ -6,4 +7,11 @@ public static class LifeUtils
         !string.IsNullOrEmpty(fileName) &&
         fileName.IndexOfAny(Path.GetInvalidFileNameChars()) < 0 &&
         !File.Exists(Path.Combine(absolutePath, fileName));
+
+    public static string ThousandSpacing(this int number)
+    {
+        var f = new NumberFormatInfo { NumberGroupSeparator = " ", NumberDecimalDigits = 0 };
+
+        return number.ToString("n", f);
+    }
 }

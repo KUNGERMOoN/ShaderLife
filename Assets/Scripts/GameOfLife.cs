@@ -69,13 +69,13 @@ public class GameOfLife : MonoBehaviour
         Shader.GetKernelThreadGroupSizes(0, out uint groupSizeX, out uint groupSizeY, out _);
 
         return $@"Each thread simulates 4x2 cells.
-Each group has {groupSizeX}x{groupSizeY} threads.
-So, in total we are simulating {4 * groupSizeX}x{2 * groupSizeY} in each thread group.
-SizeLevel = {SizeLevel}, so we create {SizeLevel}x{SizeLevel * 2} thread groups
+Each group has {((int)groupSizeX).ThousandSpacing()}x{((int)groupSizeY).ThousandSpacing()} threads.
+So, in total we are simulating {(4 * (int)groupSizeX).ThousandSpacing()}x{(2 * (int)groupSizeY).ThousandSpacing()} in each thread group.
+SizeLevel = {SizeLevel.ThousandSpacing()}, so we create {(SizeLevel).ThousandSpacing()}x{(SizeLevel * 2).ThousandSpacing()} thread groups
 (to make sure the board is square),
-which gives us {groupSizeX * SizeLevel}x{groupSizeY * SizeLevel * 2} threads or
-{4 * groupSizeX * SizeLevel}x{2 * groupSizeY * SizeLevel * 2} cells.
-({4 * groupSizeX * SizeLevel * 2 * groupSizeY * SizeLevel * 2} cells in total)";
+which gives us {((int)groupSizeX * SizeLevel).ThousandSpacing()}x{((int)groupSizeY * SizeLevel * 2).ThousandSpacing()} threads or
+{(4 * (int)groupSizeX * SizeLevel).ThousandSpacing()}x{(2 * (int)groupSizeY * SizeLevel * 2).ThousandSpacing()} cells.
+({(4 * (int)groupSizeX * SizeLevel * 2 * (int)groupSizeY * SizeLevel * 2).ThousandSpacing()} cells in total)";
     }
 
     [FoldoutGroup("Board")]
@@ -94,7 +94,7 @@ which gives us {groupSizeX * SizeLevel}x{groupSizeY * SizeLevel * 2} threads or
 
     [VerticalGroup("Board/button"), Space, DisableInPlayMode]
     public bool RandomiseOnAwake = true;
-    [VerticalGroup("Board/button"), Button("Randomise")]
+    [VerticalGroup("Board/button"), Button("Randomise"), DisableInEditorMode]
     void InspectorRandomise()
     {
         if (Application.isPlaying) Randomise();
@@ -166,6 +166,8 @@ which gives us {groupSizeX * SizeLevel}x{groupSizeY * SizeLevel * 2} threads or
 
     ComputeBuffer boardBuffer;
     ComputeBuffer flipBoardBuffer;
+
+    LUTBuilder lookupTable;
     ComputeBuffer lookupBuffer;
 
     ComputeBuffer debugBuffer; //TODO: Remove this when we finish
@@ -199,6 +201,61 @@ which gives us {groupSizeX * SizeLevel}x{groupSizeY * SizeLevel * 2} threads or
         }
     }
 
+    //TODO: Get rid of this when we finish testing
+    /*[TableMatrix]
+    public int[,] chunks = new int[,]
+    {
+        {108, 178, 128},
+        {017, 137, 009},
+        {226, 019, 178}
+    };
+
+    [FoldoutGroup("Test"), Button, DisableInEditorMode]
+    public void Test(int[,] chunks)
+    {
+        int x = chunks[1, 1];
+        int a = chunks[0, 0];
+        int b = chunks[1, 0];
+        int c = chunks[2, 0];
+        int d = chunks[0, 1];
+        int e = chunks[2, 1];
+        int f = chunks[0, 2];
+        int g = chunks[1, 2];
+        int h = chunks[2, 2];
+
+        int input =
+            ((a << 23) & 8388608) +
+            ((b << 19) & 7864320) +
+            ((c << 15) & 262144) +
+            ((d << 13) & 131072) +
+            ((d << 11) & 2048) +
+            ((e << 5) & 4096) +
+            ((e << 3) & 64) +
+            ((f << 1) & 32) +
+            ((g >> 3) & 30) +
+            ((h >> 7) & 1) +
+            ((x << 9) & 122880) +
+            ((x << 7) & 1920);
+
+        for (int x_ = 0; x_ < 3; x_++)
+        {
+            for (int y_ = 0; y_ < 3; y_++)
+            {
+                Debug.Log($"Chunk {x_}, {y_}:\n{LUTBuilder.LogConfiguration(LUTBuilder.ToCells(chunks[x_, y_], 2, 4))}");
+            }
+        }
+
+        byte result = lookupTable.Simulate(input);
+        Debug.Log(
+$@"The result of simulating pattern
+{LUTBuilder.LogConfiguration(LUTBuilder.ToCells(input, 4, 6))}(number {input})
+is a pattern:
+
+{LUTBuilder.LogConfiguration(LUTBuilder.ToCells(result, 2, 4))}(number {result})
+
+");
+    }*/
+
     private void Awake()
     {
         //Set up the CPU-side board
@@ -210,7 +267,7 @@ which gives us {groupSizeX * SizeLevel}x{groupSizeY * SizeLevel * 2} threads or
         UpdateBoardSize();
 
         //Load Lookup Table
-        LUTBuilder lookupTable = LUTBuilder.LoadFromFile(Path.GetFileName(LookupTable), Path.GetDirectoryName(LookupTable));
+        lookupTable = LUTBuilder.LoadFromFile(Path.GetFileName(LookupTable), Path.GetDirectoryName(LookupTable));
         lookupBuffer = new ComputeBuffer(LUTBuilder.packedLength, sizeof(byte) * 4);
         lookupBuffer.SetData(lookupTable.Packed);
 
@@ -221,7 +278,7 @@ which gives us {groupSizeX * SizeLevel}x{groupSizeY * SizeLevel * 2} threads or
         flipBoardBuffer = new ComputeBuffer(Board.BufferSize, sizeof(int) * 2);
         flipBoardBuffer.SetData(Board.GetCells());
 
-        debugBuffer = new ComputeBuffer(Board.BufferSize, sizeof(int));
+        debugBuffer = new ComputeBuffer(Board.BufferSize, sizeof(uint));
 
         //Link Buffers to Shaders
         foreach (Kernel kernel in AllKernels)
@@ -266,38 +323,36 @@ which gives us {groupSizeX * SizeLevel}x{groupSizeY * SizeLevel * 2} threads or
     {
         FlipBuffer();
         Shader.Dispatch((int)Kernel.Update, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
-
-        /*DebugMessage[] messages = new DebugMessage[ThreadGroups.x * ThreadGroups.y];
-        debugBuffer.GetData(messages);
-        for (int x = 0; x < ThreadGroups.x; x++)
-        {
-            for (int y = 0; y < ThreadGroups.y; y++)
-            {
-                DebugMessage message = messages[x * ThreadGroups.y + y];
-                Debug.Log($"Thread {x}, {y}: " +
-                    $"cells from {message.startX}, {message.startY} to {message.endX}, {message.endY}");
-            }
-        }*/
-        /*int[] result = new int[Board.BufferSize];
-        debugBuffer.GetData(result);
+#if false
+        uint[] debug = new uint[Board.BufferSize];
+        debugBuffer.GetData(debug);
         Vector2Int size = BoardChunks;
-        int i = 0;
-        for (int x = 0; x < size.x + 2; x++)
+        //int i = 0;
+        for (int x = 0; x < size.x; x++)
         {
-            for (int y = 0; y < size.y + 2; y++)
+            for (int y = 0; y < size.y; y++) //, i++)
             {
-                bool simulated = result[i] != 0;
-                if (!simulated)
-                {
-                    if (x == 0 || y == 0 || x == size.x + 1 || y == size.y + 1)
-                        Debug.Log($"Cell correctly not simulated at ({x}, {y}), i = {i}");
-                    else
-                        Debug.LogError($"Cell uncorrectly not simulated at ({x}, {y}), i = {i}");
-                }
-                i++;
+                //Ported from GameOfLifeGeneration.compute
+                int i = (x + 1) * (BoardChunks.y + 2) + y + 1;
+
+                //Index: Correct
+                //Debug.Log(i);
+
+                //Neighbours: Correct
+                //Debug.Log($"Input in chunk {x}, {y}: {LUTBuilder.LogConfiguration(LUTBuilder.ToCells(debug[i], 4, 6))}");
+
+                //Result: Correct? (untested)
+                /*int index = (int)debug[i];
+                int result = (lookupTable.Packed[index / 4] >> ((index % 4) * 8)) & 255;
+                Debug.Log($"Result in {x}, {y} from the Lookup Table: " +
+                    $"{LUTBuilder.LogConfiguration(LUTBuilder.ToCells(result, 2, 4))}\n" +
+@$"{index}th element in Lookup Table = {lookupTable.Bytes[index]}, or
+{index % 4}th part of the {index / 4}th packed element = {result})
+
+");*/
             }
-        }*/
-        //Debug.Log($"i: {i}, BufferSize: {Board.BufferSize}");
+        }
+#endif
     }
 
     public void Randomise()
