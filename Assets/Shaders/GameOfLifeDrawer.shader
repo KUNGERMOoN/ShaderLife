@@ -9,6 +9,7 @@ Shader "Unlit/GameOfLifeDrawer"
 		_DeadCol ("Dead Color", COLOR) = (0, 0, 0, 1)
 		_GridCol ("Grid Color", COLOR) = (.5, .5, .5, 1)
 		_GridWidth ("Grid Width", Range(0, 1)) = 0.1
+		_Pow ("Grid Pow", Range(1, 10)) = 0.1
 	}
 	SubShader
 	{
@@ -45,6 +46,7 @@ Shader "Unlit/GameOfLifeDrawer"
 			float4 _DeadCol;
 			float4 _GridCol;
 			float _GridWidth;
+			float _Pow;
 
 			v2f vert (appdata v)
 			{
@@ -81,10 +83,10 @@ Shader "Unlit/GameOfLifeDrawer"
 
 				bool alive = (chunkData >> (7 - localPos.x - 4 * localPos.y)) & 1;
 
-				return lerp(0, 1, min(
-						distanceFromGrid.x,
-						distanceFromGrid.y
-						));
+				return min(
+						abs(distanceFromGrid.x * 2 - 1),
+						abs(distanceFromGrid.y * 2 - 1)
+						);
 
 				/*return grid ? _GridCol :
 					(alive ? _AliveCol : _DeadCol);*/
