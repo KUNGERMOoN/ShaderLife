@@ -2,9 +2,13 @@ Shader "Unlit/GameOfLifeDrawer"
 {
 	Properties
 	{
-		_Interp ("Interpolation", Range(0, 1)) = 0
+		_Interp ("Interpolation", Range(0, 1)) = 0 //TODO: Figure out what to do with this
 		_sizeX ("Board Size X", Integer) = 1024
 		_sizeY ("Board Size Y", Integer) = 2048
+		_AliveCol ("Alive Color", COLOR) = (1, 1, 1, 1)
+		_DeadCol ("Dead Color", COLOR) = (0, 0, 0, 1)
+		_GridCol ("Grid Color", COLOR) = (.5, .5, .5, 1)
+		_GridWidth ("Grid Width", Range(0, 1)) = 0.1
 	}
 	SubShader
 	{
@@ -34,10 +38,13 @@ Shader "Unlit/GameOfLifeDrawer"
 
 			StructuredBuffer<int> cells;
 			StructuredBuffer<int> flipCells;
-			StructuredBuffer<int> debugBuffer;
 			float _Interp;
 			int _sizeX;
 			int _sizeY;
+			float4 _AliveCol;
+			float4 _DeadCol;
+			float4 _GridCol;
+			float _GridWidth;
 
 			v2f vert (appdata v)
 			{
@@ -50,11 +57,11 @@ Shader "Unlit/GameOfLifeDrawer"
 			fixed4 frag (v2f i) : SV_Target
 			{
 				//calculate the position
-				uint2 global = floor(int2(i.uv.x * _sizeX * 4, i.uv.y * _sizeY * 2));
-				uint2 chunk = floor(int2(global.x / 4, global.y / 2));
-				uint2 local = int2(global.x % 4, global.y % 2);
+				uint2 globalPos = floor(float2(i.uv.x * _sizeX * 4, i.uv.y * _sizeY * 2));
+				uint2 chunkPos = floor(float2(globalPos.x / 4, globalPos.y / 2));
+				uint2 localPos = int2(globalPos.x % 4, globalPos.y % 2);
 
-				int chunkIndex = (chunk.x + 1) * (_sizeY + 2) + chunk.y + 1;
+				int chunkIndex = (chunkPos.x + 1) * (_sizeY + 2) + chunkPos.y + 1;
 
 				int chunkData;
 				if(FLIP_BUFFER)
@@ -66,7 +73,17 @@ Shader "Unlit/GameOfLifeDrawer"
 					chunkData = cells[chunkIndex];
 				}
 
-				return (chunkData >> (7 - local.x - 4 * local.y)) & 1;
+				float2 distanceFromGrid = float2(
+						i.uv.x * _sizeX * 4 - globalPos.x,
+						i.uv.y * _sizeY * 2 - globalPos.y);
+
+				bool grid = (distanceFromGrid.x <= _GridWidth / 2) ||
+							(distanceFromGrid.y <= _GridWidth / 2);
+
+				bool alive = (chunkData >> (7 - localPos.x - 4 * localPos.y)) & 1;
+
+				return grid ? _GridCol :
+					(alive ? _AliveCol : _DeadCol);
 
 				//TODO: Make the board more pretty (gray lines between cells etc.)
 				//TODO: Make a heatmap shader
