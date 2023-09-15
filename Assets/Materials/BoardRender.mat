@@ -37,9 +37,10 @@ Material:
     - _sizeX: 8
     - _sizeY: 16
     m_Floats:
-    - _GridWidth: 0.007
+    - _GridWidth: 0.1
     - _Interp: 1
-    - _Offset: 0.365
+    - _Offset: 0.816
+    - _Scale: 1
     m_Colors:
     - _AliveCol: {r: 0.23981225, g: 0.9245283, b: 0.039248828, a: 1}
     - _DeadCol: {r: 0, g: 0, b: 0, a: 1}
