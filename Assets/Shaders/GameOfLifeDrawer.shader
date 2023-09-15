@@ -83,7 +83,10 @@ Shader "Unlit/GameOfLifeDrawer"
 
 				bool alive = (chunkData >> (7 - localPos.x - 4 * localPos.y)) & 1;
 
-				return lerp(0, 1, max(distanceFromGrid.x - _Offset, distanceFromGrid.y - _Offset));
+				return lerp(0, 1, max(
+						abs(distanceFromGrid.x - _Offset),
+						abs(distanceFromGrid.y - _Offset)
+						));
 
 				/*return grid ? _GridCol :
 					(alive ? _AliveCol : _DeadCol);*/
