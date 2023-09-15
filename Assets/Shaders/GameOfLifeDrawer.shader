@@ -9,6 +9,7 @@ Shader "Unlit/GameOfLifeDrawer"
 		_DeadCol ("Dead Color", COLOR) = (0, 0, 0, 1)
 		_GridCol ("Grid Color", COLOR) = (.5, .5, .5, 1)
 		_GridWidth ("Grid Width", Range(0, 1)) = 0.1
+		_Offset ("Offset", Range(0, 1)) = 0.1
 	}
 	SubShader
 	{
@@ -45,6 +46,7 @@ Shader "Unlit/GameOfLifeDrawer"
 			float4 _DeadCol;
 			float4 _GridCol;
 			float _GridWidth;
+			float _Offset;
 
 			v2f vert (appdata v)
 			{
@@ -77,13 +79,14 @@ Shader "Unlit/GameOfLifeDrawer"
 						i.uv.x * _sizeX * 4 - globalPos.x,
 						i.uv.y * _sizeY * 2 - globalPos.y);
 
-				bool grid = (distanceFromGrid.x <= _GridWidth / 2) ||
-							(distanceFromGrid.y <= _GridWidth / 2);
+				//float grid = pow(max(distanceFromGrid.x, distanceFromGrid.y) / (_GridWidth / 2), 0.2);
 
 				bool alive = (chunkData >> (7 - localPos.x - 4 * localPos.y)) & 1;
 
-				return grid ? _GridCol :
-					(alive ? _AliveCol : _DeadCol);
+				return lerp(0, 1, max(distanceFromGrid.x - _Offset, distanceFromGrid.y - _Offset));
+
+				/*return grid ? _GridCol :
+					(alive ? _AliveCol : _DeadCol);*/
 
 				//TODO: Make the board more pretty (gray lines between cells etc.)
 				//TODO: Make a heatmap shader
