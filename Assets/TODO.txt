@@ -3,5 +3,9 @@ Documentation
 Stuff in other TODOS
 Make a video about it
 Learn how to import excel files in unity correctly
+Report a bug where unity (uncorrectly) imports files with ~ prefix (see: https://docs.unity3d.com/Manual/SpecialFolders.html)
 Clean up the Excel sheet
 Get rid of Odin and make custom editors
+Create Board material at runtime (elsewise it causes the enabled shader keywords to be saved between the sessions, which is bad)
+UI
+fps counter

@@ -9,8 +9,6 @@
 RWStructuredBuffer<int> cells;
 RWStructuredBuffer<int> flipCells;
 
-RWStructuredBuffer<uint> debugBuffer;
-
 //Size of the board, in chunks
 int2 Size;
 int Seed;
@@ -72,7 +70,7 @@ int Lookup(uint index)
             & 255;
 }
 
-[numthreads(8, 8, 1)] //TODO: Replace with 8, 8, 1 when we finish testing
+[numthreads(8, 8, 1)]
 void Update(uint3 id : SV_DispatchThreadID)
 {
     uint i = index(id.x, id.y);
@@ -102,13 +100,10 @@ void Update(uint3 id : SV_DispatchThreadID)
 		((x << 9) & 122880) +
 		((x << 7) & 1920);
     
-    debugBuffer[i] = input;
-    
     SetNext(i, Lookup(input));
-    //SetNext(i, GetPrevious(i)); //TODO: Use the one above when we finish testing
 }
 
-[numthreads(8, 8, 1)] //TODO: Replace with 8, 8, 1 when we finish testing
+[numthreads(8, 8, 1)]
 void Randomise(uint3 id : SV_DispatchThreadID)
 {
     int i = index(id.x, id.y);

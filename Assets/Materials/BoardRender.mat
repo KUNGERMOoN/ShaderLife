@@ -11,7 +11,8 @@ Material:
   m_Shader: {fileID: 4800000, guid: 742917778917f5943b18b29bf62781c3, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
+  m_ValidKeywords:
+  - FLIP_BUFFER
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -33,9 +34,13 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints:
     - _size: 256
-    - _sizeX: 2048
-    - _sizeY: 4096
+    - _sizeX: 1600
+    - _sizeY: 3200
     m_Floats:
+    - _GridWidth: 0.1
     - _Interp: 1
-    m_Colors: []
+    m_Colors:
+    - _AliveCol: {r: 0.23981225, g: 0.9245283, b: 0.039248828, a: 1}
+    - _DeadCol: {r: 0, g: 0, b: 0, a: 1}
+    - _GridCol: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_BuildTextureStacks: []

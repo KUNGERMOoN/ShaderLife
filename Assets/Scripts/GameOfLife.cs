@@ -1,6 +1,5 @@
 using Sirenix.OdinInspector;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -111,9 +110,6 @@ which gives us {((int)groupSizeX * SizeLevel).ThousandSpacing()}x{((int)groupSiz
         }
     }
 
-    [FoldoutGroup("Board"), Space]
-    public List<Vector2Int> AliveOnStartup;
-
 
     [FoldoutGroup("Simulation")]
     public bool UpdateInRealtime;
@@ -170,8 +166,6 @@ which gives us {((int)groupSizeX * SizeLevel).ThousandSpacing()}x{((int)groupSiz
     LUTBuilder lookupTable;
     ComputeBuffer lookupBuffer;
 
-    ComputeBuffer debugBuffer; //TODO: Remove this when we finish
-
     //AsyncGPUReadbackRequest BufferRequest; //TODO: Read data back from buffer asynchronically
 
     public enum Kernel
@@ -183,6 +177,7 @@ which gives us {((int)groupSizeX * SizeLevel).ThousandSpacing()}x{((int)groupSiz
     public Kernel[] AllKernels { get; private set; } = (Kernel[])Enum.GetValues(typeof(Kernel));
 
 
+    float timeSinceUpdate;
     float timeSinceCounterRefresh;
     int framesSinceCounterRefresh;
     private void Update()
@@ -195,72 +190,21 @@ which gives us {((int)groupSizeX * SizeLevel).ThousandSpacing()}x{((int)groupSiz
             FPS = framesSinceCounterRefresh / timeSinceCounterRefresh;
         }
 
-        if (UpdateInRealtime) //TODO: use update rate
+        if (UpdateInRealtime)
         {
-            UpdateBoard();
+            if (timeSinceUpdate >= (float)1 / BoardUpdateRate)
+            {
+                UpdateBoard();
+                timeSinceUpdate = 0;
+            }
+            timeSinceUpdate += Time.deltaTime;
         }
     }
-
-    //TODO: Get rid of this when we finish testing
-    /*[TableMatrix]
-    public int[,] chunks = new int[,]
-    {
-        {108, 178, 128},
-        {017, 137, 009},
-        {226, 019, 178}
-    };
-
-    [FoldoutGroup("Test"), Button, DisableInEditorMode]
-    public void Test(int[,] chunks)
-    {
-        int x = chunks[1, 1];
-        int a = chunks[0, 0];
-        int b = chunks[1, 0];
-        int c = chunks[2, 0];
-        int d = chunks[0, 1];
-        int e = chunks[2, 1];
-        int f = chunks[0, 2];
-        int g = chunks[1, 2];
-        int h = chunks[2, 2];
-
-        int input =
-            ((a << 23) & 8388608) +
-            ((b << 19) & 7864320) +
-            ((c << 15) & 262144) +
-            ((d << 13) & 131072) +
-            ((d << 11) & 2048) +
-            ((e << 5) & 4096) +
-            ((e << 3) & 64) +
-            ((f << 1) & 32) +
-            ((g >> 3) & 30) +
-            ((h >> 7) & 1) +
-            ((x << 9) & 122880) +
-            ((x << 7) & 1920);
-
-        for (int x_ = 0; x_ < 3; x_++)
-        {
-            for (int y_ = 0; y_ < 3; y_++)
-            {
-                Debug.Log($"Chunk {x_}, {y_}:\n{LUTBuilder.LogConfiguration(LUTBuilder.ToCells(chunks[x_, y_], 2, 4))}");
-            }
-        }
-
-        byte result = lookupTable.Simulate(input);
-        Debug.Log(
-$@"The result of simulating pattern
-{LUTBuilder.LogConfiguration(LUTBuilder.ToCells(input, 4, 6))}(number {input})
-is a pattern:
-
-{LUTBuilder.LogConfiguration(LUTBuilder.ToCells(result, 2, 4))}(number {result})
-
-");
-    }*/
 
     private void Awake()
     {
         //Set up the CPU-side board
         Board = new(BoardChunks, true);
-        Debug.Log($"Board size: {BoardChunks}");
 
         //Set up the Compute Shader and Material
         Shader.SetFloat("Chance", Chance);
@@ -278,21 +222,17 @@ is a pattern:
         flipBoardBuffer = new ComputeBuffer(Board.BufferSize, sizeof(int) * 2);
         flipBoardBuffer.SetData(Board.GetCells());
 
-        debugBuffer = new ComputeBuffer(Board.BufferSize, sizeof(uint));
-
         //Link Buffers to Shaders
         foreach (Kernel kernel in AllKernels)
         {
             Shader.SetBuffer((int)kernel, "cells", boardBuffer);
             Shader.SetBuffer((int)kernel, "flipCells", flipBoardBuffer);
             Shader.SetBuffer((int)kernel, "LookupTable", lookupBuffer);
-            Shader.SetBuffer((int)kernel, "debugBuffer", debugBuffer);
         }
         if (Material != null)
         {
             Material.SetBuffer("cells", boardBuffer);
             Material.SetBuffer("flipCells", flipBoardBuffer);
-            Material.SetBuffer("debugBuffer", debugBuffer);
         }
 
         //Randomise the seed
@@ -301,13 +241,6 @@ is a pattern:
         //Optionally randomise
         if (RandomiseOnAwake)
             Randomise();
-
-        //TODO: get rid of this
-        foreach (Vector2Int pos in AliveOnStartup)
-        {
-            Shader.SetInts("TargetPixel", pos.x, pos.y);
-            Shader.Dispatch((int)Kernel.SetPixels, 1, 1, 1);
-        }
     }
 
     private void OnDestroy()
@@ -315,7 +248,6 @@ is a pattern:
         boardBuffer?.Release();
         flipBoardBuffer?.Release();
         lookupBuffer?.Release();
-        debugBuffer?.Release();
         Board.Dispose();
     }
 
@@ -323,36 +255,6 @@ is a pattern:
     {
         FlipBuffer();
         Shader.Dispatch((int)Kernel.Update, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
-#if false
-        uint[] debug = new uint[Board.BufferSize];
-        debugBuffer.GetData(debug);
-        Vector2Int size = BoardChunks;
-        //int i = 0;
-        for (int x = 0; x < size.x; x++)
-        {
-            for (int y = 0; y < size.y; y++) //, i++)
-            {
-                //Ported from GameOfLifeGeneration.compute
-                int i = (x + 1) * (BoardChunks.y + 2) + y + 1;
-
-                //Index: Correct
-                //Debug.Log(i);
-
-                //Neighbours: Correct
-                //Debug.Log($"Input in chunk {x}, {y}: {LUTBuilder.LogConfiguration(LUTBuilder.ToCells(debug[i], 4, 6))}");
-
-                //Result: Correct? (untested)
-                /*int index = (int)debug[i];
-                int result = (lookupTable.Packed[index / 4] >> ((index % 4) * 8)) & 255;
-                Debug.Log($"Result in {x}, {y} from the Lookup Table: " +
-                    $"{LUTBuilder.LogConfiguration(LUTBuilder.ToCells(result, 2, 4))}\n" +
-@$"{index}th element in Lookup Table = {lookupTable.Bytes[index]}, or
-{index % 4}th part of the {index / 4}th packed element = {result})
-
-");*/
-            }
-        }
-#endif
     }
 
     public void Randomise()
@@ -379,20 +281,4 @@ is a pattern:
     }
 
     public void RandomiseSeed() => Seed = Random.Range(int.MinValue / 2, int.MaxValue / 2);
-
-    /*RenderTexture CreateComputeTexture(int size, string ComputeShaderPropertyName, Kernel[] kernels)
-    {
-        RenderTexture texture = new(size, size, 24)
-        {
-            enableRandomWrite = true,
-            filterMode = FilterMode.Point,
-            wrapMode = TextureWrapMode.Clamp,
-            name = ComputeShaderPropertyName
-        };
-        texture.Create();
-        foreach (Kernel kernel in kernels)
-            Shader.SetTexture((int)kernel, ComputeShaderPropertyName, texture);
-
-        return texture;
-    }*/
 }
