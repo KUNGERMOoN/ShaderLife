@@ -99,7 +99,7 @@ Shader "Unlit/GameOfLifeDrawer"
 
 				bool alive = (chunkData >> (7 - localPos.x - 4 * localPos.y)) & 1;
 
-				return valleyCenter(i.uv.x, i.uv.y, _GridWidth);
+				return pow(valleyCenter(distanceFromGrid.x, distanceFromGrid.y, _GridWidth), _Pow);
 
 				//return max(abs(i.uv.x * 2 - 1), abs(i.uv.y * 2 - 1));
 				//return abs(min(i.uv.x, i.uv.y) * 2 - 1);
