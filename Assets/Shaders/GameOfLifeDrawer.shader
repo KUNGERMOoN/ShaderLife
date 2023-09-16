@@ -48,6 +48,22 @@ Shader "Unlit/GameOfLifeDrawer"
 			float _GridWidth;
 			float _Pow;
 
+
+			float valley(float x, float n)
+			{
+				return n != 0 ? clamp((x - 1) / n + 1, 0, 1) : 0;
+			}
+
+			float valleyCenter(float x, float n)
+			{
+				return valley(abs(x * 2 - 1), n);
+			}
+
+			float valleyCenter(float x, float y, float n)
+			{
+				return valley(min(abs(x * 2 - 1), abs(y * 2 - 1)), n);
+			}
+
 			v2f vert (appdata v)
 			{
 				v2f o;
@@ -83,10 +99,8 @@ Shader "Unlit/GameOfLifeDrawer"
 
 				bool alive = (chunkData >> (7 - localPos.x - 4 * localPos.y)) & 1;
 
-				return min(
-						abs(distanceFromGrid.x * 2 - 1),
-						abs(distanceFromGrid.y * 2 - 1)
-						);
+				return lerp(fixed4(1, 0, 0, 0), fixed4(0, 0, 1, 0), valleyCenter(i.uv.x, i.uv.y, _GridWidth));
+				//return valley(i.uv.x, _GridWidth / 2);
 
 				/*return grid ? _GridCol :
 					(alive ? _AliveCol : _DeadCol);*/
