@@ -33,15 +33,19 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints:
+    - _GridPower: 4
+    - _Zoom: 1
     - _size: 256
-    - _sizeX: 8
-    - _sizeY: 16
+    - _sizeX: 24
+    - _sizeY: 48
     m_Floats:
-    - _GridWidth: 0.093
-    - _Interp: 0.031
+    - _GridSize: 0.37
+    - _GridWidth: 0.027
+    - _Interp: 0
     - _Offset: 0.816
     - _Pow: 2.41
     - _Scale: 1
+    - _Zoom: 2.15
     m_Colors:
     - _AliveCol: {r: 0.27314657, g: 1, b: 0.06132078, a: 1}
     - _DeadCol: {r: 0, g: 0, b: 0, a: 1}

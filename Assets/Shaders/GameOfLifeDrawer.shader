@@ -48,7 +48,17 @@ Shader "Unlit/GameOfLifeDrawer"
 			float4 _GridCol;
 			float _GridWidth;
 			int _GridPower;
-			int _Zoom;
+			float _Zoom;
+
+			float grid(int gridScale, float2 uv)
+			{
+				float2 distance = float2(
+						(uv.x * _sizeX * 4) % gridScale,
+						(uv.y * _sizeY * 2) % gridScale);
+
+				return (distance.x < _GridWidth || distance.y < _GridWidth) ? 1 : 0;
+			}
+
 
 			v2f vert (appdata v)
 			{
@@ -60,8 +70,13 @@ Shader "Unlit/GameOfLifeDrawer"
 
 			fixed4 frag (v2f i) : SV_Target
 			{
+				int2 boardSize = int2(_sizeX * 4, _sizeY * 2);
+
+				i.uv *= (float)(boardSize + _GridWidth) / boardSize;
+
+
 				//calculate the position
-				uint2 globalPos = floor(float2(i.uv.x * _sizeX * 4, i.uv.y * _sizeY * 2));
+				uint2 globalPos = floor(float2(i.uv.x * boardSize.x, i.uv.y * boardSize.y));
 				uint2 chunkPos = floor(float2(globalPos.x / 4, globalPos.y / 2));
 				uint2 localPos = int2(globalPos.x % 4, globalPos.y % 2);
 
@@ -80,17 +95,15 @@ Shader "Unlit/GameOfLifeDrawer"
 				bool alive = (chunkData >> (7 - localPos.x - 4 * localPos.y)) & 1;
 
 				float zoom = max(_Zoom, 1);
-				int gridScale = pow(_GridPower, zoom - 1);
-				float2 distanceFromGrid = float2(
-						(i.uv.x * _sizeX * 4) % gridScale,
-						(i.uv.y * _sizeY * 2) % gridScale);
+				int smallGridScale = pow(_GridPower, max(floor(_Zoom - 2), 0));
+				int bigGridScale = pow(_GridPower, max(floor(_Zoom - 1), 0));
 
 				//bool grid = pow(max(distanceFromGrid.x, distanceFromGrid.y) / (_GridWidth / 2), 0.2);
 
 				/*return //grid ? _GridCol :
 					(alive ? _AliveCol : _DeadCol);*/
 				
-				return (distanceFromGrid.x < _GridWidth) || (distanceFromGrid.y < _GridWidth); 
+				return max(grid(bigGridScale, i.uv), grid(smallGridScale, i.uv) * 0.2); 
 
 				//TODO: Make the board more pretty (gray lines between cells etc.)
 				//TODO: Make a heatmap shader
