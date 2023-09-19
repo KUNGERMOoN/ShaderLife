@@ -3,13 +3,14 @@ Shader "Unlit/GameOfLifeDrawer"
 	Properties
 	{
 		_Interp ("Interpolation", Range(0, 1)) = 0 //TODO: Figure out what to do with this
-		_sizeX ("Board Size X", Integer) = 1024
-		_sizeY ("Board Size Y", Integer) = 2048
+		_sizeX ("Board Size X", Integer) = 1024 //I guess we will hide these as they're supposed
+		_sizeY ("Board Size Y", Integer) = 2048 //to be modified only by code
 		_AliveCol ("Alive Color", COLOR) = (1, 1, 1, 1)
 		_DeadCol ("Dead Color", COLOR) = (0, 0, 0, 1)
 		_GridCol ("Grid Color", COLOR) = (.5, .5, .5, 1)
 		_GridWidth ("Grid Width", Range(0, 1)) = 0.1
-		_Pow ("Grid Pow", Range(1, 10)) = 0.1
+		_GridPower ("Grid Power", Integer) = 4
+		_Zoom ("Zoom", FLOAT) = 1
 	}
 	SubShader
 	{
@@ -46,23 +47,8 @@ Shader "Unlit/GameOfLifeDrawer"
 			float4 _DeadCol;
 			float4 _GridCol;
 			float _GridWidth;
-			float _Pow;
-
-
-			float valley(float x, float n)
-			{
-				return n != 0 ? clamp((x - 1) / n + 1, 0, 1) : 0;
-			}
-
-			float valleyCenter(float x, float n)
-			{
-				return valley(abs(x * 2 - 1), n);
-			}
-
-			float valleyCenter(float x, float y, float n)
-			{
-				return valley(max(abs(x * 2 - 1), abs(y * 2 - 1)), n);
-			}
+			int _GridPower;
+			int _Zoom;
 
 			v2f vert (appdata v)
 			{
@@ -91,23 +77,20 @@ Shader "Unlit/GameOfLifeDrawer"
 					chunkData = cells[chunkIndex];
 				}
 
-				float2 distanceFromGrid = float2(
-						i.uv.x * _sizeX * 4 - globalPos.x,
-						i.uv.y * _sizeY * 2 - globalPos.y);
-
-				//float grid = pow(max(distanceFromGrid.x, distanceFromGrid.y) / (_GridWidth / 2), 0.2);
-
 				bool alive = (chunkData >> (7 - localPos.x - 4 * localPos.y)) & 1;
 
-				return pow(valleyCenter(distanceFromGrid.x, distanceFromGrid.y, _GridWidth), _Pow);
+				float zoom = max(_Zoom, 1);
+				int gridScale = pow(_GridPower, zoom - 1);
+				float2 distanceFromGrid = float2(
+						(i.uv.x * _sizeX * 4) % gridScale,
+						(i.uv.y * _sizeY * 2) % gridScale);
 
-				//return max(abs(i.uv.x * 2 - 1), abs(i.uv.y * 2 - 1));
-				//return abs(min(i.uv.x, i.uv.y) * 2 - 1);
-				//return valleyCenter(i.uv.x, _GridWidth);
-				//return valley(i.uv.x, _GridWidth / 2);
+				//bool grid = pow(max(distanceFromGrid.x, distanceFromGrid.y) / (_GridWidth / 2), 0.2);
 
-				/*return grid ? _GridCol :
+				/*return //grid ? _GridCol :
 					(alive ? _AliveCol : _DeadCol);*/
+				
+				return (distanceFromGrid.x < _GridWidth) || (distanceFromGrid.y < _GridWidth); 
 
 				//TODO: Make the board more pretty (gray lines between cells etc.)
 				//TODO: Make a heatmap shader

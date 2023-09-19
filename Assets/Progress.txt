@@ -1,0 +1,2 @@
+Looking to solution for Moire pattern problem:
+https://www.reddit.com/r/AskProgramming/comments/xn6pgi/unintentional_moire_pattern_when_trying_to_render/

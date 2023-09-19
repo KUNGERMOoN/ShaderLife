@@ -37,13 +37,13 @@ Material:
     - _sizeX: 8
     - _sizeY: 16
     m_Floats:
-    - _GridWidth: 0.066
+    - _GridWidth: 0.093
     - _Interp: 0.031
     - _Offset: 0.816
-    - _Pow: 3.25
+    - _Pow: 2.41
     - _Scale: 1
     m_Colors:
-    - _AliveCol: {r: 0.23981225, g: 0.9245283, b: 0.039248828, a: 1}
+    - _AliveCol: {r: 0.27314657, g: 1, b: 0.06132078, a: 1}
     - _DeadCol: {r: 0, g: 0, b: 0, a: 1}
     - _GridCol: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_BuildTextureStacks: []
