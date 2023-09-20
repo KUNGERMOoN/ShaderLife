@@ -56,6 +56,8 @@ Shader "Unlit/GameOfLifeDrawer"
 						(uv.x * _sizeX * 4) % gridScale,
 						(uv.y * _sizeY * 2) % gridScale);
 
+				//float width = _GridWidth * mul(float2(1, 1), UNITY_MATRIX_P).y * 10;
+
 				return (distance.x < _GridWidth || distance.y < _GridWidth) ? 1 : 0;
 			}
 
@@ -94,9 +96,9 @@ Shader "Unlit/GameOfLifeDrawer"
 
 				bool alive = (chunkData >> (7 - localPos.x - 4 * localPos.y)) & 1;
 
-				float zoom = max(_Zoom, 1);
-				int smallGridScale = pow(_GridPower, max(floor(_Zoom - 2), 0));
-				int bigGridScale = pow(_GridPower, max(floor(_Zoom - 1), 0));
+				float zoom = max(mul(float2(1, 1), UNITY_MATRIX_P).y * 10, 1);
+				int smallGridScale = pow(_GridPower, max(floor(mul(float2(1, 1), UNITY_MATRIX_P).y * 10 - 2), 0));
+				int bigGridScale = pow(_GridPower, max(floor(mul(float2(1, 1), UNITY_MATRIX_P).y * 10 - 1), 0));
 
 				//bool grid = pow(max(distanceFromGrid.x, distanceFromGrid.y) / (_GridWidth / 2), 0.2);
 

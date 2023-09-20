@@ -36,8 +36,8 @@ Material:
     - _GridPower: 4
     - _Zoom: 1
     - _size: 256
-    - _sizeX: 24
-    - _sizeY: 48
+    - _sizeX: 8
+    - _sizeY: 16
     m_Floats:
     - _GridSize: 0.37
     - _GridWidth: 0.027
@@ -45,7 +45,7 @@ Material:
     - _Offset: 0.816
     - _Pow: 2.41
     - _Scale: 1
-    - _Zoom: 2.15
+    - _Zoom: 1
     m_Colors:
     - _AliveCol: {r: 0.27314657, g: 1, b: 0.06132078, a: 1}
     - _DeadCol: {r: 0, g: 0, b: 0, a: 1}
