@@ -10,7 +10,7 @@ Shader "Unlit/GameOfLifeDrawer"
 		_GridCol ("Grid Color", COLOR) = (.5, .5, .5, 1)
 		_GridWidth ("Grid Width", Range(0, 1)) = 0.1
 		_GridPower ("Grid Power", Integer) = 4
-		_Zoom ("Zoom", FLOAT) = 1
+		_GridScale ("Grid Scale", Integer) = 1
 	}
 	SubShader
 	{
@@ -48,7 +48,12 @@ Shader "Unlit/GameOfLifeDrawer"
 			float4 _GridCol;
 			float _GridWidth;
 			int _GridPower;
-			float _Zoom;
+			int _GridScale;
+
+			float logb(float base, float a)
+			{
+				return log2(a) / log2(base);
+			}
 
 			float grid(int gridScale, float2 uv)
 			{
@@ -96,9 +101,10 @@ Shader "Unlit/GameOfLifeDrawer"
 
 				bool alive = (chunkData >> (7 - localPos.x - 4 * localPos.y)) & 1;
 
-				float zoom = max(mul(float2(1, 1), UNITY_MATRIX_P).y * 10, 1);
-				int smallGridScale = pow(_GridPower, max(floor(mul(float2(1, 1), UNITY_MATRIX_P).y * 10 - 2), 0));
-				int bigGridScale = pow(_GridPower, max(floor(mul(float2(1, 1), UNITY_MATRIX_P).y * 10 - 1), 0));
+				float zoom = (1 / length(UNITY_MATRIX_P._m01_m11_m21)) * 2;
+				float scale = logb(_GridPower clamp(zoom, 0, 1) * boardSize.y) - 1;
+				int smallGridScale = pow(_GridPower, max(scale - 1, 0));
+				int bigGridScale = pow(_GridPower, max(scale, 0));
 
 				//bool grid = pow(max(distanceFromGrid.x, distanceFromGrid.y) / (_GridWidth / 2), 0.2);
 

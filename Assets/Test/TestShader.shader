@@ -53,11 +53,12 @@ Shader "Unlit/TestShader"
 
                 //fixed4 col = tex2D(_MainTex, i.uv * mul(unity_CameraProjection, float2(1, 1)).y);
                 //float zoomScale = 1 / length(UNITY_MATRIX_P._m01_m11_m21);
-                float zoomScale = 1 / length(UNITY_MATRIX_P._m01_m11_m21);
+                float zoomScale = (1 / length(UNITY_MATRIX_P._m01_m11_m21)) * 2;
                 //Thanks https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati
                 //fixed4 col = tex2D(_MainTex, i.uv * zoomScale);
                 float2 coord = i.uv * 2 - float2(1, 1);
-                return sqrt(coord.x * coord.x + coord.y * coord.y) < 0.5 * zoomScale;
+                return zoomScale;
+                //return i.uv.x + zoomScale > 1;
             }
             ENDCG
         }
