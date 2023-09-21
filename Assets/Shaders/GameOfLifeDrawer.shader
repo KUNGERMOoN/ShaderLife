@@ -3,14 +3,14 @@ Shader "Unlit/GameOfLifeDrawer"
 	Properties
 	{
 		_Interp ("Interpolation", Range(0, 1)) = 0 //TODO: Figure out what to do with this
-		_sizeX ("Board Size X", Integer) = 1024 //I guess we will hide these as they're supposed
-		_sizeY ("Board Size Y", Integer) = 2048 //to be modified only by code
+		_sizeX ("Board Size X", Integer) = 1024
+		_sizeY ("Board Size Y", Integer) = 2048
 		_AliveCol ("Alive Color", COLOR) = (1, 1, 1, 1)
 		_DeadCol ("Dead Color", COLOR) = (0, 0, 0, 1)
 		_GridCol ("Grid Color", COLOR) = (.5, .5, .5, 1)
-		_GridWidth ("Grid Width", Range(0, 1)) = 0.1
+		_GridWidth ("Grid Width", Float) = 0.1
 		_GridPower ("Grid Power", Integer) = 4
-		_GridScale ("Grid Scale", Integer) = 1
+		_ZoomTreshold ("Zoom Treshold", Float) = 1.3
 	}
 	SubShader
 	{
@@ -48,22 +48,20 @@ Shader "Unlit/GameOfLifeDrawer"
 			float4 _GridCol;
 			float _GridWidth;
 			int _GridPower;
-			int _GridScale;
+			float _ZoomTreshold;
 
 			float logb(float base, float a)
 			{
 				return log2(a) / log2(base);
 			}
 
-			float grid(int gridScale, float2 uv)
+			bool grid(int gridScale, float2 uv, float zoom)
 			{
 				float2 distance = float2(
 						(uv.x * _sizeX * 4) % gridScale,
 						(uv.y * _sizeY * 2) % gridScale);
 
-				//float width = _GridWidth * mul(float2(1, 1), UNITY_MATRIX_P).y * 10;
-
-				return (distance.x < _GridWidth || distance.y < _GridWidth) ? 1 : 0;
+				return distance.x < _GridWidth * zoom || distance.y < _GridWidth * zoom;
 			}
 
 
@@ -79,9 +77,11 @@ Shader "Unlit/GameOfLifeDrawer"
 			{
 				int2 boardSize = int2(_sizeX * 4, _sizeY * 2);
 
-				i.uv *= (float)(boardSize + _GridWidth) / boardSize;
+				float zoom = (1 / length(UNITY_MATRIX_P._m01_m11_m21)) * 2;
 
+				i.uv *= (float)(boardSize + _GridWidth * zoom) / boardSize;
 
+				//CELLS:
 				//calculate the position
 				uint2 globalPos = floor(float2(i.uv.x * boardSize.x, i.uv.y * boardSize.y));
 				uint2 chunkPos = floor(float2(globalPos.x / 4, globalPos.y / 2));
@@ -101,17 +101,22 @@ Shader "Unlit/GameOfLifeDrawer"
 
 				bool alive = (chunkData >> (7 - localPos.x - 4 * localPos.y)) & 1;
 
-				float zoom = (1 / length(UNITY_MATRIX_P._m01_m11_m21)) * 2;
-				float scale = logb(_GridPower clamp(zoom, 0, 1) * boardSize.y) - 1;
-				int smallGridScale = pow(_GridPower, max(scale - 1, 0));
-				int bigGridScale = pow(_GridPower, max(scale, 0));
+				//GRID:
+				float scale = logb(_GridPower, floor(clamp(zoom - _ZoomTreshold, 0, 1) * boardSize.y));
+				//Calculate every how many cells grid occurs
+				int nextGridScale = pow(_GridPower, max(floor(scale) - 1, 0));
+				int previousGridScale = pow(_GridPower, max(floor(scale), 0));
 
-				//bool grid = pow(max(distanceFromGrid.x, distanceFromGrid.y) / (_GridWidth / 2), 0.2);
+				fixed4 debugCol = lerp(fixed4(1, 0, 0, 0), fixed4(0, 0, 1, 0), floor(scale) / 5);
 
 				/*return //grid ? _GridCol :
 					(alive ? _AliveCol : _DeadCol);*/
 				
-				return max(grid(bigGridScale, i.uv), grid(smallGridScale, i.uv) * 0.2); 
+				float gridVal = max(
+					grid(nextGridScale, i.uv, zoom), 
+					grid(previousGridScale, i.uv, zoom) * 0.2/*(scale - floor(scale))*/);
+
+					return gridVal > 0 ? gridVal : debugCol;
 
 				//TODO: Make the board more pretty (gray lines between cells etc.)
 				//TODO: Make a heatmap shader
