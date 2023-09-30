@@ -7,13 +7,13 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: BoardRender
+  m_Name: BoardRender Previous
   m_Shader: {fileID: 4800000, guid: 742917778917f5943b18b29bf62781c3, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - FLIP_BUFFER
-  - TEST_NEXT
+  - TEST_PREVIOUS
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -41,7 +41,7 @@ Material:
     - _sizeX: 8
     - _sizeY: 16
     m_Floats:
-    - Test: 0
+    - Test: 1
     - _GridScale: 2
     - _GridSize: 0.37
     - _GridWidth: 0.22
