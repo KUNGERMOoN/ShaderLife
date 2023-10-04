@@ -11,8 +11,6 @@ Shader "Unlit/GameOfLifeDrawer"
 		_GridWidth ("Grid Width", Float) = 0.1
 		_GridPower ("Grid Power", Integer) = 4
 		_ZoomLevelTreshold ("Zoom Level Treshold", Float) = 1
-
-		[KeywordEnum(Next, Previous)] Test ("Test", Float) = 0
 	}
 	SubShader
 	{
@@ -25,7 +23,6 @@ Shader "Unlit/GameOfLifeDrawer"
 			#pragma fragment frag
 			
 			#pragma multi_compile __ FLIP_BUFFER
-			#pragma multi_compile TEST_NEXT TEST_PREVIOUS
 
 			#include "UnityCG.cginc"
 
@@ -58,13 +55,18 @@ Shader "Unlit/GameOfLifeDrawer"
 				return log2(a) / log2(base);
 			}
 
-			bool grid(int gridScale, float2 uv, float zoom)
+			bool grid(int gridScale, float2 uv, int2 boardSize, float zoom)
 			{
 				float2 distance = float2(
 						(uv.x * _sizeX * 4) % gridScale,
 						(uv.y * _sizeY * 2) % gridScale);
 
-				return distance.x < _GridWidth * zoom || distance.y < _GridWidth * zoom;
+				//TODO: Grid width depends on zoom
+				//TODO: Grid width depends on size
+									//TODO: make a variable so we don't recalculate 
+									//_GridWidth * zoom so many times
+				return distance.x < _GridWidth * zoom 
+					|| distance.y < _GridWidth * zoom;
 			}
 
 
@@ -76,7 +78,7 @@ Shader "Unlit/GameOfLifeDrawer"
 				return o;
 			}
 
-			fixed4 frag (v2f i) : SV_Target
+			float4 frag (v2f i) : SV_Target
 			{
 				int2 boardSize = int2(_sizeX * 4, _sizeY * 2);
 
@@ -85,7 +87,6 @@ Shader "Unlit/GameOfLifeDrawer"
 				i.uv *= (float)(boardSize + _GridWidth * zoom) / boardSize;
 
 				//CELLS:
-				//calculate the position
 				uint2 globalPos = floor(float2(i.uv.x * boardSize.x, i.uv.y * boardSize.y));
 				uint2 chunkPos = floor(float2(globalPos.x / 4, globalPos.y / 2));
 				uint2 localPos = int2(globalPos.x % 4, globalPos.y % 2);
@@ -103,30 +104,52 @@ Shader "Unlit/GameOfLifeDrawer"
 				}
 
 				bool alive = (chunkData >> (7 - localPos.x - 4 * localPos.y)) & 1;
+				float4 cellCol = alive ? _AliveCol : _DeadCol;
 
 				//GRID:
-				float visibleCells = (clamp(zoom, 0, 1) * boardSize.y - _GridWidth * zoom) / _ZoomLevelTreshold;
-				float scale = logb(_GridPower, /*floor(*/visibleCells/*)*/);
-				//Calculate every how many cells grid occurs
-				int nextGridScale = pow(_GridPower, floor(max(scale, 0)));
-				int previousGridScale = pow(_GridPower, floor(max(scale - 1, 0)));
+				float visibleArea = zoom * (float)(boardSize.y + _GridWidth * zoom);
+				float visibleCells = clamp(visibleArea - zoom * _GridWidth, 0, boardSize.y);
+				float scaleLevel = logb(_GridPower, visibleCells / (_ZoomLevelTreshold / _GridPower));
 
-				fixed4 debugCol = lerp(fixed4(1, 0, 0, 0), fixed4(0, 0, 1, 0), floor(scale) / 5);
+				int nextGridScale = pow(_GridPower, floor(max(scaleLevel, 0)));
+				int currentGridScale = pow(_GridPower, floor(max(scaleLevel - 1, 0)));
 
-				float nextGrid = grid(nextGridScale, i.uv, zoom);
-				float previousGrid = grid(previousGridScale, i.uv, zoom);
+				bool nextGrid = grid(nextGridScale, i.uv, boardSize, zoom);
+				bool currentGrid = grid(currentGridScale, i.uv, boardSize, zoom);
 
-				fixed4 green = fixed4(0, 1, 0, 0);
+				float currentGridTransparency = (scaleLevel - floor(scaleLevel)) * currentGrid;
 
-				float grid;
-				if(TEST_PREVIOUS) grid = previousGrid;
-				else grid = nextGrid;
+				return 
+					nextGrid == true ? _GridCol : 
+					lerp(_GridCol, cellCol, currentGridTransparency);
 
-				return grid > 0 ? grid : debugCol;
-						//(previousGrid > 0 ? previousGrid * green : debugCol);
 
 				//TODO: Make the board look better (grid etc.)
 				//TODO: Make a heatmap shader
+				//TODO: Add customizable colors to heatmap shader
+				//	+ ability to round them to highest/lowest color (maybe for things like OTCA metapixel)
+
+
+
+				
+
+				//bool grid;
+				//if(TEST_CURRENT) grid = currentGrid;
+				//else grid = nextGrid;
+				
+				//fixed4 debugCol;
+				//if(TEST_CURRENT)
+					//debugCol = lerp(fixed4(1, 0, 0, 0), fixed4(0, 0, 1, 0), 1 - (scaleLevel - floor(scaleLevel)));
+				//else
+					//debugCol = lerp(fixed4(1, 0, 0, 0), fixed4(0, 0, 1, 0), floor(scaleLevel) / 5);
+
+				//return grid > 0 ? grid : debugCol;
+						//(previousGrid > 0 ? previousGrid * green : debugCol);
+
+
+
+
+				
 
 				//return fixed4(chunk.x % 7 == 0, ((chunk.x % 2 == 0) || (chunk.y % 2 == 0)) * 0.2, chunk.y % 7 == 0, 0);
 

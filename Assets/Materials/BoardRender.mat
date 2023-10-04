@@ -44,18 +44,18 @@ Material:
     - Test: 0
     - _GridScale: 2
     - _GridSize: 0.37
-    - _GridWidth: 0.22
+    - _GridWidth: 0.36
     - _Interp: 0
     - _Offset: 0.816
     - _Pow: 2.41
     - _Scale: 1
     - _Zoom: 1
-    - _ZoomLevelTreshold: 1
+    - _ZoomLevelTreshold: 4
     - _ZoomMultiplier: 1.7
     - _ZoomOut: 0.5
     - _ZoomTreshold: 0
     m_Colors:
     - _AliveCol: {r: 0.27314657, g: 1, b: 0.06132078, a: 1}
     - _DeadCol: {r: 0, g: 0, b: 0, a: 1}
-    - _GridCol: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    - _GridCol: {r: 0.3490566, g: 0.3490566, b: 0.3490566, a: 1}
   m_BuildTextureStacks: []
