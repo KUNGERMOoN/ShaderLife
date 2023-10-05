@@ -49,8 +49,7 @@ public class GameOfLife : MonoBehaviour
         if (material != null)
         {
             Vector2Int size = BoardChunks;
-            material.SetInteger("_sizeX", size.x);
-            material.SetInteger("_sizeY", size.y);
+            material.SetInteger("_BoardSize", size.x * 4);
             Shader.SetInts("Size", size.x, size.y);
         }
     }

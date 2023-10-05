@@ -3,7 +3,7 @@ Shader "Unlit/GameOfLifeDrawer"
 	Properties
 	{
 		_Interp ("Interpolation", Range(0, 1)) = 0 //TODO: Figure out what to do with this
-		_sizeX ("Board Size X", Integer) = 1024
+		_BoardSize ("Board Size", Integer) = 1024
 		_sizeY ("Board Size Y", Integer) = 2048
 		_AliveCol ("Alive Color", COLOR) = (1, 1, 1, 1)
 		_DeadCol ("Dead Color", COLOR) = (0, 0, 0, 1)
@@ -11,6 +11,8 @@ Shader "Unlit/GameOfLifeDrawer"
 		_GridWidth ("Grid Width", Float) = 0.1
 		_GridPower ("Grid Power", Integer) = 4
 		_ZoomLevelTreshold ("Zoom Level Treshold", Float) = 1
+
+		[IntRange] _Test ("Test", Range (0, 180)) = 20
 	}
 	SubShader
 	{
@@ -41,14 +43,15 @@ Shader "Unlit/GameOfLifeDrawer"
 			StructuredBuffer<int> cells;
 			StructuredBuffer<int> flipCells;
 			float _Interp;
-			int _sizeX;
-			int _sizeY;
+			//TODO: Use only one variable
+			int _BoardSize;
 			float4 _AliveCol;
 			float4 _DeadCol;
 			float4 _GridCol;
 			float _GridWidth;
 			int _GridPower;
 			float _ZoomLevelTreshold;
+			int _Test;
 
 			float logb(float base, float a)
 			{
@@ -58,11 +61,10 @@ Shader "Unlit/GameOfLifeDrawer"
 			bool grid(int gridScale, float2 uv, int2 boardSize, float zoom)
 			{
 				float2 distance = float2(
-						(uv.x * _sizeX * 4) % gridScale,
-						(uv.y * _sizeY * 2) % gridScale);
+						(uv.x * _BoardSize) % gridScale,
+						(uv.y * _BoardSize) % gridScale);
 
-				//TODO: Grid width depends on zoom
-				//TODO: Grid width depends on size
+				//TODO: Grid width depends on board size
 									//TODO: make a variable so we don't recalculate 
 									//_GridWidth * zoom so many times
 				return distance.x < _GridWidth * zoom 
@@ -80,18 +82,20 @@ Shader "Unlit/GameOfLifeDrawer"
 
 			float4 frag (v2f i) : SV_Target
 			{
-				int2 boardSize = int2(_sizeX * 4, _sizeY * 2);
+				int boardSize = int(_BoardSize);
 
 				float zoom = (1 / length(UNITY_MATRIX_P._m01_m11_m21)) * 2;
 
 				i.uv *= (float)(boardSize + _GridWidth * zoom) / boardSize;
 
 				//CELLS:
-				uint2 globalPos = floor(float2(i.uv.x * boardSize.x, i.uv.y * boardSize.y));
+				uint2 globalPos = floor(float2(i.uv.x * boardSize, i.uv.y * boardSize));
 				uint2 chunkPos = floor(float2(globalPos.x / 4, globalPos.y / 2));
 				uint2 localPos = int2(globalPos.x % 4, globalPos.y % 2);
 
-				int chunkIndex = (chunkPos.x + 1) * (_sizeY + 2) + chunkPos.y + 1;
+				int chunkIndex = (chunkPos.x + 1) * (_BoardSize / 2 + 2) + chunkPos.y + 1;
+
+				return chunkIndex < _Test; //(chunkIndex % 2 == 0) & (chunkIndex % 5 == 0);
 
 				int chunkData;
 				if (FLIP_BUFFER)
@@ -107,8 +111,8 @@ Shader "Unlit/GameOfLifeDrawer"
 				float4 cellCol = alive ? _AliveCol : _DeadCol;
 
 				//GRID:
-				float visibleArea = zoom * (float)(boardSize.y + _GridWidth * zoom);
-				float visibleCells = clamp(visibleArea - zoom * _GridWidth, 0, boardSize.y);
+				float visibleArea = zoom * (float)(boardSize + _GridWidth * zoom);
+				float visibleCells = clamp(visibleArea - zoom * _GridWidth, 0, boardSize);
 				float scaleLevel = logb(_GridPower, visibleCells / (_ZoomLevelTreshold / _GridPower));
 
 				int nextGridScale = pow(_GridPower, floor(max(scaleLevel, 0)));
@@ -117,11 +121,11 @@ Shader "Unlit/GameOfLifeDrawer"
 				bool nextGrid = grid(nextGridScale, i.uv, boardSize, zoom);
 				bool currentGrid = grid(currentGridScale, i.uv, boardSize, zoom);
 
-				float currentGridTransparency = (scaleLevel - floor(scaleLevel)) * currentGrid;
+				float currentGridTransparency = 1 - (scaleLevel - floor(scaleLevel));
 
 				return 
 					nextGrid == true ? _GridCol : 
-					lerp(_GridCol, cellCol, currentGridTransparency);
+					lerp(cellCol, _GridCol, currentGrid * currentGridTransparency);
 
 
 				//TODO: Make the board look better (grid etc.)
@@ -157,11 +161,11 @@ Shader "Unlit/GameOfLifeDrawer"
 				fixed4 col2 = debugBuffer[chunkIndex] == 100;
 				return lerp(col1, col2, _Interp);*/
 
-				/*fixed x = (fixed)chunk.x * 4 / _sizeX;
+				/*fixed x = (fixed)chunk.x * 4 / _BoardSize;
 				fixed y = (fixed)chunk.y * 2 / _sizeY;
 
 				fixed4 col1 = fixed4(x, 0, y, 0);
-				//fixed index = (fixed)chunkIndex / ((_sizeX / 4) * (_sizeY / 2));
+				//fixed index = (fixed)chunkIndex / ((_BoardSize / 4) * (_sizeY / 2));
 				fixed4 col2 = fixed4(chunkIndex % 10 == 0, 0, 0, 0);
 				return lerp(col1, col2, _Interp);*/
 				//return lerp(1, 0, (fixed)chunkIndex / 8192);
