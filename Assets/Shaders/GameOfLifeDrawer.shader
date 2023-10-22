@@ -91,7 +91,8 @@ Shader "Unlit/GameOfLifeDrawer"
 			{
 				float zoom = (1 / length(UNITY_MATRIX_MVP._m01_m11_m21)) * 2;
 
-				//TODO: instead of keeping the grid the same size, scale it with the scale level
+				//TODO: instead of keeping the grid the same size,
+				//scale it according to grid's scale level
 				float gridWidth = zoom * _GridWidth * _BoardSize / 32;
 
 				float boardSizeExtraGridEdge = _BoardSize + gridWidth;
