@@ -10,4 +10,5 @@ Create Board material at runtime (elsewise it causes the enabled shader keywords
 UI
 fps counter
 make a benchmark vs old simulation
-make the grid zoom calculation work in 3d
+make the grid zoom calculation work in 3d (maybe, if yes use the code by bgolus)
+anti-aliasing in the drawing shader code
