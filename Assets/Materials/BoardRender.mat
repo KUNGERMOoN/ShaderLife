@@ -11,8 +11,7 @@ Material:
   m_Shader: {fileID: 4800000, guid: 742917778917f5943b18b29bf62781c3, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
-  - FLIP_BUFFER
+  m_ValidKeywords: []
   m_InvalidKeywords:
   - TEST_NEXT
   m_LightmapFlags: 4
@@ -34,8 +33,9 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints:
-    - _BoardSize: 32
-    - _GridPower: 2
+    - _BoardSize: 8192
+    - _GridDetail: 2
+    - _GridPower: 4
     - _GridScale: 1
     - _Zoom: 1
     - _size: 256
@@ -43,21 +43,23 @@ Material:
     - _sizeY: 32
     m_Floats:
     - Test: 0
+    - _GridDetail: 0.5
+    - _GridFadePow: 1
     - _GridScale: 2
     - _GridSize: 0.37
-    - _GridWidth: 0.36
+    - _GridWidth: 0.17
     - _Interp: 0
     - _Offset: 0.816
     - _Pow: 2.41
     - _Scale: 1
-    - _Test: 20
+    - _Test: 14
     - _Zoom: 1
-    - _ZoomLevelTreshold: 4
+    - _ZoomLevelTreshold: 16
     - _ZoomMultiplier: 1.7
     - _ZoomOut: 0.5
     - _ZoomTreshold: 0
     m_Colors:
-    - _AliveCol: {r: 0.27314657, g: 1, b: 0.06132078, a: 1}
-    - _DeadCol: {r: 0, g: 0, b: 0, a: 1}
-    - _GridCol: {r: 0.3490566, g: 0.3490566, b: 0.3490566, a: 1}
+    - _AliveCol: {r: 0.2790196, g: 0.9716981, b: 0.0779192, a: 1}
+    - _DeadCol: {r: 0.028301895, g: 0.028301895, b: 0.028301895, a: 1}
+    - _GridCol: {r: 0.16981131, g: 0.16981131, b: 0.16981131, a: 1}
   m_BuildTextureStacks: []

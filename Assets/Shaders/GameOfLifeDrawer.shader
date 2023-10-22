@@ -3,16 +3,20 @@ Shader "Unlit/GameOfLifeDrawer"
 	Properties
 	{
 		_Interp ("Interpolation", Range(0, 1)) = 0 //TODO: Figure out what to do with this
-		_BoardSize ("Board Size", Integer) = 1024
-		_sizeY ("Board Size Y", Integer) = 2048
+
+		[Header(Simulation)]
+		[Space]
+		_BoardSize ("Board Size", Integer) = 32
 		_AliveCol ("Alive Color", COLOR) = (1, 1, 1, 1)
 		_DeadCol ("Dead Color", COLOR) = (0, 0, 0, 1)
-		_GridCol ("Grid Color", COLOR) = (.5, .5, .5, 1)
-		_GridWidth ("Grid Width", Float) = 0.1
-		_GridPower ("Grid Power", Integer) = 4
-		_ZoomLevelTreshold ("Zoom Level Treshold", Float) = 1
 
-		[IntRange] _Test ("Test", Range (0, 180)) = 20
+		[Header(Grid)]
+		[Space]
+		_GridCol ("Grid Color", COLOR) = (.36, .36, .36, 1)
+		_GridWidth ("Grid Width", Float) = 0.15 //0.06 for Unity-like
+		_GridPower ("Grid Power", Integer) = 2
+		_GridDetail ("Grid Detail Level", Integer) = 4
+		_GridFadePow ("Grid Fading Power", Float) = 0.333
 	}
 	SubShader
 	{
@@ -50,25 +54,23 @@ Shader "Unlit/GameOfLifeDrawer"
 			float4 _GridCol;
 			float _GridWidth;
 			int _GridPower;
-			float _ZoomLevelTreshold;
-			int _Test;
+			int _GridDetail;
+			float _GridFadePow;
 
 			float logb(float base, float a)
 			{
 				return log2(a) / log2(base);
 			}
 
-			bool grid(int gridScale, float2 uv, int2 boardSize, float zoom)
+			bool grid(int gridScale, float2 uv, float zoom, float gridWidth)
 			{
 				float2 distance = float2(
 						(uv.x * _BoardSize) % gridScale,
 						(uv.y * _BoardSize) % gridScale);
 
 				//TODO: Grid width depends on board size
-									//TODO: make a variable so we don't recalculate 
-									//_GridWidth * zoom so many times
-				return distance.x < _GridWidth * zoom 
-					|| distance.y < _GridWidth * zoom;
+				return distance.x < gridWidth 
+					|| distance.y < gridWidth;
 			}
 
 
@@ -80,22 +82,27 @@ Shader "Unlit/GameOfLifeDrawer"
 				return o;
 			}
 
+			float4 blend(float4 colorA, float4 colorB)
+			{
+				return float4((colorA.rgb * colorA.a + colorB.rgb * colorB.a), colorA.a + colorB.a);
+			}
+
 			float4 frag (v2f i) : SV_Target
 			{
-				int boardSize = int(_BoardSize);
+				float zoom = (1 / length(UNITY_MATRIX_MVP._m01_m11_m21)) * 2;
 
-				float zoom = (1 / length(UNITY_MATRIX_P._m01_m11_m21)) * 2;
+				//TODO: instead of keeping the grid the same size, scale it with the scale level
+				float gridWidth = zoom * _GridWidth * _BoardSize / 32;
 
-				i.uv *= (float)(boardSize + _GridWidth * zoom) / boardSize;
+				float boardSizeExtraGridEdge = _BoardSize + gridWidth;
+				i.uv *= boardSizeExtraGridEdge / _BoardSize;
 
 				//CELLS:
-				uint2 globalPos = floor(float2(i.uv.x * boardSize, i.uv.y * boardSize));
+				uint2 globalPos = floor(float2(i.uv.x * _BoardSize, i.uv.y * _BoardSize));
 				uint2 chunkPos = floor(float2(globalPos.x / 4, globalPos.y / 2));
 				uint2 localPos = int2(globalPos.x % 4, globalPos.y % 2);
 
-				int chunkIndex = (chunkPos.x + 1) * (_BoardSize / 2 + 2) + chunkPos.y + 1;
-
-				return chunkIndex < _Test; //(chunkIndex % 2 == 0) & (chunkIndex % 5 == 0);
+				int chunkIndex = (chunkPos.x + 1) * ((uint)_BoardSize / 2 + 2) + chunkPos.y + 1;
 
 				int chunkData;
 				if (FLIP_BUFFER)
@@ -111,27 +118,29 @@ Shader "Unlit/GameOfLifeDrawer"
 				float4 cellCol = alive ? _AliveCol : _DeadCol;
 
 				//GRID:
-				float visibleArea = zoom * (float)(boardSize + _GridWidth * zoom);
-				float visibleCells = clamp(visibleArea - zoom * _GridWidth, 0, boardSize);
-				float scaleLevel = logb(_GridPower, visibleCells / (_ZoomLevelTreshold / _GridPower));
+				float visibleArea = zoom * boardSizeExtraGridEdge;
+				float visibleCells = clamp(visibleArea - gridWidth, 0, _BoardSize);
+
+				float scaleLevel = logb(_GridPower, visibleCells / _GridDetail);
 
 				int nextGridScale = pow(_GridPower, floor(max(scaleLevel, 0)));
 				int currentGridScale = pow(_GridPower, floor(max(scaleLevel - 1, 0)));
 
-				bool nextGrid = grid(nextGridScale, i.uv, boardSize, zoom);
-				bool currentGrid = grid(currentGridScale, i.uv, boardSize, zoom);
+				bool nextGrid = grid(nextGridScale, i.uv, zoom, gridWidth);
+				bool currentGrid = grid(currentGridScale, i.uv, zoom, gridWidth);
 
 				float currentGridTransparency = 1 - (scaleLevel - floor(scaleLevel));
 
-				return 
-					nextGrid == true ? _GridCol : 
-					lerp(cellCol, _GridCol, currentGrid * currentGridTransparency);
+				return
+					nextGrid == true ? _GridCol :
+					//currentGrid ? _GridCol : lerp(fixed4(1, 0, 0, 0), fixed4(0, 0, 1, 0), currentGridTransparency);
+					lerp(cellCol, _GridCol, pow(currentGrid * currentGridTransparency, _GridFadePow));
 
 
 				//TODO: Make the board look better (grid etc.)
 				//TODO: Make a heatmap shader
 				//TODO: Add customizable colors to heatmap shader
-				//	+ ability to round them to highest/lowest color (maybe for things like OTCA metapixel)
+				//	+ ability to round the current heatmap color to highest/lowest color (maybe for things like OTCA metapixel)
 
 
 

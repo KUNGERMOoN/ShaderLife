@@ -1,7 +1,5 @@
 // Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
 
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
 Shader "Unlit/TestShader"
 {
     Properties
@@ -19,7 +17,6 @@ Shader "Unlit/TestShader"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma enable_d3d11_debug_symbols
             #pragma target 5.0
 
             #include "UnityCG.cginc"
@@ -49,16 +46,8 @@ Shader "Unlit/TestShader"
 
             fixed4 frag (v2f i) : SV_Target
             {
-                //IMPORTANT: This works: UNITY_MATRIX_P._m01_m11_m21
+                return (1 / length(UNITY_MATRIX_MVP._m01_m11_m21)) * 2 > 5;
 
-                //fixed4 col = tex2D(_MainTex, i.uv * mul(unity_CameraProjection, float2(1, 1)).y);
-                //float zoomScale = 1 / length(UNITY_MATRIX_P._m01_m11_m21);
-                float zoomScale = (1 / length(UNITY_MATRIX_P._m01_m11_m21)) * 2;
-                //Thanks https://math.stackexchange.com/questions/237369/given-this-transformation-matrix-how-do-i-decompose-it-into-translation-rotati
-                //fixed4 col = tex2D(_MainTex, i.uv * zoomScale);
-                float2 coord = i.uv * 2 - float2(1, 1);
-                return zoomScale;
-                //return i.uv.x + zoomScale > 1;
             }
             ENDCG
         }
