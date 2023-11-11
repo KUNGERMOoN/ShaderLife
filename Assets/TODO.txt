@@ -1,5 +1,4 @@
 TODO (the real one):
-Create Board material at runtime (elsewise it causes the enabled shader keywords to be saved between the sessions, which is bad)
 UI
 fps counter
 

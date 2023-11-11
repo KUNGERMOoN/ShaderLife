@@ -130,7 +130,6 @@ Shader "Unlit/GameOfLifeDrawer"
 
 				return
 					nextGrid == true ? _GridCol :
-					//currentGrid ? _GridCol : lerp(fixed4(1, 0, 0, 0), fixed4(0, 0, 1, 0), currentGridTransparency);
 					lerp(cellCol, _GridCol, pow(currentGrid * currentGridTransparency, _GridFadePow));
 			}
 			ENDCG

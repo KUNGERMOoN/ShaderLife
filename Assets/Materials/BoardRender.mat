@@ -34,8 +34,8 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints:
-    - _BoardSize: 4992
-    - _GridDetail: 5
+    - _BoardSize: 8192
+    - _GridDetail: 7
     - _GridPower: 4
     - _GridScale: 1
     - _Zoom: 1
