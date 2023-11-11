@@ -1,5 +1,4 @@
 TODO (the real one):
-Stuff in other TODOS
 Create Board material at runtime (elsewise it causes the enabled shader keywords to be saved between the sessions, which is bad)
 UI
 fps counter
@@ -10,7 +9,15 @@ Make the actual video about it
 Clean up the Excel sheet
 Get rid of Odin and make custom editors
 make a benchmark vs old simulation
+allow to swap the old and new simulation compute shader
 
 TODO sometime maybe:
 make the grid zoom calculation work in 3d (maybe, if yes use the code by bgolus)
 anti-aliasing in the drawing shader code
+make a heatmap shader
+async data redback to CPU
+use hex literals in shaders and excel sheets for readability
+kernel for editing multiple (at least 8x8) cells (basically SetPixel but with [numthreads(8, 8, 1)])
+	+ use it when needed for better performance
+add customizable colors to heatmap shader
+	+ ability to round the current heatmap color to highest/lowest color (maybe for things like OTCA metapixel)

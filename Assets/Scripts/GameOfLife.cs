@@ -17,22 +17,24 @@ public class GameOfLife : MonoBehaviour
 
     [SerializeField, PropertySpace(SpaceBefore = 0, SpaceAfter = 8f)]
     Material material;
-    Material lastMaterial; //TODO: we shouldn't need this
+    Material lastMaterial;
     public Material Material
     {
         get => material;
         set
         {
             material = value;
-            if (Application.isPlaying && boardBuffer != null && flipBoardBuffer != null)
+            if (Application.isPlaying && boardBufferA != null && boardBufferB != null)
             {
                 if (lastMaterial != null)
                 {
-                    lastMaterial.SetBuffer("cells", (ComputeBuffer)null);
+                    lastMaterial.SetBuffer("chunksA", (ComputeBuffer)null);
+                    lastMaterial.SetBuffer("chunksB", (ComputeBuffer)null);
                 }
                 if (material != null)
                 {
-                    material.SetBuffer("cells", Board.Flipped ? flipBoardBuffer : boardBuffer);
+                    material.SetBuffer("chunksA", boardBufferA);
+                    material.SetBuffer("chunksB", boardBufferB);
                     UpdateBoardSize();
                 }
 
@@ -113,13 +115,23 @@ which gives us {((int)groupSizeX * SizeLevel).ThousandSpacing()}x{((int)groupSiz
     [FoldoutGroup("Simulation")]
     public bool UpdateInRealtime;
     [FoldoutGroup("Simulation"), EnableIf("UpdateInRealtime")]
-    public int BoardUpdateRate = 10;
-    [FoldoutGroup("Simulation"), Button("UpdateBoard"), DisableInEditorMode]
+    public int BoardUpdateRate = 10; //Add controls for frame-based optimising and add "overcharge" mode for more than 1 update every frame
+    [FoldoutGroup("Simulation"), Button("Update Board"), DisableInEditorMode]
     void InspectorUpdateBoard()
     {
         if (Application.isPlaying) UpdateBoard();
     }
 
+
+    [FoldoutGroup("Edit"), DisableInEditorMode, LabelText("Position"), ShowInInspector]
+    Vector2Int SetPixels_position = Vector2Int.zero;
+    [FoldoutGroup("Edit"), DisableInEditorMode, LabelText("Value"), ShowInInspector]
+    bool SetPixels_value = true;
+    [FoldoutGroup("Edit"), DisableInEditorMode, Button("Set Pixel")]
+    void InspectorSetPixel()
+    {
+        if (Application.isPlaying) SetPixel(SetPixels_position, SetPixels_value);
+    }
 
     [FoldoutGroup("FPS Counter")]
     public float RefreshRate = 2;
@@ -156,22 +168,25 @@ which gives us {((int)groupSizeX * SizeLevel).ThousandSpacing()}x{((int)groupSiz
     public Vector2Int BoardChunks
         => new(ThreadGroupSize.x * ThreadGroups.x, ThreadGroupSize.y * ThreadGroups.y);
 
+    public Vector2Int Cells
+        => new(BoardChunks.x * 4, BoardChunks.y * 2);
+
     //Variables
     DoubleBoard<int> Board;
 
-    ComputeBuffer boardBuffer;
-    ComputeBuffer flipBoardBuffer;
+    //Implementation of double-buffering the board
+    //For more info, see Shaders/GameOfLifeSimulation.compute
+    ComputeBuffer boardBufferA;
+    ComputeBuffer boardBufferB;
 
     LUTBuilder lookupTable;
     ComputeBuffer lookupBuffer;
-
-    //AsyncGPUReadbackRequest BufferRequest; //TODO: Read data back from buffer asynchronically
 
     public enum Kernel
     {
         Update = 0,
         Randomise = 1,
-        SetPixels = 2,
+        SetPixel = 2,
     }
     public Kernel[] AllKernels { get; private set; } = (Kernel[])Enum.GetValues(typeof(Kernel));
 
@@ -204,6 +219,7 @@ which gives us {((int)groupSizeX * SizeLevel).ThousandSpacing()}x{((int)groupSiz
     {
         //Set up the CPU-side board
         Board = new(BoardChunks, true);
+        FlipBuffer();
 
         //Set up the Compute Shader and Material
         Shader.SetFloat("Chance", Chance);
@@ -215,23 +231,23 @@ which gives us {((int)groupSizeX * SizeLevel).ThousandSpacing()}x{((int)groupSiz
         lookupBuffer.SetData(lookupTable.Packed);
 
         //Create buffers
-        boardBuffer = new ComputeBuffer(Board.BufferSize, sizeof(int) * 2);
-        boardBuffer.SetData(Board.GetCells());
+        boardBufferA = new ComputeBuffer(Board.BufferSize, sizeof(int) * 2);
+        boardBufferA.SetData(Board.GetCells());
 
-        flipBoardBuffer = new ComputeBuffer(Board.BufferSize, sizeof(int) * 2);
-        flipBoardBuffer.SetData(Board.GetCells());
+        boardBufferB = new ComputeBuffer(Board.BufferSize, sizeof(int) * 2);
+        boardBufferB.SetData(Board.GetCells());
 
         //Link Buffers to Shaders
         foreach (Kernel kernel in AllKernels)
         {
-            Shader.SetBuffer((int)kernel, "cells", boardBuffer);
-            Shader.SetBuffer((int)kernel, "flipCells", flipBoardBuffer);
+            Shader.SetBuffer((int)kernel, "chunksA", boardBufferA);
+            Shader.SetBuffer((int)kernel, "chunksB", boardBufferB);
             Shader.SetBuffer((int)kernel, "LookupTable", lookupBuffer);
         }
         if (Material != null)
         {
-            Material.SetBuffer("cells", boardBuffer);
-            Material.SetBuffer("flipCells", flipBoardBuffer);
+            Material.SetBuffer("chunksA", boardBufferA);
+            Material.SetBuffer("chunksB", boardBufferB);
         }
 
         //Randomise the seed
@@ -244,8 +260,8 @@ which gives us {((int)groupSizeX * SizeLevel).ThousandSpacing()}x{((int)groupSiz
 
     private void OnDestroy()
     {
-        boardBuffer?.Release();
-        flipBoardBuffer?.Release();
+        boardBufferA?.Release();
+        boardBufferB?.Release();
         lookupBuffer?.Release();
         Board.Dispose();
     }
@@ -262,6 +278,14 @@ which gives us {((int)groupSizeX * SizeLevel).ThousandSpacing()}x{((int)groupSiz
 
         FlipBuffer();
         Shader.Dispatch((int)Kernel.Randomise, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
+    }
+
+    public void SetPixel(Vector2Int position, bool value)
+    {
+        Shader.SetBool("TargetValue", value);
+        Shader.SetInts("TargetPixel", position.x, position.y);
+
+        Shader.Dispatch((int)Kernel.SetPixel, 1, 1, 1);
     }
 
     void FlipBuffer()

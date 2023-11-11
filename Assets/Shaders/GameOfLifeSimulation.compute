@@ -1,13 +1,12 @@
 #pragma kernel Update
 #pragma kernel Randomise
-#pragma kernel SetPixels
+#pragma kernel SetPixel
 
 #pragma multi_compile __ FLIP_BUFFER
 
-//TODO: We only need one byte for each chunk - maybe we could pack 4 of them into one int?
-//(see LUTBilder.cs)
-RWStructuredBuffer<int> cells;
-RWStructuredBuffer<int> flipCells;
+//Implementation of double buffering (read more here: https://gameprogrammingpatterns.com/double-buffer.html)
+RWStructuredBuffer<int> chunksA;
+RWStructuredBuffer<int> chunksB;
 
 //Size of the board, in chunks
 int2 Size;
@@ -28,10 +27,15 @@ uint hash(uint s)
     return s;
 }
 
-//TODO: Use actual chance
 int randomConfiguration(uint seed)
 {
-    return hash(seed) % 256;
+    int result = 0;
+    for(int i = 0; i < 8; i++){
+        float rnd = (hash(seed * i) / 4294967295.0);
+        bool alive = rnd <= Chance && rnd != 0;
+        result |= alive << i;
+    }
+    return result;
 }
 
 uint index(in uint x, in uint y)
@@ -43,11 +47,35 @@ int GetPrevious(int i)
 {
     if (FLIP_BUFFER)
     {
-        return cells[i];
+        return chunksA[i];
     }
     else
     {
-        return flipCells[i];
+        return chunksB[i];
+    }
+}
+
+void SetPrevious(int i, int value)
+{
+    if (FLIP_BUFFER)
+    {
+        chunksA[i] = value;
+    }
+    else
+    {
+        chunksB[i] = value;
+    }
+}
+
+int GetNext(int i)
+{
+    if (FLIP_BUFFER)
+    {
+        return chunksB[i];
+    }
+    else
+    {
+        return chunksA[i];
     }
 }
 
@@ -55,11 +83,11 @@ void SetNext(int i, int value)
 {
     if (FLIP_BUFFER)
     {
-        flipCells[i] = value;
+        chunksB[i] = value;
     }
     else
     {
-        cells[i] = value;
+        chunksA[i] = value;
     }
 }
 
@@ -75,7 +103,6 @@ void Update(uint3 id : SV_DispatchThreadID)
 {
     uint i = index(id.x, id.y);
     
-    //TODO: Use hex literals for readability (also change it in other places, including excel sheet)
     uint x = GetPrevious(i);
     uint a = GetPrevious(i - Size.y - 3);
     uint b = GetPrevious(i - 1);
@@ -112,8 +139,21 @@ void Randomise(uint3 id : SV_DispatchThreadID)
 }
 
 int2 TargetPixel = int2(0, 0);
+bool TargetValue = true;
 [numthreads(1, 1, 1)]
-void SetPixels(uint3 id : SV_DispatchThreadID)
+void SetPixel(uint3 id : SV_DispatchThreadID)
 {
-    //TODO
+    int i = index(TargetPixel.x / 4u, TargetPixel.y / 2u);
+    
+    int chunk = GetNext(i);
+
+    //Which bit in the chunk we want to update
+    int localIndex = 7 - ((TargetPixel.x % 4u) + 4 * (TargetPixel.y % 2u));
+
+    //Clear the bit we want to update...
+    chunk &= ~(1 << localIndex);
+    //... and set it to our desired value
+    chunk |= TargetValue << localIndex;
+
+    SetNext(i, chunk);
 }

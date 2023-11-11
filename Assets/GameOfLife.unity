@@ -314,12 +314,12 @@ MonoBehaviour:
   Shader: {fileID: 7200000, guid: b33be95b30b36914e87fa054dc3f2c83, type: 3}
   LookupTable: Lookup Tables/Life.lut
   material: {fileID: 2100000, guid: eae4068e4c3ce52428fa7d2f6af5a091, type: 2}
-  sizeLevel: 256
+  sizeLevel: 156
   RandomSeed: 0
   seed: 1337
-  RandomiseOnAwake: 1
+  RandomiseOnAwake: 0
   chance: 0.2
-  UpdateInRealtime: 1
+  UpdateInRealtime: 0
   BoardUpdateRate: 10
   RefreshRate: 2
 --- !u!1660057539 &9223372036854775807
