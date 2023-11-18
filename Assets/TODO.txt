@@ -1,4 +1,5 @@
 TODO (the real one):
+Generate the board material at runtime
 UI
 fps counter
 

@@ -2,7 +2,7 @@ using System;
 using Unity.Collections;
 using UnityEngine;
 
-public class DoubleBoard<T> : IDisposable where T : struct
+public class DoubleBoard<T> : IDisposable where T : struct //TODO: Write unit tests or just test
 {
     readonly Board<T> boardA;
     readonly Board<T> boardB;

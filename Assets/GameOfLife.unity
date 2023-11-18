@@ -226,7 +226,6 @@ GameObject:
   - component: {fileID: 1518814362}
   - component: {fileID: 1518814361}
   - component: {fileID: 1518814360}
-  - component: {fileID: 1518814363}
   m_Layer: 0
   m_Name: Board
   m_TagString: Untagged
@@ -299,29 +298,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1518814363
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1518814358}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 34f190be5ec14854ba751ce3effca24a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Shader: {fileID: 7200000, guid: b33be95b30b36914e87fa054dc3f2c83, type: 3}
-  LookupTable: Lookup Tables/Life.lut
-  material: {fileID: 2100000, guid: eae4068e4c3ce52428fa7d2f6af5a091, type: 2}
-  sizeLevel: 256
-  RandomSeed: 0
-  seed: 1337
-  RandomiseOnAwake: 0
-  chance: 0.2
-  UpdateInRealtime: 0
-  BoardUpdateRate: 10
-  RefreshRate: 2
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
