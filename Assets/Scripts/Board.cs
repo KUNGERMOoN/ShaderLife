@@ -22,7 +22,7 @@ public class Board<T> : IDisposable where T : struct
 
     public bool Disposed { get; private set; }
 
-    public T this[int x, int y]
+    public T this[int x, int y] //TODO: See if any of these actually work
     {
         get => Cells[Index(x, y)];
         set => Cells[Index(x, y)] = value;

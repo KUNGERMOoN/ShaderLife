@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.IO;
 
-public static class LifeUtils
+public static class Utils
 {
     public static bool IsValidFileName(string fileName, string absolutePath) =>
         !string.IsNullOrEmpty(fileName) &&

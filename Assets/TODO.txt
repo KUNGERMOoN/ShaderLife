@@ -1,6 +1,8 @@
 TODO (the real one):
 Generate the board material at runtime
+Store the LUT as a bitmask
 UI
+	+ Add controls for frame-based optimising and add "overcharge" mode for more than 1 update every frame
 fps counter
 
 TODO for video: 
@@ -10,6 +12,7 @@ Clean up the Excel sheet
 Get rid of Odin and make custom editors
 make a benchmark vs old simulation
 allow to swap the old and new simulation compute shader
+decide if we actually need the cpu-side board (and if yes, check if it works)
 
 TODO sometime maybe:
 make the grid zoom calculation work in 3d (maybe, if yes use the code by bgolus)

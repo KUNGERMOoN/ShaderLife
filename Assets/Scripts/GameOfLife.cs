@@ -1,173 +1,174 @@
-using System;
+using Sirenix.OdinInspector;
+using System.IO;
 using UnityEngine;
 
-public class GameOfLife : IDisposable
+public class GameOfLife : MonoBehaviour, System.IDisposable
 {
-    public readonly ComputeShader ComputeShader;
+#pragma warning disable IDE0051
+    #region Inspector
+    [BoxGroup("Base", showLabel: false)]
+    public ComputeShader ComputeShader;
+    [BoxGroup("Base"), FilePath(AbsolutePath = false, ParentFolder = "Assets", Extensions = ".lut")]
+    public string LookupTable;
+    [BoxGroup("Base"), DetailedInfoBox("Calculate Board Size", "$InspectorBoardSizeInfo")]
+    public int SizeLevel;
+    [BoxGroup("Base")]
+    public bool RandomiseOnStart = true;
+    [BoxGroup("Base"), Button]
+    void NewSimulation() => CreateSimulation();
 
-    public readonly LUTBuilder LookupTable;
-
+    [FoldoutGroup("Simulation"), SerializeField, LabelText("Material")]
     Material material;
-    public Material Material //TODO: Test
+    public Material Material
     {
         get => material;
         set
         {
-            Material newMaterial = value;
-            if (material != null)
-            {
-                material.SetBuffer("chunksA", (ComputeBuffer)null);
-                material.SetBuffer("chunksB", (ComputeBuffer)null);
-            }
-            if (newMaterial != null)
-            {
-                newMaterial.SetBuffer("chunksA", boardBufferA);
-                newMaterial.SetBuffer("chunksB", boardBufferB);
-                material.SetInteger("_BoardSize", Cells.x);
-            }
+            material = value;
+            MeshRenderer.sharedMaterial = material;
 
-            material = newMaterial;
+            if (simulation != null) simulation.Material = value;
         }
     }
+    [BoxGroup("Simulation/Randomise", ShowLabel = false)]
+    public bool RandomSeed;
+    [BoxGroup("Simulation/Randomise"), HideIf("$RandomSeed")]
+    public int Seed = 1337;
+    [BoxGroup("Simulation/Randomise"), Range(0, 1)]
+    public float Chance;
+    [BoxGroup("Simulation/Randomise"), Button("Randomise"), DisableInEditorMode]
+    void InspectorRandomise() => Randomise();
 
-    public readonly int SizeLevel;
-    public int Size => Cells.x;
+    [BoxGroup("Simulation/Update", ShowLabel = false)]
+    public bool UpdateInRealtime;
+    [BoxGroup("Simulation/Update"), EnableIf("UpdateInRealtime")]
+    public int BoardUpdateRate = 10;
+    [BoxGroup("Simulation/Update"), Button("Update Board"), DisableInEditorMode]
+    void InspectorUpdateBoard() => UpdateBoard();
 
-    int seed = 1337;
-    public int Seed //TODO: Test
+    [BoxGroup("Simulation/Edit", ShowLabel = false), DisableInEditorMode, LabelText("Position"), ShowInInspector]
+    Vector2Int SetPixel_position = Vector2Int.zero;
+    [BoxGroup("Simulation/Edit"), DisableInEditorMode, LabelText("Value"), ShowInInspector]
+    bool SetPixel_value = true;
+    [BoxGroup("Simulation/Edit"), DisableInEditorMode, Button("Set Pixel")]
+    void InspectorSetPixel() => SetPixel(SetPixel_position, SetPixel_value);
+
+    private void OnValidate()
     {
-        get => seed;
-        set => SetSeed(value);
-    }
-    void SetSeed(int seed)
-    {
-        this.seed = seed;
-        ComputeShader.SetInt("Seed", seed);
+        Material = material;
+
+        SizeLevel = Mathf.Max(SizeLevel, 1);
+        if (ComputeShader != null)
+        {
+            ComputeShader.GetKernelThreadGroupSizes(0, out uint groupSizeX, out _, out _);
+            if (simulation == null) Material.SetInteger("_BoardSize", (int)groupSizeX * SizeLevel * 4);
+        }
+
+        if (simulation != null)
+            SetPixel_position.Clamp(Vector2Int.zero, new Vector2Int(simulation.Size - 1, simulation.Size - 1));
     }
 
-    float chance = 0.2f;
-    public float Chance //TODO: Test
+    string InspectorBoardSizeInfo()
     {
-        get => chance;
-        set => SetChance(value);
-    }
-    void SetChance(float chance)
-    {
-        this.chance = Mathf.Clamp01(chance);
-        ComputeShader.SetFloat("Chance", chance);
-    }
+        if (ComputeShader == null)
+            return $"The {nameof(ComputeShader)} property has not been set, and so the board size can't be calculated";
 
-    public Vector3Int ThreadGroupSize
+        ComputeShader.GetKernelThreadGroupSizes(0, out uint groupSizeX, out uint groupSizeY, out _);
+
+        return $@"Each thread has 4x2 cells.
+Each thread group has {((int)groupSizeX).ThousandSpacing()}x{((int)groupSizeY).ThousandSpacing()} threads.
+So, in total we are simulating {(4 * (int)groupSizeX).ThousandSpacing()}x{(2 * (int)groupSizeY).ThousandSpacing()} in each thread group.
+SizeLevel = {SizeLevel.ThousandSpacing()}, so we create {(SizeLevel).ThousandSpacing()}x{(SizeLevel * 2).ThousandSpacing()} thread groups
+(to make sure the board is square),
+which gives us {((int)groupSizeX * SizeLevel).ThousandSpacing()}x{((int)groupSizeY * SizeLevel * 2).ThousandSpacing()} threads or
+{(4 * (int)groupSizeX * SizeLevel).ThousandSpacing()}x{(2 * (int)groupSizeY * SizeLevel * 2).ThousandSpacing()} cells.
+({(4 * (int)groupSizeX * SizeLevel * 2 * (int)groupSizeY * SizeLevel * 2).ThousandSpacing()} cells in total)";
+    }
+    #endregion Inspector
+#pragma warning restore IDE0051
+
+    Simulation simulation;
+    MeshRenderer meshRenderer;
+    MeshRenderer MeshRenderer
     {
         get
         {
-            ComputeShader.GetKernelThreadGroupSizes(0, out uint groupSizeX, out uint groupSizeY, out uint groupSizeZ);
-            return new Vector3Int((int)groupSizeX, (int)groupSizeY, (int)groupSizeZ);
+            if (meshRenderer == null)
+            {
+                meshRenderer = GetComponent<MeshRenderer>();
+            }
+            return meshRenderer;
         }
     }
 
-    readonly DoubleBoard<int> Board;
-
-    //Implementation of double-buffering the board
-    //For more info, see Shaders/GameOfLifeSimulation.compute
-    readonly ComputeBuffer boardBufferA;
-    readonly ComputeBuffer boardBufferB;
-
-    readonly ComputeBuffer lookupBuffer;
-
-    public enum ComputeKernel
+    private void Start()
     {
-        Update = 0,
-        Randomise = 1,
-        SetPixel = 2,
+        CreateSimulation();
     }
-    public static readonly ComputeKernel[] AllKernels
-        = (ComputeKernel[])Enum.GetValues(typeof(ComputeKernel));
 
-    public GameOfLife(ComputeShader simulation, int sizeLevel, LUTBuilder lut)
+    private void OnDestroy() => Dispose();
+
+    float timeSinceUpdate;
+    private void Update()
     {
-        if (simulation == null) throw new ArgumentNullException(nameof(simulation));
-
-        ComputeShader = simulation;
-        LookupTable = lut;
-        SizeLevel = sizeLevel;
-
-        //Set up the board
-        Board = new(BoardChunks, true);
-
-        boardBufferA = new ComputeBuffer(Board.BufferSize, sizeof(int) * 2);
-        boardBufferA.SetData(Board.GetCells());
-
-        boardBufferB = new ComputeBuffer(Board.BufferSize, sizeof(int) * 2);
-        boardBufferB.SetData(Board.GetCells());
-
-        ComputeShader.SetInts("Size", BoardChunks.x, BoardChunks.y);
-        FlipBuffer();
-
-        //Setup other params
-        SetChance(chance);
-        SetSeed(seed);
-
-        lookupBuffer = new ComputeBuffer(LUTBuilder.packedLength, sizeof(byte) * 4);
-        lookupBuffer.SetData(LookupTable.Packed);
-
-        //Link Buffers to the shader
-        foreach (ComputeKernel kernel in AllKernels)
+        if (UpdateInRealtime)
         {
-            ComputeShader.SetBuffer((int)kernel, "chunksA", boardBufferA);
-            ComputeShader.SetBuffer((int)kernel, "chunksB", boardBufferB);
-            ComputeShader.SetBuffer((int)kernel, "LookupTable", lookupBuffer);
+            if (timeSinceUpdate >= (float)1 / BoardUpdateRate)
+            {
+                UpdateBoard();
+                timeSinceUpdate = 0;
+            }
+            timeSinceUpdate += Time.deltaTime;
         }
     }
 
-    public void Dispose()
+    public void CreateSimulation()
     {
-        boardBufferA?.Release();
-        boardBufferB?.Release();
-        lookupBuffer?.Release();
-        Board.Dispose();
+        if (!Application.isPlaying) return;
+        if (ComputeShader == null || !File.Exists(Path.Combine(Application.dataPath, LookupTable)))
+            return;
+
+        if (simulation != null) Dispose();
+
+        var lookupTable = LUTBuilder.LoadFromFile(Path.GetFileName(LookupTable), Path.GetDirectoryName(LookupTable));
+
+        simulation = new Simulation(ComputeShader, SizeLevel, lookupTable);
+        simulation.Material = material;
+
+        if (RandomSeed) RandomiseSeed();
+        if (RandomiseOnStart) Randomise();
     }
 
     public void UpdateBoard()
     {
-        FlipBuffer();
-        ComputeShader.Dispatch((int)ComputeKernel.Update, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
+        if (simulation == null) return;
+
+        simulation.UpdateBoard();
     }
 
     public void Randomise()
     {
-        FlipBuffer();
-        ComputeShader.Dispatch((int)ComputeKernel.Randomise, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
+        if (simulation == null) return;
+
+        if (RandomSeed) RandomiseSeed();
+        simulation.Randomise(Seed, Chance);
     }
+
+    public void RandomiseSeed() => Seed = Random.Range(int.MinValue / 2, int.MaxValue / 2);
 
     public void SetPixel(Vector2Int position, bool value)
     {
-        ComputeShader.SetBool("TargetValue", value);
-        ComputeShader.SetInts("TargetPixel", position.x, position.y);
+        if (simulation == null) return;
 
-        ComputeShader.Dispatch((int)ComputeKernel.SetPixel, 1, 1, 1);
+        simulation.SetPixel(position, value);
     }
 
-    void FlipBuffer()
+    public void Dispose()
     {
-        Board.Flip();
-        if (Board.Flipped)
+        if (simulation != null)
         {
-            ComputeShader.EnableKeyword("FLIP_BUFFER");
-            if (Material != null) Material.EnableKeyword("FLIP_BUFFER");
-        }
-        else
-        {
-            ComputeShader.DisableKeyword("FLIP_BUFFER");
-            if (Material != null) Material.DisableKeyword("FLIP_BUFFER");
+            simulation.Dispose();
+            simulation = null;
         }
     }
-
-    public Vector3Int ThreadGroups => new(SizeLevel, SizeLevel * 2, 1);
-
-    public Vector2Int BoardChunks
-        => new(ThreadGroupSize.x * ThreadGroups.x, ThreadGroupSize.y * ThreadGroups.y);
-
-    public Vector2Int Cells
-        => new(BoardChunks.x * 4, BoardChunks.y * 2); //Same as: new(Size, Size)
 }

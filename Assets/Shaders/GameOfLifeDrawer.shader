@@ -1,4 +1,4 @@
-Shader "Unlit/GameOfLifeDrawer"
+Shader "Game Of Life/GameOfLifeDrawer"
 {
 	Properties
 	{
@@ -14,7 +14,7 @@ Shader "Unlit/GameOfLifeDrawer"
 		_GridWidth ("Grid Width", Float) = 0.15 //0.06 for Unity-like
 		_GridPower ("Grid Power", Integer) = 2
 		_GridDetail ("Grid Detail Level", Integer) = 4
-		_GridFadePow ("Grid Fading Power", Float) = 0.333
+		_GridFadePow ("Grid Fading Power", Float) = 0.333 //Todo: What this even is
 	}
 	SubShader
 	{
@@ -67,8 +67,8 @@ Shader "Unlit/GameOfLifeDrawer"
 						(uv.x * _BoardSize) % gridScale,
 						(uv.y * _BoardSize) % gridScale);
 
-				return distance.x < gridWidth 
-					|| distance.y < gridWidth;
+				return min(distance.x, distance.y) < gridWidth ||
+					   gridScale - max(distance.x, distance.y) < gridWidth;
 			}
 
 
@@ -89,10 +89,10 @@ Shader "Unlit/GameOfLifeDrawer"
 			{
 				float zoom = (1 / length(UNITY_MATRIX_MVP._m01_m11_m21)) * 2;
 
-				float gridWidth = zoom * _GridWidth * _BoardSize / 32;
+				float gridWidth = zoom * _GridWidth / 2 * _BoardSize / 32;
 
-				float boardSizeExtraGridEdge = _BoardSize + gridWidth;
-				i.uv *= boardSizeExtraGridEdge / _BoardSize;
+				float boardSizeExtraGridEdge = _BoardSize + 2 * gridWidth;
+				i.uv = i.uv * boardSizeExtraGridEdge / _BoardSize - gridWidth / _BoardSize;
 
 				//CELLS:
 				uint2 globalPos = floor(float2(i.uv.x * _BoardSize, i.uv.y * _BoardSize));

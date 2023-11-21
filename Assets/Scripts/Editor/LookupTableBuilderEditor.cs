@@ -94,6 +94,6 @@ public class LookupTableBuilderEditor : OdinEditorWindow
     bool IsValidFileName()
     {
         string fileName = $"{FileName.Split('.')[0]}.{LUTBuilder.FileExtension}";
-        return LifeUtils.IsValidFileName(fileName, $"{Application.dataPath}/{Path}/{fileName}");
+        return Utils.IsValidFileName(fileName, $"{Application.dataPath}/{Path}/{fileName}");
     }
 }
