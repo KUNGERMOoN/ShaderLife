@@ -25,7 +25,6 @@ public class LUTBuilder
 
     public const string FileExtension = "lut";
 
-
     public bool Generated { get; private set; }
     public byte[] Bytes { get; private set; }
     public int[] Packed { get; private set; }

@@ -1,9 +1,19 @@
 TODO (the real one):
-Generate the board material at runtime
-Store the LUT as a bitmask
+Figure out what eats 40% of the GPU as soon as we start the game (with "Update in realtime" disabled!)
+	it should't be the drawing shader because it also runs when the game is paused (GPU is fine then)
+	and it shouldn't be the simulation compute shader, because "Update in realtime" is disabled
+	(and debugging shows that Simulation.UpdateBoard wasn't run)
+	EDIT 1: It moving the camera when game is paused (or in editor) also causes this problem.
+	Possibly it's just drawing shader being unoptimized
+	Edit 2: Nope, it also happens in a clear new scene with default background.
+	So it seems like it's just some strange unity thing
 UI
-	+ Add controls for frame-based optimising and add "overcharge" mode for more than 1 update every frame
+	+ Add controls to update multiple times in one frame (and maybe)
 fps counter
+Generate the board material at runtime
+importing/exporting to popular game of life file formats
+Cleanup Assets
+Write a palette importer/exporter
 
 TODO for video: 
 Documentation

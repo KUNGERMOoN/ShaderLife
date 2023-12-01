@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 963194228}
   - component: {fileID: 963194227}
   - component: {fileID: 963194226}
+  - component: {fileID: 963194229}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -215,6 +216,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &963194229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08ad2379a61b535408e192c60bee219d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Camera: {fileID: 963194227}
+  Simulation: {fileID: 1518814363}
+  Speed: 0.6
+  Acceleration: 0.15
+  ZoomMultiplier: 0.15
+  ZoomTime: 0.03
 --- !u!1 &1518814358
 GameObject:
   m_ObjectHideFlags: 0
@@ -254,7 +273,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: eae4068e4c3ce52428fa7d2f6af5a091, type: 2}
+  - {fileID: 2100000, guid: 6f4f4082840be754ea505034efd58c56, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -313,9 +332,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ComputeShader: {fileID: 7200000, guid: b33be95b30b36914e87fa054dc3f2c83, type: 3}
   LookupTable: Lookup Tables/Life.lut
-  SizeLevel: 1
-  RandomiseOnStart: 1
-  material: {fileID: 2100000, guid: eae4068e4c3ce52428fa7d2f6af5a091, type: 2}
+  SizeLevel: 256
+  RandomiseOnStart: 0
+  material: {fileID: 2100000, guid: 6f4f4082840be754ea505034efd58c56, type: 2}
   RandomSeed: 0
   Seed: 1337
   Chance: 0.227

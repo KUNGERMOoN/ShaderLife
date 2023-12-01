@@ -1,3 +1,8 @@
 Heatmap_gradient.png - https://www.andrewnoske.com/wiki/Code_-_heatmaps_and_color_gradients
 gdc_2012_released.pdf - https://directtovideo.wordpress.com/2012/03/15/get-my-slides-from-gdc2012/
 	(from https://gamedev.stackexchange.com/a/31780)
+
+Color palettes:
+https://lospec.com/palette-list/blackwhitered
+https://lospec.com/palette-list/cold-light
+https://lospec.com/palette-list/titanstone

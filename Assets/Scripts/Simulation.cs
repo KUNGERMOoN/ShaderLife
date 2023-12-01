@@ -24,6 +24,8 @@ public class Simulation : IDisposable
                 newMaterial.SetBuffer("chunksA", boardBufferA);
                 newMaterial.SetBuffer("chunksB", boardBufferB);
                 newMaterial.SetInteger("_BoardSize", Cells.x);
+                if (Board.Flipped) newMaterial.EnableKeyword("FLIP_BUFFER");
+                else newMaterial.DisableKeyword("FLIP_BUFFER");
             }
 
             material = newMaterial;

@@ -14,7 +14,8 @@ Shader "Game Of Life/GameOfLifeDrawer"
 		_GridWidth ("Grid Width", Float) = 0.15 //0.06 for Unity-like
 		_GridPower ("Grid Power", Integer) = 2
 		_GridDetail ("Grid Detail Level", Integer) = 4
-		_GridFadePow ("Grid Fading Power", Float) = 0.333 //Todo: What this even is
+		_GridFadePow ("Grid Fading Power", Float) = 0.333
+		_AAScale ("Anti Aliasing Scale", Float) = 10 //Increase if the grid becomes too pixelated. Decrease if grid becomes too blurred.
 	}
 	SubShader
 	{
@@ -25,6 +26,7 @@ Shader "Game Of Life/GameOfLifeDrawer"
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
+			#pragma enable_d3d11_debug_symbols //TODO: Remove this after we finish debugging
 			
 			#pragma multi_compile __ FLIP_BUFFER
 
@@ -55,20 +57,23 @@ Shader "Game Of Life/GameOfLifeDrawer"
 			int _GridPower;
 			int _GridDetail;
 			float _GridFadePow;
+			float _AAScale;
 
 			float logb(float base, float a)
 			{
 				return log2(a) / log2(base);
 			}
 
-			bool grid(int gridScale, float2 uv, float zoom, float gridWidth)
+			float grid(int gridScale, float2 uv, float zoom, float gridWidth)
 			{
 				float2 distance = float2(
 						(uv.x * _BoardSize) % gridScale,
 						(uv.y * _BoardSize) % gridScale);
 
-				return min(distance.x, distance.y) < gridWidth ||
-					   gridScale - max(distance.x, distance.y) < gridWidth;
+				float distanceFromGrid = min(min(distance.x, distance.y), gridScale - max(distance.x, distance.y));
+				float AAstep = zoom * _AAScale;
+
+				return smoothstep(distanceFromGrid - AAstep, distanceFromGrid + AAstep, gridWidth);
 			}
 
 
@@ -123,14 +128,18 @@ Shader "Game Of Life/GameOfLifeDrawer"
 				int nextGridScale = pow(_GridPower, floor(max(scaleLevel, 0)));
 				int currentGridScale = pow(_GridPower, floor(max(scaleLevel - 1, 0)));
 
-				bool nextGrid = grid(nextGridScale, i.uv, zoom, gridWidth);
-				bool currentGrid = grid(currentGridScale, i.uv, zoom, gridWidth);
+				float nextGrid = grid(nextGridScale, i.uv, zoom, gridWidth);
+				float currentGrid = grid(currentGridScale, i.uv, zoom, gridWidth);
 
-				float currentGridTransparency = 1 - (scaleLevel - floor(scaleLevel));
+				float currentGridFading = pow(1 - (scaleLevel - floor(scaleLevel)), _GridFadePow);
 
-				return
-					nextGrid == true ? _GridCol :
-					lerp(cellCol, _GridCol, pow(currentGrid * currentGridTransparency, _GridFadePow));
+				float gridValue = max(nextGrid, currentGrid * currentGridFading);
+
+				return lerp(cellCol, _GridCol, gridValue);
+
+				/*return
+					nextGrid > 0 ? _GridCol :
+					lerp(cellCol, _GridCol, pow(currentGrid * currentGridFading, _GridFadePow));*/
 			}
 			ENDCG
 		}
