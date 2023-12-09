@@ -27,7 +27,7 @@ public class GameOfLife : MonoBehaviour, System.IDisposable
             material = value;
             MeshRenderer.sharedMaterial = material;
 
-            if (simulation != null) simulation.Material = value;
+            if (Simulation != null) Simulation.Material = value;
         }
     }
     [BoxGroup("Simulation/Randomise", ShowLabel = false)]
@@ -61,11 +61,11 @@ public class GameOfLife : MonoBehaviour, System.IDisposable
         if (ComputeShader != null)
         {
             ComputeShader.GetKernelThreadGroupSizes(0, out uint groupSizeX, out _, out _);
-            if (simulation == null) Material.SetInteger("_BoardSize", (int)groupSizeX * SizeLevel * 4);
+            if (Simulation == null) Material.SetInteger("_BoardSize", (int)groupSizeX * SizeLevel * 4);
         }
 
-        if (simulation != null)
-            SetPixel_position.Clamp(Vector2Int.zero, new Vector2Int(simulation.Size - 1, simulation.Size - 1));
+        if (Simulation != null)
+            SetPixel_position.Clamp(Vector2Int.zero, new Vector2Int(Simulation.Size - 1, Simulation.Size - 1));
     }
 
     string InspectorBoardSizeInfo()
@@ -87,7 +87,7 @@ which gives us {((int)groupSizeX * SizeLevel).ThousandSpacing()}x{((int)groupSiz
     #endregion Inspector
 #pragma warning restore IDE0051
 
-    Simulation simulation;
+    public Simulation Simulation { get; private set; }
     MeshRenderer meshRenderer;
     MeshRenderer MeshRenderer
     {
@@ -128,12 +128,12 @@ which gives us {((int)groupSizeX * SizeLevel).ThousandSpacing()}x{((int)groupSiz
         if (ComputeShader == null || !File.Exists(Path.Combine(Application.dataPath, LookupTable)))
             return;
 
-        if (simulation != null) Dispose();
+        if (Simulation != null) Dispose();
 
         var lookupTable = LUTBuilder.LoadFromFile(Path.GetFileName(LookupTable), Path.GetDirectoryName(LookupTable));
 
-        simulation = new Simulation(ComputeShader, SizeLevel, lookupTable);
-        simulation.Material = material;
+        Simulation = new Simulation(ComputeShader, SizeLevel, lookupTable);
+        Simulation.Material = material;
 
         if (RandomSeed) RandomiseSeed();
         if (RandomiseOnStart) Randomise();
@@ -141,34 +141,34 @@ which gives us {((int)groupSizeX * SizeLevel).ThousandSpacing()}x{((int)groupSiz
 
     public void UpdateBoard()
     {
-        if (simulation == null) return;
+        if (Simulation == null) return;
 
-        simulation.UpdateBoard();
+        Simulation.UpdateBoard();
     }
 
     public void Randomise()
     {
-        if (simulation == null) return;
+        if (Simulation == null) return;
 
         if (RandomSeed) RandomiseSeed();
-        simulation.Randomise(Seed, Chance);
+        Simulation.Randomise(Seed, Chance);
     }
 
     public void RandomiseSeed() => Seed = Random.Range(int.MinValue / 2, int.MaxValue / 2);
 
     public void SetPixel(Vector2Int position, bool value)
     {
-        if (simulation == null) return;
+        if (Simulation == null) return;
 
-        simulation.SetPixel(position, value);
+        Simulation.SetPixel(position, value);
     }
 
     public void Dispose()
     {
-        if (simulation != null)
+        if (Simulation != null)
         {
-            simulation.Dispose();
-            simulation = null;
+            Simulation.Dispose();
+            Simulation = null;
         }
     }
 }

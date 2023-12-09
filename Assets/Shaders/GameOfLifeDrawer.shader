@@ -71,7 +71,8 @@ Shader "Game Of Life/GameOfLifeDrawer"
 						(uv.y * _BoardSize) % gridScale);
 
 				float distanceFromGrid = min(min(distance.x, distance.y), gridScale - max(distance.x, distance.y));
-				float AAstep = zoom * _AAScale;
+				float AAstep = zoom * _AAScale * _BoardSize / 8192;
+
 
 				return smoothstep(distanceFromGrid - AAstep, distanceFromGrid + AAstep, gridWidth);
 			}
@@ -136,10 +137,6 @@ Shader "Game Of Life/GameOfLifeDrawer"
 				float gridValue = max(nextGrid, currentGrid * currentGridFading);
 
 				return lerp(cellCol, _GridCol, gridValue);
-
-				/*return
-					nextGrid > 0 ? _GridCol :
-					lerp(cellCol, _GridCol, pow(currentGrid * currentGridFading, _GridFadePow));*/
 			}
 			ENDCG
 		}

@@ -34,7 +34,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints:
-    - _BoardSize: 8192
+    - _BoardSize: 64
     - _GridDetail: 7
     - _GridPower: 4
     - _GridScale: 1
@@ -61,7 +61,7 @@ Material:
     - _ZoomOut: 0.5
     - _ZoomTreshold: 0
     m_Colors:
-    - _AliveCol: {r: 0.279095, g: 0.9433962, b: 0.084549636, a: 1}
-    - _DeadCol: {r: 0.028301895, g: 0.028301895, b: 0.028301895, a: 1}
-    - _GridCol: {r: 0.36078432, g: 0.36078432, b: 0.36078432, a: 1}
+    - _AliveCol: {r: 1, g: 1, b: 0.81960785, a: 1}
+    - _DeadCol: {r: 0.08235294, g: 0.015686275, b: 0.07450981, a: 1}
+    - _GridCol: {r: 0.3882353, g: 0.36078432, b: 0.42745098, a: 1}
   m_BuildTextureStacks: []

@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
+  m_IndirectSpecularColor: {r: 0.0074348147, g: 0.0012035394, b: 0.00645446, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -229,11 +229,70 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Camera: {fileID: 963194227}
+  GameOfLife: {fileID: 1518814363}
+--- !u!1 &1424205208
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1424205210}
+  - component: {fileID: 1424205209}
+  m_Layer: 0
+  m_Name: Game Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1424205209
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1424205208}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a284167cd6fa5fb4498361a21f550e5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CameraController: {fileID: 963194229}
   Simulation: {fileID: 1518814363}
-  Speed: 0.6
-  Acceleration: 0.15
-  ZoomMultiplier: 0.15
-  ZoomTime: 0.03
+  Board: {fileID: 2100000, guid: eae4068e4c3ce52428fa7d2f6af5a091, type: 2}
+  Skybox: {fileID: 2100000, guid: 95b7cbaea06c47b4895a8e3ae0ea0b63, type: 2}
+  DefaultPalette_Source: D:\Programowanie\Unity\Editor\Shaders\Assets\Resources\Palettes\Titanstone.png
+  DefaultPalette:
+    DeadCell: {r: 0.08235294, g: 0.015686275, b: 0.07450981, a: 1}
+    Grid: {r: 0.3882353, g: 0.36078432, b: 0.42745098, a: 1}
+    AliveCell: {r: 1, g: 1, b: 0.81960785, a: 1}
+    Name: Titanstone
+    Description: 'Titanstone palette by @POLY-PHROG on Lospec
+
+      https://lospec.com/palette-list/titanstone'
+  Settings:
+    CameraMaxSpeed: 0.6
+    CameraAcceleration: 0.15
+    CameraPositionLimit: 1
+    CameraZoomMultiplier: 0.15
+    CameraZoomTime: 0.03
+--- !u!4 &1424205210
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1424205208}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1518814358
 GameObject:
   m_ObjectHideFlags: 0
@@ -273,7 +332,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 6f4f4082840be754ea505034efd58c56, type: 2}
+  - {fileID: 2100000, guid: eae4068e4c3ce52428fa7d2f6af5a091, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -331,10 +390,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ComputeShader: {fileID: 7200000, guid: b33be95b30b36914e87fa054dc3f2c83, type: 3}
-  LookupTable: Lookup Tables/Life.lut
-  SizeLevel: 256
+  LookupTable: Resources/Lookup Tables/Life.lut
+  SizeLevel: 2
   RandomiseOnStart: 0
-  material: {fileID: 2100000, guid: 6f4f4082840be754ea505034efd58c56, type: 2}
+  material: {fileID: 2100000, guid: eae4068e4c3ce52428fa7d2f6af5a091, type: 2}
   RandomSeed: 0
   Seed: 1337
   Chance: 0.227
@@ -346,3 +405,4 @@ SceneRoots:
   m_Roots:
   - {fileID: 963194228}
   - {fileID: 1518814362}
+  - {fileID: 1424205210}

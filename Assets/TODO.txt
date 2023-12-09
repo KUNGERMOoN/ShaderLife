@@ -9,11 +9,8 @@ Figure out what eats 40% of the GPU as soon as we start the game (with "Update i
 	So it seems like it's just some strange unity thing
 UI
 	+ Add controls to update multiple times in one frame (and maybe)
-fps counter
-Generate the board material at runtime
+	+ fps counter
 importing/exporting to popular game of life file formats
-Cleanup Assets
-Write a palette importer/exporter
 
 TODO for video: 
 Documentation
