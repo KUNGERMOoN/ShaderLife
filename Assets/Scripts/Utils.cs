@@ -24,6 +24,9 @@ public static class Utils
 
     public static Vector2 Clamp(this Vector2 vector, float min, float max)
         => new Vector2(Mathf.Clamp(vector.x, min, max), Mathf.Clamp(vector.y, min, max));
+
+    public static Vector2Int Clamp(this Vector2Int vector, int min, int max)
+        => new Vector2Int(Mathf.Clamp(vector.x, min, max), Mathf.Clamp(vector.y, min, max));
 }
 
 public class Range : IEnumerable<int>

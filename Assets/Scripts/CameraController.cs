@@ -1,6 +1,6 @@
 ﻿using Sirenix.OdinInspector;
-using System;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class CameraController : MonoBehaviour
 {
@@ -80,9 +80,13 @@ public class CameraController : MonoBehaviour
 
         var boardPos = worldPos + Vector2.one / 2;
 
-        Vector2Int cellPos = (boardPos * GameOfLife.Simulation.Size).FloorToInt();
+        int boardsize = GameOfLife.Simulation.Size;
+        Vector2Int cellPos = (boardPos * boardsize).FloorToInt();
 
-        if (Mathf.Clamp01(boardPos.x) == boardPos.x && Mathf.Clamp01(boardPos.y) == boardPos.y)
+        Vector2Int cellPosClamped = lastCellPos.Clamp(0, boardsize - 1);
+        Vector2Int lastCellPosClamped = cellPos.Clamp(0, boardsize - 1);
+
+        if (true)
         {
             bool pressed;
             bool value;
@@ -105,37 +109,7 @@ public class CameraController : MonoBehaviour
 
             if (pressed)
             {
-                var posDelta = cellPos - lastCellPos;
-
-                Vector2Int iteratorPos = lastCellPos;
-
-                do
-                {
-                    //How many pixels do we need to go upwards (or downwards) in this column
-                    int yDelta = Mathf.FloorToInt(posDelta.y * (iteratorPos.x - lastCellPos.x) / posDelta.x);
-
-                    int y = 0;
-                    do
-                    {
-                        iteratorPos.y += Math.Sign(y);
-                        GameOfLife.SetPixel(iteratorPos, value);
-
-                        y += Math.Sign(y);
-                    }
-                    while (y != yDelta);
-
-                    iteratorPos.x += Math.Sign(posDelta.x); //Move to the next column
-                }
-                while (iteratorPos.x != cellPos.x);
-
-                /*for (int x = lastCellPos.x; x != cellPos.x; x += Math.Sign(posDelta.x))
-                {
-                    int y = lastCellPos.y + ;
-                    for (int i = 0; i < Mathf.Abs(y - lastY); i++)
-                    {
-                        GameOfLife.SetPixel(new(x, y + i * Math.Sign(y - lastY)), value);
-                    }
-                }*/
+                DrawLine(cellPos, lastCellPos, value);
             }
         }
 
@@ -143,150 +117,32 @@ public class CameraController : MonoBehaviour
     }
 
     [Button]
+    //Shamelessly stolen straight from the wikipedia: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm#All_cases
     public void DrawLine(Vector2Int start, Vector2Int end, bool value)
     {
-        var posDelta = end - start;
+        Vector2Int d = new(Mathf.Abs(end.x - start.x), -Mathf.Abs(end.y - start.y));
+        Vector2Int s = new(start.x < end.x ? 1 : -1, start.y < end.y ? 1 : -1);
+        int error = d.x + d.y;
+        int boardSize = GameOfLife.Simulation.Size;
 
-        if (posDelta.x >= 0)
+        while (true)
         {
-            if (posDelta.y >= 0)
+            if (start.x < boardSize && start.x >= 0 && start.y < boardSize && start.y >= 0)
+                GameOfLife.SetPixel(start, value);
+            if (start.x == end.x && start.y == end.y) break;
+            int e2 = 2 * error;
+            if (e2 >= d.y)
             {
-                if (posDelta.x >= posDelta.y)
-                {
-                    Bresenham(new(posDelta.x, posDelta.y),
-                        delta => GameOfLife.SetPixel(start + new Vector2Int(delta.x, delta.y), value));
-                }
-                else
-                {
-                    Bresenham(new(posDelta.y, posDelta.x),
-                        delta => GameOfLife.SetPixel(start + new Vector2Int(delta.y, delta.x), value));
-                }
+                if (start.x == end.x) break;
+                error += d.y;
+                start.x += s.x;
             }
-            else
+            if (e2 <= d.x)
             {
-                if (posDelta.x >= -posDelta.y)
-                {
-                    Bresenham(new(-posDelta.y, posDelta.x),
-                        delta => GameOfLife.SetPixel(start + new Vector2Int(delta.y, -delta.x), value));
-                }
-                else
-                {
-                    Bresenham(new(-posDelta.x, posDelta.y),
-                        delta => GameOfLife.SetPixel(start + new Vector2Int(delta.x, -delta.y), value));
-                }
+                if (start.y == end.y) break;
+                error += d.x;
+                start.y += s.y;
             }
-        }
-        else
-        {
-            if (posDelta.y >= 0)
-            {
-                if (posDelta.y >= -posDelta.x)
-                {
-                    Bresenham(new(posDelta.y, -posDelta.x),
-                        delta => GameOfLife.SetPixel(start + new Vector2Int(-delta.y, delta.x), value));
-                }
-                else
-                {
-                    Bresenham(new(posDelta.x, -posDelta.y),
-                        delta => GameOfLife.SetPixel(start + new Vector2Int(-delta.x, delta.y), value));
-                }
-            }
-            else
-            {
-                if (-posDelta.x >= -posDelta.y)
-                {
-                    Bresenham(new(-posDelta.x, -posDelta.y),
-                        delta => GameOfLife.SetPixel(start + new Vector2Int(-delta.x, -delta.y), value));
-                }
-                else
-                {
-                    Bresenham(new(-posDelta.y, -posDelta.x),
-                        delta => GameOfLife.SetPixel(start + new Vector2Int(-delta.y, -delta.x), value));
-                }
-            }
-        }
-
-        #region Unused
-        /*if (posDelta.x > 0)
-        {
-            if (posDelta.y > 0)
-            {
-                Bresenham(new(posDelta.x, posDelta.y));
-            }
-            else
-            {
-                Bresenham(new(-posDelta.y, posDelta.x));
-            }
-        }
-        else
-        {
-            if (posDelta.y > 0)
-            {
-
-            }
-            else
-            {
-                Bresenham(new(-posDelta.x, -posDelta.y));
-            }
-        }*/
-
-        /*
-        var posDeltaSign = new Vector2Int(Math.Sign(posDelta.x), Math.Sign(posDelta.y));
-        Vector2Int iteratorPos = lastCellPos;
-        do
-        {
-            Vector2Int iteratorLocalPos = iteratorPos - lastCellPos;
-
-            //How many pixels do we need to go upwards (or downwards) in this column
-            int yDelta;
-            if (posDelta.x != 0)
-                yDelta = Mathf.FloorToInt(posDelta.y * iteratorLocalPos.x / posDelta.x) - iteratorLocalPos.y;
-            else yDelta = posDelta.y;
-
-            int y = 0;
-            do
-            {
-                iteratorPos.y += Math.Sign(yDelta);
-                GameOfLife.SetPixel(iteratorPos, value);
-
-                y += Math.Sign(yDelta);
-            }
-            while (y != yDelta);
-
-            iteratorPos.x += Math.Sign(posDelta.x); //Move to the next column
-        }
-        while (iteratorPos.x != cellPos.x + posDeltaSign.x);
-        //while ((cellPos.x - iteratorPos.x) * Math.Sign(posDelta.x) >= 0);
-        //^ Until we overshoot our target x position
-        */
-        #endregion Unused
-    }
-
-    //Shamelessly stolen from: https://classic.csunplugged.org/documents/activities/community-activities/line-drawing/line-drawing.pdf
-    void Bresenham(Vector2Int posDelta, Action<Vector2Int> drawer)
-    {
-        int a = 2 * posDelta.y;
-        int b = a - 2 * posDelta.x;
-        int p = a - posDelta.x;
-
-        drawer(new(0, 0));
-
-        Vector2Int iterator = new(1, 0);
-        while (iterator.x <= posDelta.x && iterator.y <= posDelta.y)
-        {
-            if (p < 0)
-            {
-                drawer(iterator);
-                p += a;
-            }
-            else
-            {
-                iterator.y++;
-                drawer(iterator);
-                p += b;
-            }
-
-            iterator.x++;
         }
     }
 }
