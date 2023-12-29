@@ -1,17 +1,17 @@
-﻿using Sirenix.OdinInspector;
-using UnityEngine;
-using UnityEngine.UIElements;
+﻿using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
     [Header("References")]
     public Camera Camera;
-    public GameOfLife GameOfLife;
+    public SimulationRunner SimulationManager;
 
     Vector2 velocity;
     Vector2 moveInput;
     float zoomInput;
     float zoom;
+
+    enum MouseState { None, Lmb, Rmb }
 
     private void Start()
     {
@@ -73,62 +73,64 @@ public class CameraController : MonoBehaviour
     }
 
     Vector2Int lastCellPos;
+    MouseState lastMouseState;
     private void LateUpdate()
     {
         var screenPos = new Vector2(Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.height) * 2 - Vector2.one;
         var worldPos = (Vector2)Camera.transform.position + Camera.orthographicSize * new Vector2(screenPos.x * Camera.aspect, screenPos.y);
 
         var boardPos = worldPos + Vector2.one / 2;
+        Vector2Int cellPos = (boardPos * SimulationManager.Simulation.Size).FloorToInt();
+        MouseState mouseState;
 
-        int boardsize = GameOfLife.Simulation.Size;
-        Vector2Int cellPos = (boardPos * boardsize).FloorToInt();
+        if (Input.GetKey(KeyCode.Mouse0))
+            mouseState = MouseState.Lmb;
+        else if (Input.GetKey(KeyCode.Mouse1))
+            mouseState = MouseState.Rmb;
+        else
+            mouseState = MouseState.None;
 
-        Vector2Int cellPosClamped = lastCellPos.Clamp(0, boardsize - 1);
-        Vector2Int lastCellPosClamped = cellPos.Clamp(0, boardsize - 1);
-
-        if (true)
+        //TODO: maybe someday add line drawing
+        /*if (Input.GetKey(KeyCode.LeftShift))
         {
-            bool pressed;
-            bool value;
-
-            if (Input.GetKey(KeyCode.Mouse0))
+            if (mouseState != lastMouseState)
             {
-                pressed = true;
-                value = true;
+                Debug.Log($"{nameof(lastMouseState)}: {lastMouseState}, {nameof(mouseState)}: {mouseState}");
+                if (mouseState == MouseState.None)
+                {
+                    DrawLine(lastCellPos, cellPos, lastMouseState == MouseState.Lmb);
+                }
+                lastMouseState = mouseState;
             }
-            else if (Input.GetKey(KeyCode.Mouse1))
+            if (mouseState == MouseState.None)
             {
-                pressed = true;
-                value = false;
+                lastCellPos = cellPos;
             }
-            else
-            {
-                pressed = false;
-                value = false;
-            }
-
-            if (pressed)
-            {
-                DrawLine(cellPos, lastCellPos, value);
-            }
+        }
+        else
+        {*/
+        if (mouseState != MouseState.None)
+        {
+            DrawLine(lastCellPos, cellPos, mouseState == MouseState.Lmb);
         }
 
         lastCellPos = cellPos;
+        lastMouseState = mouseState;
+        /*}*/
     }
 
-    [Button]
     //Shamelessly stolen straight from the wikipedia: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm#All_cases
     public void DrawLine(Vector2Int start, Vector2Int end, bool value)
     {
         Vector2Int d = new(Mathf.Abs(end.x - start.x), -Mathf.Abs(end.y - start.y));
         Vector2Int s = new(start.x < end.x ? 1 : -1, start.y < end.y ? 1 : -1);
         int error = d.x + d.y;
-        int boardSize = GameOfLife.Simulation.Size;
+        int boardSize = SimulationManager.Simulation.Size;
 
         while (true)
         {
             if (start.x < boardSize && start.x >= 0 && start.y < boardSize && start.y >= 0)
-                GameOfLife.SetPixel(start, value);
+                SimulationManager.Simulation.SetPixel(start, value);
             if (start.x == end.x && start.y == end.y) break;
             int e2 = 2 * error;
             if (e2 >= d.y)

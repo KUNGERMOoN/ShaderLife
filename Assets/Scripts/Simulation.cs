@@ -5,7 +5,7 @@ public class Simulation : IDisposable
 {
     public readonly ComputeShader ComputeShader;
 
-    public readonly LUTBuilder LookupTable;
+    public readonly LookupTable LookupTable;
 
     Material material;
     public Material Material
@@ -60,7 +60,7 @@ public class Simulation : IDisposable
     public static readonly ComputeKernel[] AllKernels
         = (ComputeKernel[])Enum.GetValues(typeof(ComputeKernel));
 
-    public Simulation(ComputeShader simulation, int sizeLevel, LUTBuilder lut)
+    public Simulation(ComputeShader simulation, int sizeLevel, LookupTable lut)
     {
         if (simulation == null) throw new ArgumentNullException(nameof(simulation));
         if (sizeLevel < 1) throw new ArgumentException($"{nameof(sizeLevel)} cannot be smaller than 1", nameof(sizeLevel));
@@ -79,7 +79,7 @@ public class Simulation : IDisposable
         ComputeShader.SetInts("Size", BoardChunks.x, BoardChunks.y);
         FlipBuffer();
 
-        lookupBuffer = new ComputeBuffer(LUTBuilder.packedLength, sizeof(byte) * 4);
+        lookupBuffer = new ComputeBuffer(LookupTable.packedLength, sizeof(byte) * 4);
         lookupBuffer.SetData(LookupTable.Packed);
 
         //Link Buffers to the shader

@@ -1,0 +1,224 @@
+* {
+    font-size: 13px;
+    color: rgb(196, 196, 196);
+}
+
+.main {
+    border-width: 1px;
+    border-radius: 5px;
+    border-color: rgb(35, 35, 35);
+    padding: 2px;
+    background-color: rgb(64, 64, 64);
+}
+
+.property {
+    margin-left: 0;
+    margin-top: 0;
+    margin-bottom: 2px;
+    margin-right: 0;
+}
+
+Foldout {
+    margin-left: 1px;
+    margin-right: 1px;
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+Button {
+    background-color: rgb(103, 103, 103);
+    border-radius: 5px;
+    border-color: rgb(48, 48, 48);
+    margin-bottom: 4px;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+}
+
+Button:active {
+    background-color: rgb(88, 88, 88);
+}
+
+.unity-base-field__label {
+    padding-top: 0;
+    padding-bottom: 0;
+    -unity-text-align: upper-left;
+}
+
+.unity-toggle__checkmark {
+    background-color: rgb(42, 42, 42);
+    margin-left: 2px;
+    border-width: 1px;
+    border-color: rgb(32, 32, 32);
+    border-radius: 5px;
+    -unity-background-image-tint-color: rgb(230, 230, 230);
+}
+
+.unity-toggle__checkmark.unity-foldout__checkmark {
+    background-color: rgba(0, 0, 0, 0);
+    margin-left: 0;
+    border-width: 0;
+    border-color: rgb(50, 50, 50);
+    border-radius: 0;
+    -unity-background-image-tint-color: rgb(108, 108, 108);
+}
+
+.unity-unsigned-integer-field__input {
+    background-color: rgb(42, 42, 42);
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: rgb(32, 32, 32);
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.unity-text-field__input {
+    background-color: rgb(42, 42, 42);
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: rgb(32, 32, 32);
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 5px;
+    flex-grow: 1;
+    padding-right: 5px;
+}
+
+.popup {
+    width: 246px;
+}
+
+#newSimulation .unity-text-element--inner-input-field-component {
+    min-width: 37px;
+}
+
+#lookupTable .unity-base-text-field__label {
+    display: none;
+}
+
+.unity-base-slider__tracker {
+    margin-top: 0;
+    height: 2px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    background-color: rgb(94, 94, 94);
+    border-top-left-radius: 1px;
+    border-bottom-left-radius: 1px;
+    border-top-right-radius: 1px;
+    border-bottom-right-radius: 1px;
+    margin-bottom: 0;
+    top: auto;
+}
+
+.unity-base-slider__dragger {
+    height: 8px;
+    width: 8px;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: auto;
+    margin-bottom: auto;
+    top: auto;
+    border-top-left-radius: 100%;
+    border-bottom-left-radius: 100%;
+    border-top-right-radius: 100%;
+    border-bottom-right-radius: 100%;
+    background-color: rgb(153, 153, 153);
+    border-left-color: rgb(153, 153, 153);
+    border-right-color: rgb(153, 153, 153);
+    border-top-color: rgb(153, 153, 153);
+    border-bottom-color: rgb(153, 153, 153);
+}
+
+.unity-base-slider__drag-container {
+    justify-content: center;
+    flex-grow: 1;
+}
+
+.unity-slider__label {
+    min-width: 71px;
+}
+
+.unity-integer-field__input {
+    background-color: rgb(42, 42, 42);
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: rgb(32, 32, 32);
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.controlButton {
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    height: 25px;
+    width: 20px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left-width: 1px;
+    justify-content: center;
+    margin-bottom: 0;
+    background-color: rgb(103, 103, 103);
+    margin-left: -1px;
+    margin-top: 0;
+    margin-right: 0;
+    border-left-color: rgb(48, 48, 48);
+    border-right-color: rgb(48, 48, 48);
+    border-top-color: rgb(48, 48, 48);
+    border-bottom-color: rgb(48, 48, 48);
+    flex-direction: column;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+}
+
+.controlButton:checked {
+    background-color: rgb(40, 84, 124);
+    margin-top: 1px;
+    margin-bottom: -1px;
+}
+
+#play > #image {
+    background-image: url('project://database/Assets/GUI/Textures/d_PlayButton@2x.png?fileID=2800000&guid=43c48efe0c9fb5245a0a76da81583bf2&type=3#d_PlayButton@2x');
+}
+
+#pause > #image {
+    background-image: url('project://database/Assets/GUI/Textures/d_PauseButton@2x.png?fileID=2800000&guid=942bef6c5810ad64387636c07b70bc03&type=3#d_PauseButton@2x');
+}
+
+#play:checked > #image {
+    background-image: url('project://database/Assets/GUI/Textures/d_PlayButton%20On@2x.png?fileID=2800000&guid=6ddc16e9c05345648bd767e1d6a4f355&type=3#d_PlayButton On@2x');
+}
+
+#pause:checked > #image {
+    background-image: url('project://database/Assets/GUI/Textures/d_PauseButton%20On@2x.png?fileID=2800000&guid=d5b12e73ffefe3f42b95284023e869f7&type=3#d_PauseButton On@2x');
+}
+
+#randomSeed {
+    background-color: rgb(103, 103, 103);
+    border-left-color: rgb(48, 48, 48);
+    border-right-color: rgb(48, 48, 48);
+    border-top-color: rgb(48, 48, 48);
+    border-bottom-color: rgb(48, 48, 48);
+}
+
+#randomSeed:checked {
+    background-color: rgb(42, 42, 42);
+    border-left-color: rgb(32, 32, 32);
+    border-right-color: rgb(32, 32, 32);
+    border-top-color: rgb(32, 32, 32);
+    border-bottom-color: rgb(32, 32, 32);
+}
+
+#randomSeed:checked > #image {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}

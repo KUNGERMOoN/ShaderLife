@@ -1,0 +1,16 @@
+{
+    "name": "Unused",
+    "rootNamespace": "",
+    "references": [
+        "GUID:b21fe87c08fc37a49af51a85b30ebbff"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

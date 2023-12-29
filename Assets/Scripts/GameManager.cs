@@ -10,7 +10,6 @@ public class GameManager : MonoBehaviour
 
     [Header("References")]
     public CameraController CameraController;
-    public GameOfLife Simulation;
     public Material Board;
     public Material Skybox;
 

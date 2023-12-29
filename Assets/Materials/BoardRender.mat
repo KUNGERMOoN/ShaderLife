@@ -61,7 +61,7 @@ Material:
     - _ZoomOut: 0.5
     - _ZoomTreshold: 0
     m_Colors:
-    - _AliveCol: {r: 1, g: 1, b: 0.81960785, a: 1}
-    - _DeadCol: {r: 0.08235294, g: 0.015686275, b: 0.07450981, a: 1}
-    - _GridCol: {r: 0.3882353, g: 0.36078432, b: 0.42745098, a: 1}
+    - _AliveCol: {r: 0.69803923, g: 0.8352941, b: 0.81960785, a: 1}
+    - _DeadCol: {r: 0.03137255, g: 0, b: 0.12156863, a: 1}
+    - _GridCol: {r: 0.26666668, g: 0.3019608, b: 0.5176471, a: 1}
   m_BuildTextureStacks: []

@@ -135,7 +135,7 @@ void Randomise(uint3 id : SV_DispatchThreadID)
 {
     int i = index(id.x, id.y);
     
-    SetNext(i, randomConfiguration(i + Seed));
+    SetNext(i, randomConfiguration(i ^ Seed));
 }
 
 int2 TargetPixel = int2(0, 0);
