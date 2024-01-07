@@ -25,15 +25,7 @@
             </ui:VisualElement>
             <ui:VisualElement name="space" style="flex-grow: 1; height: 15px;" />
             <ui:VisualElement name="randomization" style="flex-grow: 1;">
-                <ui:VisualElement tooltip="Seed used for the randomization. Randomizing with the same seed will always give the same results. Enable the &quot;Random Seed&quot; button to generate new seed every time you randomize." name="seed" class="property" style="flex-grow: 1; flex-direction: row;">
-                    <ui:Label tabindex="-1" text="Seed" parse-escape-sequences="true" display-tooltip-when-elided="true" name="Label" class="unity-label unity-base-field__label unity-base-text-field__label unity-unsigned-integer-field__label unity-base-field__label--with-dragger" style="flex-grow: 0; margin-left: 2px; margin-right: 4px; margin-top: 4px; margin-bottom: 2px; padding-left: 1px; padding-right: 2px; padding-top: 0; padding-bottom: 0; align-self: center; min-width: 70px; -unity-text-align: middle-left;" />
-                    <ui:VisualElement name="input" style="flex-grow: 2; flex-direction: row;">
-                        <SwitchButton focusable="true" name="randomSeed" tooltip="&quot;Random Seed&quot; button. If you enable it, a new random seed will be generated every time before randomizing the board." style="border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; border-top-left-radius: 4px; border-bottom-left-radius: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; width: 24px; height: 24px; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; justify-content: center; align-self: center; flex-direction: column;">
-                            <ui:VisualElement name="image" style="flex-grow: 0; background-image: url(&apos;project://database/Assets/GUI/Textures/d_SyncSearch@2x.png?fileID=2800000&amp;guid=c6aac7906d9cdef47ba4eb5e829e0da5&amp;type=3#d_SyncSearch@2x&apos;); width: 18px; height: 18px; align-self: center; position: absolute;" />
-                        </SwitchButton>
-                        <ui:IntegerField value="1337" name="seed" style="margin-left: 5px; margin-right: 0; margin-top: 0; margin-bottom: 0; min-width: 52px; flex-grow: 1;" />
-                    </ui:VisualElement>
-                </ui:VisualElement>
+                <ui:IntegerField label="Seed" value="1337" name="seed" tooltip="Seed used for the randomization. Randomizing with the same seed will always give the same results." class="property" />
                 <ui:Slider picking-mode="Ignore" label="Chance" value="0.22" high-value="1" name="chance" tooltip="The chance of the cell becoming alive when randomizing the board." focusable="false" class="property" />
                 <ui:Button text="Randomize" parse-escape-sequences="true" display-tooltip-when-elided="true" name="randomize" tooltip="Randomizes the all the cells on the board, with the given seed and chance for the cells to be alive." class="property" />
             </ui:VisualElement>

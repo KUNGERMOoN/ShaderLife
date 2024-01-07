@@ -229,7 +229,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Camera: {fileID: 963194227}
-  SimulationManager: {fileID: 1518814363}
+  Simulation: {fileID: 1518814363}
 --- !u!1 &1424205208
 GameObject:
   m_ObjectHideFlags: 0
@@ -324,7 +324,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Document: {fileID: 1424205211}
-  SimulationRunner: {fileID: 1518814363}
+  Simulation: {fileID: 1518814363}
 --- !u!1 &1518814358
 GameObject:
   m_ObjectHideFlags: 0

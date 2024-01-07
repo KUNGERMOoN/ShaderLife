@@ -12,9 +12,8 @@ public class SimulationRunner : MonoBehaviour
     public Material Material;
 
 
-    public Simulation Simulation { get; private set; }
+    private Simulation Simulation;
 
-    public readonly Bindable<bool> RandomSeed = new(true);
     public readonly Bindable<int> Seed = new(1337);
     public readonly Bindable<float> Chance = new(0.2f);
 
@@ -79,11 +78,18 @@ public class SimulationRunner : MonoBehaviour
         };
     }
 
+
+    public int BoardSize => Simulation.Size;
+
+    public void UpdateBoard() => Simulation.UpdateBoard();
+
     public void Randomise()
     {
-        if (RandomSeed.Value) RandomiseSeed();
         Simulation.Randomise(Seed.Value, Chance.Value);
+        Seed.Value = UnityEngine.Random.Range(int.MinValue / 2, int.MaxValue / 2);
     }
 
-    void RandomiseSeed() => Seed.Value = UnityEngine.Random.Range(int.MinValue / 2, int.MaxValue / 2);
+    public void ClearBoard() => Simulation.Clear();
+
+    public void SetPixel(Vector2Int position, bool value) => Simulation.SetPixel(position, value);
 }

@@ -4,7 +4,7 @@ public class CameraController : MonoBehaviour
 {
     [Header("References")]
     public Camera Camera;
-    public SimulationRunner SimulationManager;
+    public SimulationRunner Simulation;
 
     Vector2 velocity;
     Vector2 moveInput;
@@ -72,6 +72,7 @@ public class CameraController : MonoBehaviour
             transform.position.z);
     }
 
+    //TODO: Clean up this mess
     Vector2Int lastCellPos;
     MouseState lastMouseState;
     private void LateUpdate()
@@ -80,7 +81,7 @@ public class CameraController : MonoBehaviour
         var worldPos = (Vector2)Camera.transform.position + Camera.orthographicSize * new Vector2(screenPos.x * Camera.aspect, screenPos.y);
 
         var boardPos = worldPos + Vector2.one / 2;
-        Vector2Int cellPos = (boardPos * SimulationManager.Simulation.Size).FloorToInt();
+        Vector2Int cellPos = (boardPos * Simulation.BoardSize).FloorToInt();
         MouseState mouseState;
 
         if (Input.GetKey(KeyCode.Mouse0))
@@ -125,12 +126,12 @@ public class CameraController : MonoBehaviour
         Vector2Int d = new(Mathf.Abs(end.x - start.x), -Mathf.Abs(end.y - start.y));
         Vector2Int s = new(start.x < end.x ? 1 : -1, start.y < end.y ? 1 : -1);
         int error = d.x + d.y;
-        int boardSize = SimulationManager.Simulation.Size;
+        int boardSize = Simulation.BoardSize;
 
         while (true)
         {
             if (start.x < boardSize && start.x >= 0 && start.y < boardSize && start.y >= 0)
-                SimulationManager.Simulation.SetPixel(start, value);
+                Simulation.SetPixel(start, value);
             if (start.x == end.x && start.y == end.y) break;
             int e2 = 2 * error;
             if (e2 >= d.y)
