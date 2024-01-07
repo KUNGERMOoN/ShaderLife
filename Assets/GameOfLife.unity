@@ -229,7 +229,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Camera: {fileID: 963194227}
-  GameOfLife: {fileID: 0}
+  SimulationManager: {fileID: 1518814363}
 --- !u!1 &1424205208
 GameObject:
   m_ObjectHideFlags: 0
@@ -262,7 +262,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CameraController: {fileID: 963194229}
-  Simulation: {fileID: 0}
   Board: {fileID: 2100000, guid: eae4068e4c3ce52428fa7d2f6af5a091, type: 2}
   Skybox: {fileID: 2100000, guid: 95b7cbaea06c47b4895a8e3ae0ea0b63, type: 2}
   DefaultPalette_Source: D:/Programowanie/Unity/Editor/Shaders/Assets/Resources/Palettes/Cold
@@ -324,7 +323,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b2e081da4c8159498c049bc1f8c58e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Simulation: {fileID: 0}
+  Document: {fileID: 1424205211}
+  SimulationRunner: {fileID: 1518814363}
 --- !u!1 &1518814358
 GameObject:
   m_ObjectHideFlags: 0
@@ -336,6 +336,7 @@ GameObject:
   - component: {fileID: 1518814362}
   - component: {fileID: 1518814361}
   - component: {fileID: 1518814360}
+  - component: {fileID: 1518814363}
   m_Layer: 0
   m_Name: Board
   m_TagString: Untagged
@@ -408,6 +409,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1518814363
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1518814358}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee28e3c4ff94dda449efb75f64e150da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ComputeShader: {fileID: 7200000, guid: b33be95b30b36914e87fa054dc3f2c83, type: 3}
+  Renderer: {fileID: 1518814360}
+  Material: {fileID: 2100000, guid: eae4068e4c3ce52428fa7d2f6af5a091, type: 2}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

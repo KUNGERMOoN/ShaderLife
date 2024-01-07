@@ -57,7 +57,7 @@ public class SimulationRunner : MonoBehaviour
             }
             else
             {
-                if (timeSinceUpdate >= 1 / BoardUpdateRate.Value)
+                if (timeSinceUpdate >= 1f / BoardUpdateRate.Value)
                 {
                     Simulation.UpdateBoard();
                     timeSinceUpdate = 0;
@@ -85,5 +85,5 @@ public class SimulationRunner : MonoBehaviour
         Simulation.Randomise(Seed.Value, Chance.Value);
     }
 
-    public void RandomiseSeed() => Seed.Value = UnityEngine.Random.Range(int.MinValue / 2, int.MaxValue / 2);
+    void RandomiseSeed() => Seed.Value = UnityEngine.Random.Range(int.MinValue / 2, int.MaxValue / 2);
 }

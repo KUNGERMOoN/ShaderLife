@@ -1,28 +1,39 @@
+using System;
 using System.Collections.Generic;
 
 namespace MiniBinding
 {
     public class Bindable<T>
     {
-        T value;
+        readonly List<Bindable<T>> Bound = new();
+
+        protected T value;
         public T Value
         {
             get => this.value;
             set
             {
-                OnChanged(value);
-                this.value = value;
+                Apply(value);
+            }
+        }
+
+        void Apply(T newValue)
+        {
+            T newInternalValue = In(newValue);
+            if (newInternalValue.Equals(value) == false)
+            {
+                OnValueChanged(newInternalValue);
+                value = newInternalValue;
                 foreach (var bindable in Bound)
                 {
-                    bindable.OnChanged(value);
-                    bindable.value = value;
+                    bindable.Apply(Out(value));
                 }
             }
         }
 
-        protected virtual void OnChanged(T newValue) { }
+        protected virtual void OnValueChanged(T newVal) { }
 
-        readonly List<Bindable<T>> Bound = new();
+        protected readonly Func<T, T> In, Out;
 
         public void Bind(Bindable<T> bindable)
         {
@@ -31,14 +42,13 @@ namespace MiniBinding
             if (Bound.Contains(bindable) == false)
             {
                 Bound.Add(bindable);
-                value = bindable.value;
                 bindable.Bind(this);
+                Value = bindable.value;
             }
         }
 
         public void Unbind(Bindable<T> bindable)
         {
-
             if (bindable == this) return;
 
             if (Bound.Contains(bindable) == true)
@@ -48,9 +58,21 @@ namespace MiniBinding
             }
         }
 
-        public Bindable() { }
-        public Bindable(T value)
-            => this.value = value;
+        public Bindable(Func<T, T> @in = null, Func<T, T> @out = null)
+        {
+            //Todo: check if value == @out(@in(value)).
+            //If it's false, throw an exception - such behaviour could lead
+            //to infinite loops or StackOverflow
+            @in ??= x => x;
+            In = @in;
+            @out ??= x => x;
+            Out = @out;
+        }
+
+        public Bindable(T value, Func<T, T> @in = null, Func<T, T> @out = null) : this(@in, @out)
+        {
+            this.value = value;
+        }
 
         override public string ToString() => value.ToString();
     }

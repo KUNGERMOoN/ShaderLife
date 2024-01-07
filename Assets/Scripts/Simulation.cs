@@ -55,7 +55,8 @@ public class Simulation : IDisposable
     {
         Update = 0,
         Randomise = 1,
-        SetPixel = 2,
+        Clear = 2,
+        SetPixel = 3
     }
     public static readonly ComputeKernel[] AllKernels
         = (ComputeKernel[])Enum.GetValues(typeof(ComputeKernel));
@@ -111,6 +112,12 @@ public class Simulation : IDisposable
         ComputeShader.SetInt("Seed", seed);
         ComputeShader.SetFloat("Chance", Mathf.Clamp01(chance));
         ComputeShader.Dispatch((int)ComputeKernel.Randomise, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
+    }
+
+    public void Clear()
+    {
+        FlipBuffer();
+        ComputeShader.Dispatch((int)ComputeKernel.Clear, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
     }
 
     public void SetPixel(Vector2Int position, bool value)

@@ -1,5 +1,6 @@
 #pragma kernel Update
 #pragma kernel Randomise
+#pragma kernel Clear
 #pragma kernel SetPixel
 
 #pragma multi_compile __ FLIP_BUFFER
@@ -136,6 +137,14 @@ void Randomise(uint3 id : SV_DispatchThreadID)
     int i = index(id.x, id.y);
     
     SetNext(i, randomConfiguration(i ^ Seed));
+}
+
+[numthreads(8, 8, 1)]
+void Clear(uint3 id : SV_DispatchThreadID)
+{
+    int i = index(id.x, id.y);
+    
+    SetNext(i, 0);
 }
 
 int2 TargetPixel = int2(0, 0);

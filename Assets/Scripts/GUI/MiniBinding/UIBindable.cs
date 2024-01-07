@@ -7,16 +7,22 @@ namespace MiniBinding
     {
         public readonly BaseField<T> VisualElement;
 
-        protected override void OnChanged(T newValue)
-            => VisualElement.value = newValue;
+        protected override void OnValueChanged(T newVal)
+        {
+            VisualElement.value = newVal;
+        }
 
-        public UIBindable(BaseField<T> visualElement)
+        public UIBindable(BaseField<T> visualElement, Func<T, T> @in = null, Func<T, T> @out = null)
+            : base(visualElement.value, @in, @out)
         {
             VisualElement = visualElement;
             VisualElement.RegisterCallback<ChangeEvent<T>>(OnUiChanged);
         }
 
-        void OnUiChanged(ChangeEvent<T> ctx) => Value = ctx.newValue;
+        void OnUiChanged(ChangeEvent<T> ctx)
+        {
+            Value = Out(ctx.newValue);
+        }
 
         public void Dispose()
         {

@@ -5,73 +5,87 @@ using UnityEngine.UIElements;
 
 namespace MiniBinding
 {
-    public static class MiniBinder<T>
+    public static class MiniBinder
     {
-        static Dictionary<int, Bindable<T>> Bindables = new();
-        static List<UIBindable<T>> UIBindables = new();
+        public static List<IDisposable> UICallbacks = new();
+        private static class GenericData<T>
+        {
+            public static Dictionary<int, Bindable<T>> Bindables = new();
+        }
 
-        public static T Get(
+        public static T Get<T>(
             [CallerMemberName] string propertyName = "",
             [CallerFilePath] string file = "",
             [CallerLineNumber] int line = 0)
         {
             int id = GetPropertyId(propertyName, file, line);
-            Bindable<T> bindable = GetById(id);
+            Bindable<T> bindable = GetById<T>(id);
             return bindable.Value;
         }
 
-        public static void Set(T value,
+        public static void Set<T>(T value,
             [CallerMemberName] string propertyName = "",
             [CallerFilePath] string file = "",
             [CallerLineNumber] int line = 0)
         {
             int id = GetPropertyId(propertyName, file, line);
-            Bindable<T> bindable = GetById(id);
+            Bindable<T> bindable = GetById<T>(id);
             bindable.Value = value;
         }
 
-        public static void Bind(BaseField<T> ui, string propertyName = "", string file = "", int line = 0)
+        public static void Bind<T>(BaseField<T> ui,
+            string propertyName = "", string file = "", int line = 0,
+            Func<T, T> @in = null, Func<T, T> @out = null)
         {
-            UIBindable<T> uiBindable = new(ui);
-            UIBindables.Add(uiBindable);
+            UIBindable<T> uiBindable = new(ui, @in, @out);
+            UICallbacks.Add(uiBindable);
 
             int id = GetPropertyId(propertyName, file, line);
-            Bindable<T> bindable = GetById(id);
+            Bindable<T> bindable = GetById<T>(id);
             uiBindable.Bind(bindable);
         }
 
-        public static void Bind(BaseField<T> ui, Bindable<T> bindable)
+        public static void Bind<T>(BaseField<T> ui, Bindable<T> bindable,
+            Func<T, T> @in = null, Func<T, T> @out = null)
         {
-            UIBindable<T> uiBindable = new(ui);
-            UIBindables.Add(uiBindable);
+            UIBindable<T> uiBindable = new(ui, @in, @out);
+            UICallbacks.Add(uiBindable);
             uiBindable.Bind(bindable);
+        }
+
+        public static void Bind(Button button, Action clicked)
+        {
+            ButtonBinder binder = new(button, clicked);
+            UICallbacks.Add(binder);
         }
 
         public static void UnbindUI()
         {
-            foreach (var ui in UIBindables)
+            foreach (var ui in UICallbacks)
             {
                 ui.Dispose();
             }
-            UIBindables.Clear();
+            UICallbacks.Clear();
         }
 
-        static Bindable<T> GetById(int id)
+        static Bindable<T> GetById<T>(int id)
         {
             Bindable<T> bindable;
 
-            if (Bindables.ContainsKey(id))
+            if (GenericData<T>.Bindables.ContainsKey(id))
             {
-                bindable = Bindables[id];
+                bindable = GenericData<T>.Bindables[id];
             }
             else
             {
                 bindable = new();
-                Bindables.Add(id, bindable);
+                GenericData<T>.Bindables.Add(id, bindable);
             }
 
             return bindable;
         }
+
+
 
         static int GetPropertyId(string propertyName, string file, int line)
             => HashCode.Combine(BindableType.Property, propertyName, file, line);
