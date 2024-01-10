@@ -1,5 +1,6 @@
 using MiniBinding;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UIElements;
 
 public class GUIManager : MonoBehaviour
@@ -7,8 +8,14 @@ public class GUIManager : MonoBehaviour
     [Header("References")]
     public UIDocument Document;
     public SimulationRunner Simulation;
+    public EventSystem EventSystem;
 
     VisualElement root;
+
+    public bool Focused
+    {
+        get => root.focusController.focusedElement != null;
+    }
 
     private void OnEnable()
     {

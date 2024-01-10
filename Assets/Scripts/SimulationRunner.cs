@@ -20,7 +20,7 @@ public class SimulationRunner : MonoBehaviour
     public readonly Bindable<bool> UpdateInRealtime = new(false);
     public readonly Bindable<uint> BoardUpdateRate = new(10);
 
-    private void Start()
+    private void Awake()
     {
         var LUTs = Directory.GetFiles(LookupTable.LUTsPath);
         if (LUTs.Length > 0)
@@ -31,8 +31,9 @@ public class SimulationRunner : MonoBehaviour
         }
         else
         {
-            //TODO: Figure out what to do (maybe create an empty LUT at runtime
-            //or re-generate the default LUT and use it)
+            throw new NotImplementedException();
+            //TODO: If no LUT files were found, show the "generation in progress" popup (with some funny title)
+            //and generate the default lut file
         }
     }
 

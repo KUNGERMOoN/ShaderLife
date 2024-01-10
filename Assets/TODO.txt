@@ -8,6 +8,7 @@ Figure out what eats 40% of the GPU as soon as we start the game (with "Update i
 	Edit 2: Nope, it also happens in a clear new scene with default background.
 	So it seems like it's just some strange unity thing
 	EDIT 2: Seems like (based on what others are saying) that it might be only a problem int the editor.
+Fill the board with some example data on the start (maybe a glider in the middle of the board?)
 UI
 	+ clean up and review the code (namespaces etc.)
 	+ fix problems with focusing the selection on the ui and the game
@@ -18,17 +19,14 @@ UI
 	+"The simulation uses lookup tables with pre-computed data to speed up the simulation.
 	  You can use diffrent lookup table (.lut) files to simulate diffrent life-like kinds of simulations.
 	  To learn more, see: https://conwaylife.com/wiki/Life-like_cellular_automaton"
-	+ Remove the "random seed" button, instead make the seed randomize AFTER you run the board randomization.
-	  Also, apply the tooltips to reflect this change.
 	+ Board update rate: "Limited to FPS and the \"Simulation Speed\" option"
-	+ make the "seed" input become readonly when "random seed" is enabled
 	+ write a tooltip system
 	+ write a popup system
 	+ add a number input to the chance slider
 	+ (maybe) Add controls to update multiple times in one frame
 	+ fps counter (and board update rate counter - with the text "limited by the FPS and "simulation speed" option")
-
 importing/exporting to popular game of life file formats
+
 TODO for video: 
 Documentation
 Make the actual video about it

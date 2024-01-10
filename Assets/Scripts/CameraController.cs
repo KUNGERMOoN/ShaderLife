@@ -5,19 +5,14 @@ public class CameraController : MonoBehaviour
     [Header("References")]
     public Camera Camera;
     public SimulationRunner Simulation;
+    public GUIManager GUIManager;
 
     Vector2 velocity;
     Vector2 moveInput;
     float zoomInput;
-    float zoom;
+    float zoom = 0.9f;
 
-    enum MouseState { None, Lmb, Rmb }
-
-    private void Start()
-    {
-        zoom = 0.9f;
-        velocity = Vector2.zero;
-    }
+    bool focusingBack;
 
     private void Update()
     {
@@ -26,6 +21,8 @@ public class CameraController : MonoBehaviour
             input = 1;
         else if (Input.GetKeyDown(KeyCode.PageDown) || Input.GetKeyDown(KeyCode.Q))
             input = -1;
+
+        if (focusingBack) input = 0;
 
         zoomInput += input * GameManager.LoadedSettings.CameraZoomMultiplier;
 
@@ -63,7 +60,7 @@ public class CameraController : MonoBehaviour
         Vector2 velocityDelta = Vector2.ClampMagnitude(moveInput * speed - velocity, GameManager.LoadedSettings.CameraAcceleration);
         velocity += velocityDelta;
 
-        transform.position += new Vector3(velocity.x, velocity.y, 0) * Time.fixedDeltaTime;
+        transform.position += (Vector3)velocity * Time.fixedDeltaTime;
 
         float bounds = GameManager.LoadedSettings.CameraPositionLimit;
         transform.position = new Vector3(
@@ -72,57 +69,51 @@ public class CameraController : MonoBehaviour
             transform.position.z);
     }
 
-    //TODO: Clean up this mess
     Vector2Int lastCellPos;
-    MouseState lastMouseState;
     private void LateUpdate()
+    {
+        Vector2Int cellPos = CalculateSelectedCell();
+
+        if (focusingBack)
+        {
+            lastCellPos = cellPos;
+        }
+
+        if (GUIManager.Focused == false)
+        {
+            int mouseState = 0;
+
+            if (Input.GetKey(KeyCode.Mouse0))
+                mouseState = 1;
+            else if (Input.GetKey(KeyCode.Mouse1))
+                mouseState = -1;
+
+            if (mouseState != 0)
+            {
+                DrawLine(lastCellPos, cellPos, mouseState > 0);
+            }
+        }
+
+        lastCellPos = cellPos;
+        focusingBack = false;
+    }
+
+    private void OnApplicationFocus(bool focus)
+        => focusingBack = focus;
+
+    Vector2Int CalculateSelectedCell()
     {
         var screenPos = new Vector2(Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.height) * 2 - Vector2.one;
         var worldPos = (Vector2)Camera.transform.position + Camera.orthographicSize * new Vector2(screenPos.x * Camera.aspect, screenPos.y);
 
         var boardPos = worldPos + Vector2.one / 2;
-        Vector2Int cellPos = (boardPos * Simulation.BoardSize).FloorToInt();
-        MouseState mouseState;
-
-        if (Input.GetKey(KeyCode.Mouse0))
-            mouseState = MouseState.Lmb;
-        else if (Input.GetKey(KeyCode.Mouse1))
-            mouseState = MouseState.Rmb;
-        else
-            mouseState = MouseState.None;
-
-        //TODO: maybe someday add line drawing
-        /*if (Input.GetKey(KeyCode.LeftShift))
-        {
-            if (mouseState != lastMouseState)
-            {
-                Debug.Log($"{nameof(lastMouseState)}: {lastMouseState}, {nameof(mouseState)}: {mouseState}");
-                if (mouseState == MouseState.None)
-                {
-                    DrawLine(lastCellPos, cellPos, lastMouseState == MouseState.Lmb);
-                }
-                lastMouseState = mouseState;
-            }
-            if (mouseState == MouseState.None)
-            {
-                lastCellPos = cellPos;
-            }
-        }
-        else
-        {*/
-        if (mouseState != MouseState.None)
-        {
-            DrawLine(lastCellPos, cellPos, mouseState == MouseState.Lmb);
-        }
-
-        lastCellPos = cellPos;
-        lastMouseState = mouseState;
-        /*}*/
+        return (boardPos * Simulation.BoardSize).FloorToInt();
     }
 
     //Shamelessly stolen straight from the wikipedia: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm#All_cases
     public void DrawLine(Vector2Int start, Vector2Int end, bool value)
     {
+        //TODO: Rewrite this in a more organised fashion
         Vector2Int d = new(Mathf.Abs(end.x - start.x), -Mathf.Abs(end.y - start.y));
         Vector2Int s = new(start.x < end.x ? 1 : -1, start.y < end.y ? 1 : -1);
         int error = d.x + d.y;

@@ -1,55 +1,57 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/GUI/MainStyle.uss?fileID=7433441132597879392&amp;guid=952f131e41afdb94688cac5454a3c168&amp;type=3#MainStyle" />
-    <ui:VisualElement name="VisualElement" class="container main" style="display: flex; align-self: flex-start; height: 80%; flex-grow: 0; top: 10%; background-color: rgb(56, 56, 56); width: 243px;">
-        <ui:Label tabindex="-1" text="Hover the mouse over different settings to see what they do!" parse-escape-sequences="true" display-tooltip-when-elided="true" style="white-space: normal; font-size: 8px; color: rgb(145, 145, 145); margin-left: 1px; margin-right: 1px; margin-top: 0; margin-bottom: 3px; padding-top: 1px; padding-bottom: 1px;" />
-        <ui:Foldout text="Simulation" value="true" name="simulationFoldout" class="main foldout">
-            <ui:VisualElement name="newSimulationContainer" style="position: absolute; width: 100%; top: -32px; height: 32px; justify-content: flex-end; align-items: flex-end; flex-direction: row;">
-                <ui:Button text="New" parse-escape-sequences="true" display-tooltip-when-elided="true" style="align-self: center; margin-bottom: 4px; margin-top: 4px;" />
-            </ui:VisualElement>
-            <ui:VisualElement name="general" style="flex-grow: 1;">
-                <ui:VisualElement name="controlButtons" class="property" style="flex-direction: row; justify-content: center; right: 15px; margin-bottom: 2px;">
-                    <SwitchButton focusable="true" name="play" tooltip="Play" class="controlButton" style="margin-left: 0; border-top-left-radius: 7px; border-bottom-left-radius: 7px;">
-                        <ui:VisualElement name="image" style="width: 16px; height: 16px; margin-top: 1px; position: absolute; margin-left: 2px;" />
-                    </SwitchButton>
-                    <SwitchButton focusable="true" name="pause" tooltip="Pause" class="controlButton">
-                        <ui:VisualElement name="image" style="width: 16px; height: 16px; margin-top: 1px; position: absolute; margin-left: 1px;" />
-                    </SwitchButton>
-                    <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="next" tooltip="Next" class="controlButton">
-                        <ui:VisualElement name="image" style="width: 16px; height: 16px; background-image: url(&apos;project://database/Assets/GUI/Textures/d_StepButton@2x.png?fileID=2800000&amp;guid=e9b338fad84eff543b0ec05b97059761&amp;type=3#d_StepButton@2x&apos;); align-self: center; margin-top: 1px;" />
-                    </ui:Button>
-                    <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="clear" tooltip="Clear" class="controlButton" style="border-top-right-radius: 7px; border-bottom-right-radius: 7px;">
-                        <ui:VisualElement name="image" style="width: 15px; height: 15px; background-image: url(&apos;project://database/Assets/GUI/Textures/d_Refresh@2x.png?fileID=2800000&amp;guid=9510d6abc8d066f4daad3da770e3131a&amp;type=3#d_Refresh@2x&apos;); align-self: center; margin-top: 2px; margin-right: 1px;" />
-                    </ui:Button>
+    <ui:VisualElement name="body" style="flex-grow: 1; position: absolute; width: 100%; height: 100%; display: flex;">
+        <ui:VisualElement name="options" focusable="true" class="container main" style="display: flex; align-self: flex-start; height: 80%; flex-grow: 0; top: 10%; background-color: rgb(56, 56, 56); width: 243px;">
+            <ui:Label tabindex="-1" text="Hover the mouse over different settings to see what they do!" parse-escape-sequences="true" display-tooltip-when-elided="true" style="white-space: normal; font-size: 8px; color: rgb(145, 145, 145); margin-left: 1px; margin-right: 1px; margin-top: 0; margin-bottom: 3px; padding-top: 1px; padding-bottom: 1px;" />
+            <ui:Foldout text="Simulation" value="true" name="simulationFoldout" class="main foldout">
+                <ui:VisualElement name="newSimulationContainer" style="position: absolute; width: 100%; top: -32px; height: 32px; justify-content: flex-end; align-items: flex-end; flex-direction: row;">
+                    <ui:Button text="New" parse-escape-sequences="true" display-tooltip-when-elided="true" style="align-self: center; margin-bottom: 4px; margin-top: 4px; padding-right: 8px; padding-left: 8px;" />
                 </ui:VisualElement>
-                <ui:UnsignedIntegerField label="Simulation Speed" value="10" tooltip="Determines the maximum rate at which the simulation runs, in updates per second. When set to 0, it will update the simulation every frame." name="simulationSpeed" class="property" />
-            </ui:VisualElement>
-            <ui:VisualElement name="space" style="flex-grow: 1; height: 15px;" />
-            <ui:VisualElement name="randomization" style="flex-grow: 1;">
-                <ui:IntegerField label="Seed" value="1337" name="seed" tooltip="Seed used for the randomization. Randomizing with the same seed will always give the same results." class="property" />
-                <ui:Slider picking-mode="Ignore" label="Chance" value="0.22" high-value="1" name="chance" tooltip="The chance of the cell becoming alive when randomizing the board." focusable="false" class="property" />
-                <ui:Button text="Randomize" parse-escape-sequences="true" display-tooltip-when-elided="true" name="randomize" tooltip="Randomizes the all the cells on the board, with the given seed and chance for the cells to be alive." class="property" />
-            </ui:VisualElement>
-        </ui:Foldout>
-        <ui:Foldout text="Settings" value="true" name="settingsFoldout" class="main foldout" />
-        <ui:Foldout text="Palette" value="true" name="paletteFoldout" class="main foldout" />
-    </ui:VisualElement>
-    <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="popupManager" style="margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; left: 0; top: 0; right: 0; bottom: 0; position: absolute; background-color: rgba(88, 88, 88, 0); display: none;">
-        <ui:VisualElement name="newSimulation" style="position: relative; justify-content: center; align-self: center; margin-left: auto; margin-right: auto; margin-top: auto; margin-bottom: auto; background-color: rgba(56, 56, 56, 0); border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-left-color: rgba(35, 35, 35, 0); border-right-color: rgba(35, 35, 35, 0); border-top-color: rgba(35, 35, 35, 0); border-bottom-color: rgba(35, 35, 35, 0); display: flex;">
-            <ui:VisualElement name="header" style="width: 100%; height: 22px; border-top-left-radius: 5px; border-bottom-left-radius: 0; border-top-right-radius: 5px; border-bottom-right-radius: 0; border-left-color: rgb(35, 35, 35); border-right-color: rgb(35, 35, 35); border-top-color: rgb(35, 35, 35); border-bottom-color: rgb(35, 35, 35); border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; background-color: rgb(56, 56, 56); flex-direction: row;">
-                <ui:Label tabindex="-1" text="New Simulation" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" style="flex-grow: 1; margin-right: 2px; margin-top: 2px; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;" />
-                <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="closeButton" style="width: 20px; height: 20px; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; align-self: flex-end; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; background-color: rgba(162, 162, 162, 0); background-image: url(&apos;project://database/Assets/GUI/Textures/d_winbtn_win_close@2x.png?fileID=2800000&amp;guid=ab08b8e7068a71044bec348ea241429e&amp;type=3#d_winbtn_win_close@2x&apos;); -unity-background-image-tint-color: rgb(238, 238, 238);" />
-            </ui:VisualElement>
-            <ui:VisualElement name="contents" class="main" style="padding-left: 2px; padding-right: 2px; padding-top: 2px; padding-bottom: 2px; border-top-width: 0; border-top-left-radius: 0; border-top-right-radius: 0;">
-                <ui:UnsignedIntegerField label="Size" value="1" name="size" class="property" style="margin-bottom: 2px;" />
-                <ui:Toggle label="Randomise" name="randomiseOnStart" value="true" class="property" style="height: initial; margin-bottom: 2px;" />
-                <ui:VisualElement name="lookupTable" class="unity-base-field property" style="flex-grow: 1; flex-direction: column;">
-                    <ui:Label tabindex="-1" text="Lookup Table File:" parse-escape-sequences="true" display-tooltip-when-elided="true" focusable="true" class="unity-text-element unity-base-field__label" style="margin-top: 2px;" />
-                    <ui:TextField picking-mode="Ignore" label="Text Field" value="GameOfLife.lut" class="property" style="margin-bottom: 0;">
-                        <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; margin-bottom: 0; background-image: url(&apos;project://database/Assets/GUI/Textures/d_Profiler.FileAccess@2x.png?fileID=2800000&amp;guid=d5c23782e5422aa49bee363271dc112e&amp;type=3#d_Profiler.FileAccess@2x&apos;); height: 23px; align-self: center; width: 23px; background-color: rgba(88, 88, 88, 0);" />
-                    </ui:TextField>
+                <ui:VisualElement name="general" style="flex-grow: 1;">
+                    <ui:VisualElement name="controlButtons" class="property" style="flex-direction: row; justify-content: center; right: 15px; margin-bottom: 2px;">
+                        <SwitchButton focusable="true" name="play" tooltip="Play" class="controlButton" style="margin-left: 0; border-top-left-radius: 7px; border-bottom-left-radius: 7px;">
+                            <ui:VisualElement name="image" style="width: 16px; height: 16px; margin-top: 1px; position: absolute; margin-left: 2px;" />
+                        </SwitchButton>
+                        <SwitchButton focusable="true" name="pause" tooltip="Pause" class="controlButton">
+                            <ui:VisualElement name="image" style="width: 16px; height: 16px; margin-top: 1px; position: absolute; margin-left: 1px;" />
+                        </SwitchButton>
+                        <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="next" tooltip="Next" class="controlButton">
+                            <ui:VisualElement name="image" style="width: 16px; height: 16px; background-image: url(&apos;project://database/Assets/GUI/Textures/d_StepButton@2x.png?fileID=2800000&amp;guid=e9b338fad84eff543b0ec05b97059761&amp;type=3#d_StepButton@2x&apos;); align-self: center; margin-top: 1px;" />
+                        </ui:Button>
+                        <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="clear" tooltip="Clear" class="controlButton" style="border-top-right-radius: 7px; border-bottom-right-radius: 7px;">
+                            <ui:VisualElement name="image" style="width: 15px; height: 15px; background-image: url(&apos;project://database/Assets/GUI/Textures/d_Refresh@2x.png?fileID=2800000&amp;guid=9510d6abc8d066f4daad3da770e3131a&amp;type=3#d_Refresh@2x&apos;); align-self: center; margin-top: 2px; margin-right: 1px;" />
+                        </ui:Button>
+                    </ui:VisualElement>
+                    <ui:UnsignedIntegerField label="Simulation Speed" value="10" tooltip="Determines the maximum rate at which the simulation runs, in updates per second. When set to 0, it will update the simulation every frame." name="simulationSpeed" class="property" />
                 </ui:VisualElement>
-                <ui:Button text="Create" parse-escape-sequences="true" display-tooltip-when-elided="true" name="createNew" class="button property" style="margin-top: 2px;" />
-            </ui:VisualElement>
+                <ui:VisualElement name="space" style="flex-grow: 1; height: 15px;" />
+                <ui:VisualElement name="randomization" style="flex-grow: 1;">
+                    <ui:IntegerField label="Seed" value="1337" name="seed" tooltip="Seed used for the randomization. Randomizing with the same seed will always give the same results." class="property" />
+                    <ui:Slider picking-mode="Ignore" label="Chance" value="0.22" high-value="1" name="chance" tooltip="The chance of the cell becoming alive when randomizing the board." focusable="true" class="property" />
+                    <ui:Button text="Randomize" parse-escape-sequences="true" display-tooltip-when-elided="true" name="randomize" tooltip="Randomizes the all the cells on the board, with the given seed and chance for the cells to be alive." class="property" />
+                </ui:VisualElement>
+            </ui:Foldout>
+            <ui:Foldout text="Settings" value="true" name="settingsFoldout" class="main foldout" />
+            <ui:Foldout text="Palette" value="true" name="paletteFoldout" class="main foldout" />
         </ui:VisualElement>
-    </ui:Button>
+        <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="popupManager" focusable="true" style="margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; left: 0; top: 0; right: 0; bottom: 0; position: absolute; background-color: rgba(88, 88, 88, 0); display: none;">
+            <ui:VisualElement name="newSimulation" style="position: relative; justify-content: center; align-self: center; margin-left: auto; margin-right: auto; margin-top: auto; margin-bottom: auto; background-color: rgba(56, 56, 56, 0); border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; border-left-color: rgba(35, 35, 35, 0); border-right-color: rgba(35, 35, 35, 0); border-top-color: rgba(35, 35, 35, 0); border-bottom-color: rgba(35, 35, 35, 0); display: none;">
+                <ui:VisualElement name="header" style="width: 100%; height: 22px; border-top-left-radius: 5px; border-bottom-left-radius: 0; border-top-right-radius: 5px; border-bottom-right-radius: 0; border-left-color: rgb(35, 35, 35); border-right-color: rgb(35, 35, 35); border-top-color: rgb(35, 35, 35); border-bottom-color: rgb(35, 35, 35); border-left-width: 1px; border-right-width: 1px; border-top-width: 1px; border-bottom-width: 1px; background-color: rgb(56, 56, 56); flex-direction: row;">
+                    <ui:Label tabindex="-1" text="New Simulation" parse-escape-sequences="true" display-tooltip-when-elided="true" name="title" style="flex-grow: 1; margin-right: 2px; margin-top: 2px; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0;" />
+                    <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="closeButton" style="width: 20px; height: 20px; margin-left: 0; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; align-self: flex-end; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; background-color: rgba(162, 162, 162, 0); background-image: url(&apos;project://database/Assets/GUI/Textures/d_winbtn_win_close@2x.png?fileID=2800000&amp;guid=ab08b8e7068a71044bec348ea241429e&amp;type=3#d_winbtn_win_close@2x&apos;); -unity-background-image-tint-color: rgb(238, 238, 238);" />
+                </ui:VisualElement>
+                <ui:VisualElement name="contents" class="main" style="padding-left: 2px; padding-right: 2px; padding-top: 2px; padding-bottom: 2px; border-top-width: 0; border-top-left-radius: 0; border-top-right-radius: 0;">
+                    <ui:UnsignedIntegerField label="Size" value="1" name="size" class="property" style="margin-bottom: 2px;" />
+                    <ui:Toggle label="Randomise" name="randomiseOnStart" value="true" class="property" style="height: initial; margin-bottom: 2px;" />
+                    <ui:VisualElement name="lookupTable" class="unity-base-field property" style="flex-grow: 1; flex-direction: column;">
+                        <ui:Label tabindex="-1" text="Lookup Table File:" parse-escape-sequences="true" display-tooltip-when-elided="true" focusable="true" class="unity-text-element unity-base-field__label" style="margin-top: 2px;" />
+                        <ui:TextField picking-mode="Ignore" label="Text Field" value="GameOfLife.lut" class="property" style="margin-bottom: 0;">
+                            <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; margin-bottom: 0; background-image: url(&apos;project://database/Assets/GUI/Textures/d_Profiler.FileAccess@2x.png?fileID=2800000&amp;guid=d5c23782e5422aa49bee363271dc112e&amp;type=3#d_Profiler.FileAccess@2x&apos;); height: 23px; align-self: center; width: 23px; background-color: rgba(88, 88, 88, 0);" />
+                        </ui:TextField>
+                    </ui:VisualElement>
+                    <ui:Button text="Create" parse-escape-sequences="true" display-tooltip-when-elided="true" name="createNew" class="button property" style="margin-top: 2px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:Button>
+    </ui:VisualElement>
 </ui:UXML>
