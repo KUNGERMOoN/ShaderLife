@@ -157,7 +157,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Document: {fileID: 423357964}
   Simulation: {fileID: 1518814363}
-  EventSystem: {fileID: 423357967}
 --- !u!114 &423357964
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -332,6 +331,7 @@ MonoBehaviour:
   Camera: {fileID: 963194227}
   Simulation: {fileID: 1518814363}
   GUIManager: {fileID: 423357963}
+  Test: 3
 --- !u!1 &1424205208
 GameObject:
   m_ObjectHideFlags: 0
@@ -374,12 +374,6 @@ MonoBehaviour:
     Description: 'Cold Light palette by @A-LAMP on Lospec
 
       https://lospec.com/palette-list/cold-light'
-  Settings:
-    CameraMaxSpeed: 0.6
-    CameraAcceleration: 0.15
-    CameraPositionLimit: 1
-    CameraZoomMultiplier: 0.15
-    CameraZoomTime: 0.03
 --- !u!4 &1424205210
 Transform:
   m_ObjectHideFlags: 0

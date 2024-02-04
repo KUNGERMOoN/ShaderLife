@@ -1,0 +1,29 @@
+Here are calculations we use to make the camera zoom 'into' mouse position
+
+Known:
+MouseToScreenPos1() = MouseToScreenPos2() = MouseToScreenPos()
+Camera.aspect
+zoom2
+
+worldMousePos1 = worldMousePos2
+CameraPositionΔ = Camera.position2 - Camera.position1
+
+Unknown:
+CameraPositionΔ = ?
+
+Reasoning:
+worldMousePos = ScreenToWorldPos(MouseToScreenPos()) =
+Camera.position + ScreenWorldSize * MouseToScreenPos() =
+Camera.position + Camera.orthographicSize * new Vector2(Camera.aspect, 1) * MouseToScreenPos()
+
+worldMousePos1 = worldMousePos2
+Camera.position1 + ScreenWorldSize1 * MouseToScreenPos() = Camera.position2 + ScreenWorldSize2 * MouseToScreenPos()
+ScreenWorldSize1 * MouseToScreenPos() - ScreenWorldSize2 * MouseToScreenPos() = Camera.position2 - Camera.position1
+MouseToScreenPos() * (ScreenWorldSize1 - ScreenWorldSize2) = CameraPositionΔ
+CameraPositionΔ = MouseToScreenPos() * (ScreenWorldSize1 - ScreenWorldSize2)
+
+ScreenWorldSize = Camera.orthographicSize * new Vector2(Camera.aspect, 1)
+
+CameraPositionΔ = MouseToScreenPos() * (Camera.orthographicSize1 * new Vector2(Camera.aspect, 1) - Camera.orthographicSize2 * new Vector2(Camera.aspect, 1))
+CameraPositionΔ = MouseToScreenPos() * new Vector2(Camera.aspect, 1)
+  * (Camera.orthographicSize1 - Camera.orthographicSize2)

@@ -13,23 +13,27 @@ namespace MiniBinding
             get => this.value;
             set
             {
-                Apply(value);
+                Apply(value, !version);
             }
         }
 
-        void Apply(T newValue)
+        void Apply(T newValue, bool newVersion)
         {
-            T newInternalValue = In(newValue);
-            if (newInternalValue.Equals(value) == false)
+            if (version != newVersion)
             {
+                version = newVersion;
+
+                T newInternalValue = In(newValue);
                 OnValueChanged(newInternalValue);
                 value = newInternalValue;
                 foreach (var bindable in Bound)
                 {
-                    bindable.Apply(Out(value));
+                    bindable.Apply(Out(value), newVersion);
                 }
             }
         }
+
+        bool version = false;
 
         protected virtual void OnValueChanged(T newVal) { }
 
@@ -60,9 +64,6 @@ namespace MiniBinding
 
         public Bindable(Func<T, T> @in = null, Func<T, T> @out = null)
         {
-            //Todo: check if value == @out(@in(value)).
-            //If it's false, throw an exception - such behaviour could lead
-            //to infinite loops or StackOverflow
             @in ??= x => x;
             In = @in;
             @out ??= x => x;
@@ -73,6 +74,9 @@ namespace MiniBinding
         {
             this.value = value;
         }
+
+        public static implicit operator T(Bindable<T> bindable)
+            => bindable.Value;
 
         override public string ToString() => value.ToString();
     }

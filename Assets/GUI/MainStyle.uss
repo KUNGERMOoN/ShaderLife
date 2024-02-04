@@ -74,6 +74,25 @@ Button:active {
     padding-right: 5px;
 }
 
+.unity-integer-field__input {
+    background-color: rgb(42, 42, 42);
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: rgb(32, 32, 32);
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.unity-slider .unity-text-field__input {
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    flex-shrink: 0;
+}
+
 .unity-text-field__input {
     background-color: rgb(42, 42, 42);
     border-radius: 5px;
@@ -86,8 +105,8 @@ Button:active {
     padding-right: 5px;
 }
 
-.popup {
-    width: 246px;
+.popup-container {
+    min-width: 246px;
 }
 
 #newSimulation .unity-text-element--inner-input-field-component {
@@ -142,17 +161,6 @@ Button:active {
     min-width: 71px;
 }
 
-.unity-integer-field__input {
-    background-color: rgb(42, 42, 42);
-    border-radius: 5px;
-    border-width: 1px;
-    border-color: rgb(32, 32, 32);
-    padding-top: 3px;
-    padding-bottom: 3px;
-    padding-left: 5px;
-    padding-right: 5px;
-}
-
 .controlButton {
     padding-left: 0;
     padding-right: 0;
@@ -188,19 +196,19 @@ Button:active {
 }
 
 #play > #image {
-    background-image: url('project://database/Assets/GUI/Textures/d_PlayButton@2x.png?fileID=2800000&guid=43c48efe0c9fb5245a0a76da81583bf2&type=3#d_PlayButton@2x');
+    background-image: url('project://database/Assets/GUI/Icons/Old/d_PlayButton@2x.png?fileID=2800000&guid=43c48efe0c9fb5245a0a76da81583bf2&type=3#d_PlayButton@2x');
 }
 
 #pause > #image {
-    background-image: url('project://database/Assets/GUI/Textures/d_PauseButton@2x.png?fileID=2800000&guid=942bef6c5810ad64387636c07b70bc03&type=3#d_PauseButton@2x');
+    background-image: url('project://database/Assets/GUI/Icons/Old/d_PauseButton@2x.png?fileID=2800000&guid=942bef6c5810ad64387636c07b70bc03&type=3#d_PauseButton@2x');
 }
 
 #play:checked > #image {
-    background-image: url('project://database/Assets/GUI/Textures/d_PlayButton%20On@2x.png?fileID=2800000&guid=6ddc16e9c05345648bd767e1d6a4f355&type=3#d_PlayButton On@2x');
+    background-image: url('project://database/Assets/GUI/Icons/Old/d_PlayButton%20On@2x.png?fileID=2800000&guid=6ddc16e9c05345648bd767e1d6a4f355&type=3#d_PlayButton On@2x');
 }
 
 #pause:checked > #image {
-    background-image: url('project://database/Assets/GUI/Textures/d_PauseButton%20On@2x.png?fileID=2800000&guid=d5b12e73ffefe3f42b95284023e869f7&type=3#d_PauseButton On@2x');
+    background-image: url('project://database/Assets/GUI/Icons/Old/d_PauseButton%20On@2x.png?fileID=2800000&guid=d5b12e73ffefe3f42b95284023e869f7&type=3#d_PauseButton On@2x');
 }
 
 #randomSeed {
@@ -221,4 +229,64 @@ Button:active {
 
 #randomSeed:checked > #image {
     -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+
+Popup #header > * {
+    background-color: rgb(56, 56, 56);
+}
+
+Popup #content-container {
+    background-color: rgb(64, 64, 64);
+}
+
+.countToggle Label {
+    -unity-text-align: upper-center;
+    min-width: 24px;
+    margin-top: 0;
+}
+
+.countToggle > Toggle {
+    flex-grow: 1;
+}
+
+.countToggle > Toggle > VisualElement {
+    align-self: center;
+}
+
+.countToggle > Toggle #unity-checkmark {
+    margin-left: 0;
+}
+
+.unity-progress-bar__progress {
+    background-color: rgb(231, 231, 231);
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.unity-progress-bar__background {
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    background-color: rgb(64, 64, 64);
+}
+
+.unity-progress-bar__container {
+    max-height: 10px;
+    min-height: 10px;
+}
+
+#advancedOptions > .unity-foldout__toggle {
+    margin-left: 0;
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+#advancedOptions > #unity-content {
 }

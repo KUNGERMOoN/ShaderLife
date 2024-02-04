@@ -3,7 +3,6 @@ using System.Collections;
 using System.IO;
 using UnityEngine;
 
-//TODO: Generate a new lookput table and compare it to the backup of an old, reliable one
 public class LUTContentsTest : MonoBehaviour
 {
     [Test]
@@ -22,10 +21,10 @@ public class LUTContentsTest : MonoBehaviour
         int i = 0;
         while (enumerator.MoveNext())
         {
-            Assert.AreEqual(builder.Bytes[i + 0], original[contentOffset + i + 0]);
-            Assert.AreEqual(builder.Bytes[i + 1], original[contentOffset + i + 1]);
-            Assert.AreEqual(builder.Bytes[i + 2], original[contentOffset + i + 2]);
-            Assert.AreEqual(builder.Bytes[i + 3], original[contentOffset + i + 3]);
+            Assert.AreEqual(builder.Contents[i + 0], original[contentOffset + i + 0]);
+            Assert.AreEqual(builder.Contents[i + 1], original[contentOffset + i + 1]);
+            Assert.AreEqual(builder.Contents[i + 2], original[contentOffset + i + 2]);
+            Assert.AreEqual(builder.Contents[i + 3], original[contentOffset + i + 3]);
 
             i += 4;
         }

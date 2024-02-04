@@ -3,19 +3,11 @@ using UnityEngine.UIElements;
 
 public class SwitchButton : BaseBoolField
 {
-    public bool Pressed
-    {
-        get => base.value;
-        set => base.value = value;
-    }
-
-    public SwitchButton() : base("") { }
-
     public new class UxmlFactory : UxmlFactory<SwitchButton, UxmlTraits> { }
 
     public new class UxmlTraits : VisualElement.UxmlTraits
     {
-        UxmlBoolAttributeDescription ValueAttribute = new() { name = "value" };
+        readonly UxmlBoolAttributeDescription ValueAttribute = new() { name = "value" };
 
         public override IEnumerable<UxmlChildElementDescription> uxmlChildElementsDescription
         {
@@ -28,5 +20,18 @@ public class SwitchButton : BaseBoolField
             SwitchButton button = (SwitchButton)ve;
             button.Pressed = ValueAttribute.GetValueFromBag(bag, cc);
         }
+    }
+
+    public static new readonly string ussClassName = "switch-button";
+
+    public bool Pressed
+    {
+        get => base.value;
+        set => base.value = value;
+    }
+
+    public SwitchButton() : base("")
+    {
+        AddToClassList(ussClassName);
     }
 }

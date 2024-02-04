@@ -21,16 +21,18 @@ public class LookupTable
 
     //Amount of elements needed to store all possible configurations when they are packed
     //into 4-byte object (so it can be sent as a buffer to the compute shader)
-    public const int packedLength = configurations / 4; //2^6
+    public const int packedLength = configurations / 4; //2^22
 
 
     public static string FileExtension => "lut";
     public static string LUTsPath => Path.Combine(Application.dataPath, "Resources", "Lookup Tables");
     public static string DefaultLUT => "GameOfLife.lut";
+    public static int[] DefaultBirthCount = { 3 };
+    public static int[] DefaultSurviveCount = { 2, 3 };
 
     public bool Generated { get; private set; }
-    public byte[] Bytes { get; private set; }
-    public int[] Packed { get; private set; }
+    public byte[] Contents { get; private set; }
+    public int[] PackedContents { get; private set; }
 
     public readonly int[] BirthCount, SurviveCount;
 
@@ -65,7 +67,7 @@ public class LookupTable
             foreach (int survive in SurviveCount)
                 writer.Write(survive);
 
-            writer.Write(Bytes);
+            writer.Write(Contents);
         }
 #if UNITY_EDITOR
         AssetDatabase.Refresh();
@@ -74,22 +76,14 @@ public class LookupTable
 
     public void GenerateAll()
     {
-        //TODO: use Generate instead
-        Bytes = new byte[configurations];
-        Packed = new int[packedLength];
-
-        for (int i = 0; i < packedLength; i++)
-        {
-            GeneratePackedConfigurations(i);
-        }
-
-        Generated = true;
+        IEnumerator enumerator = Generate();
+        while (enumerator.MoveNext()) { }
     }
 
     public IEnumerator Generate()
     {
-        Bytes = new byte[configurations];
-        Packed = new int[packedLength];
+        Contents = new byte[configurations];
+        PackedContents = new int[packedLength];
         GeneratedPacks = 0;
 
         for (int i = 0; i < packedLength; i++)
@@ -119,13 +113,13 @@ public class LookupTable
             for (int i = 0; i < surviveCount.Length; i++)
                 surviveCount[i] = reader.ReadInt32();
 
-            LookupTable builder = new(birthCount, surviveCount)
+            LookupTable lut = new(birthCount, surviveCount)
             {
                 GeneratedPacks = configurations
             };
 
-            builder.Bytes = new byte[configurations];
-            builder.Packed = new int[packedLength];
+            lut.Contents = new byte[configurations];
+            lut.PackedContents = new int[packedLength];
             for (int i = 0; i < packedLength; i++)
             {
                 byte byte1 = reader.ReadByte();
@@ -133,15 +127,16 @@ public class LookupTable
                 byte byte3 = reader.ReadByte();
                 byte byte4 = reader.ReadByte();
 
-                builder.Bytes[i * 4] = byte1;
-                builder.Bytes[i * 4 + 1] = byte2;
-                builder.Bytes[i * 4 + 2] = byte3;
-                builder.Bytes[i * 4 + 3] = byte4;
+                lut.Contents[i * 4] = byte1;
+                lut.Contents[i * 4 + 1] = byte2;
+                lut.Contents[i * 4 + 2] = byte3;
+                lut.Contents[i * 4 + 3] = byte4;
 
-                builder.Packed[i] = PackBytes(byte1, byte2, byte3, byte4);
+                lut.PackedContents[i] = PackBytes(byte1, byte2, byte3, byte4);
             }
 
-            return builder;
+            lut.Generated = true;
+            return lut;
         }
         catch (Exception error)
         {
@@ -159,12 +154,12 @@ public class LookupTable
         byte byte2 = Simulate(packedIndex * 4 + 2);
         byte byte3 = Simulate(packedIndex * 4 + 3);
 
-        Bytes[packedIndex * 4] = byte0;
-        Bytes[packedIndex * 4 + 1] = byte1;
-        Bytes[packedIndex * 4 + 2] = byte2;
-        Bytes[packedIndex * 4 + 3] = byte3;
+        Contents[packedIndex * 4] = byte0;
+        Contents[packedIndex * 4 + 1] = byte1;
+        Contents[packedIndex * 4 + 2] = byte2;
+        Contents[packedIndex * 4 + 3] = byte3;
 
-        Packed[packedIndex] = PackBytes(byte0, byte1, byte2, byte3);
+        PackedContents[packedIndex] = PackBytes(byte0, byte1, byte2, byte3);
     }
 
     static int PackBytes(byte byte0, byte byte1, byte byte2, byte byte3) =>

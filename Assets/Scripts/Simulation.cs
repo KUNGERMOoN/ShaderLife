@@ -4,7 +4,6 @@ using UnityEngine;
 public class Simulation : IDisposable
 {
     public readonly ComputeShader ComputeShader;
-
     public readonly LookupTable LookupTable;
 
     Material material;
@@ -24,7 +23,7 @@ public class Simulation : IDisposable
                 newMaterial.SetBuffer("chunksA", boardBufferA);
                 newMaterial.SetBuffer("chunksB", boardBufferB);
                 newMaterial.SetInteger("_BoardSize", Cells.x);
-                if (Board.Flipped) newMaterial.EnableKeyword("FLIP_BUFFER");
+                if (bufferFlipped) newMaterial.EnableKeyword("FLIP_BUFFER");
                 else newMaterial.DisableKeyword("FLIP_BUFFER");
             }
 
@@ -34,32 +33,15 @@ public class Simulation : IDisposable
 
     public readonly int SizeLevel;
     public int Size
-    {
-        get
-        {
-            ComputeShader.GetKernelThreadGroupSizes(0, out uint groupSizeX, out _, out _);
-            return (int)groupSizeX * SizeLevel * 4;
-        }
-    }
-
-    readonly DoubleBoard<int> Board;
+        => ThreadGroupSize.x * SizeLevel * 4;
 
     //Implementation of double-buffering the board
     //For more info, see Shaders/GameOfLifeSimulation.compute
     readonly ComputeBuffer boardBufferA;
     readonly ComputeBuffer boardBufferB;
+    bool bufferFlipped = false;
 
     readonly ComputeBuffer lookupBuffer;
-
-    public enum ComputeKernel
-    {
-        Update = 0,
-        Randomise = 1,
-        Clear = 2,
-        SetPixel = 3
-    }
-    public static readonly ComputeKernel[] AllKernels
-        = (ComputeKernel[])Enum.GetValues(typeof(ComputeKernel));
 
     public Simulation(ComputeShader simulation, int sizeLevel, LookupTable lut)
     {
@@ -70,18 +52,15 @@ public class Simulation : IDisposable
         LookupTable = lut;
         SizeLevel = sizeLevel;
 
-        //Set up the board
-        Board = new(BoardChunks, true);
+        var bufferSize = (Size + 2) * (Size + 2);
+        boardBufferA = new ComputeBuffer(bufferSize, sizeof(int) * 2);
+        boardBufferB = new ComputeBuffer(bufferSize, sizeof(int) * 2);
 
-        boardBufferA = new ComputeBuffer(Board.BufferSize, sizeof(int) * 2);
-
-        boardBufferB = new ComputeBuffer(Board.BufferSize, sizeof(int) * 2);
-
-        ComputeShader.SetInts("Size", BoardChunks.x, BoardChunks.y);
+        ComputeShader.SetInts("Size", Chunks.x, Chunks.y);
         FlipBuffer();
 
         lookupBuffer = new ComputeBuffer(LookupTable.packedLength, sizeof(byte) * 4);
-        lookupBuffer.SetData(LookupTable.Packed);
+        lookupBuffer.SetData(LookupTable.PackedContents);
 
         //Link Buffers to the shader
         foreach (ComputeKernel kernel in AllKernels)
@@ -97,7 +76,6 @@ public class Simulation : IDisposable
         boardBufferA?.Release();
         boardBufferB?.Release();
         lookupBuffer?.Release();
-        Board.Dispose();
     }
 
     public void UpdateBoard()
@@ -134,8 +112,8 @@ public class Simulation : IDisposable
 
     void FlipBuffer()
     {
-        Board.Flip();
-        if (Board.Flipped)
+        bufferFlipped = !bufferFlipped;
+        if (bufferFlipped)
         {
             ComputeShader.EnableKeyword("FLIP_BUFFER");
             if (Material != null) Material.EnableKeyword("FLIP_BUFFER");
@@ -147,6 +125,16 @@ public class Simulation : IDisposable
         }
     }
 
+    enum ComputeKernel
+    {
+        Update = 0,
+        Randomise = 1,
+        Clear = 2,
+        SetPixel = 3
+    }
+    static readonly ComputeKernel[] AllKernels
+        = (ComputeKernel[])Enum.GetValues(typeof(ComputeKernel));
+
     public Vector3Int ThreadGroupSize
     {
         get
@@ -156,11 +144,12 @@ public class Simulation : IDisposable
         }
     }
 
-    public Vector3Int ThreadGroups => new(SizeLevel, SizeLevel * 2, 1);
+    public Vector3Int ThreadGroups
+        => new(SizeLevel, SizeLevel * 2, 1);
 
-    public Vector2Int BoardChunks
+    public Vector2Int Chunks
         => new(ThreadGroupSize.x * ThreadGroups.x, ThreadGroupSize.y * ThreadGroups.y);
 
     public Vector2Int Cells
-        => new(BoardChunks.x * 4, BoardChunks.y * 2); //Same as: new(Size, Size)
+        => new(Chunks.x * 4, Chunks.y * 2); //Same as: new(Size, Size)
 }

@@ -4,9 +4,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public static class Utils
 {
+    public static float ToFloat(this StyleLength styleLength)
+        => styleLength.value.value;
+
     public static bool IsValidFileName(string fileName, string absolutePath) =>
         !string.IsNullOrEmpty(fileName) &&
         fileName.IndexOfAny(Path.GetInvalidFileNameChars()) < 0 &&

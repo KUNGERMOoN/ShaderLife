@@ -26,7 +26,6 @@ Shader "Game Of Life/GameOfLifeDrawer"
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
-			#pragma enable_d3d11_debug_symbols //TODO: Remove this after we finish debugging
 			
 			#pragma multi_compile __ FLIP_BUFFER
 

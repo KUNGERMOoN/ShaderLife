@@ -1,4 +1,4 @@
-TODO (the real one):
+﻿TODO (the real one):
 Figure out what eats 40% of the GPU as soon as we start the game (with "Update in realtime" disabled!)
 	it should't be the drawing shader because it also runs when the game is paused (GPU is fine then)
 	and it shouldn't be the simulation compute shader, because "Update in realtime" is disabled
@@ -10,21 +10,33 @@ Figure out what eats 40% of the GPU as soon as we start the game (with "Update i
 	EDIT 2: Seems like (based on what others are saying) that it might be only a problem int the editor.
 Fill the board with some example data on the start (maybe a glider in the middle of the board?)
 UI
+	+ the restart button should return to the original configuration rather than just clearing
+	+ add warning popup at the start about high GPU usage
 	+ clean up and review the code (namespaces etc.)
-	+ fix problems with focusing the selection on the ui and the game
-	+ make changes to fields in GameOfLife.cs also apply to the runtime ui
-	  (ex. change the seed in the ui when "random seed" is enabled)
 	+ show expected board size in the "New Simulation" popup
-	+ make custom controls
-	+"The simulation uses lookup tables with pre-computed data to speed up the simulation.
-	  You can use diffrent lookup table (.lut) files to simulate diffrent life-like kinds of simulations.
-	  To learn more, see: https://conwaylife.com/wiki/Life-like_cellular_automaton"
+	+ custom LUT Selection under "Advanced" settings
 	+ Board update rate: "Limited to FPS and the \"Simulation Speed\" option"
 	+ write a tooltip system
-	+ write a popup system
 	+ add a number input to the chance slider
 	+ (maybe) Add controls to update multiple times in one frame
 	+ fps counter (and board update rate counter - with the text "limited by the FPS and "simulation speed" option")
+Add validation for:
+	+ loading and saving LUTs (incorrect files / file paths)
+	+ palettes (incorrect files / file paths)
+	+ incorrect new simulation size (0)
+	+ lookup table generation popup: label "to speed up the generation, the app might become very laggy"
+	  and make it non-draggable and non-closable
+Remove test visual element from newLUTPopup/birthCountElement/birthToggles
+While generating a LUT, if you:
+	- click on the popup
+	- open other window
+	- open back the app
+you will draw a stripe of 
+Add increasing/ decreasing bruch size
+Use bool[] rather than int[] for defining birth/survive count
+store the information about what is the value of outline cells and
+	the default value of the background in the lut file
+Use SpriteRenderer instead of MeshRenderer for the board
 importing/exporting to popular game of life file formats
 
 TODO for video: 

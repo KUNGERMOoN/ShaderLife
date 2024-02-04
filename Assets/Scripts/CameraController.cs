@@ -9,23 +9,36 @@ public class CameraController : MonoBehaviour
 
     Vector2 velocity;
     Vector2 moveInput;
-    float zoomInput;
+
+    float targetZoom;
     float zoom = 0.9f;
+
+    Vector2 zoomPosition;
 
     bool focusingBack;
 
+    private void Start()
+    {
+        targetZoom = zoom;
+    }
+
     private void Update()
     {
+        if (focusingBack || GUIManager.Focused) return;
+
+        //Zoom
         float input = Input.mouseScrollDelta.y;
+        if (input != 0)
+            zoomPosition = MouseToScreenPos();
         if (Input.GetKeyDown(KeyCode.PageUp) || Input.GetKeyDown(KeyCode.E))
             input = 1;
         else if (Input.GetKeyDown(KeyCode.PageDown) || Input.GetKeyDown(KeyCode.Q))
             input = -1;
 
-        if (focusingBack) input = 0;
+        targetZoom += input * GameManager.LoadedSettings.CameraZoomMultiplier;
+        targetZoom = Mathf.Max(targetZoom, 0);
 
-        zoomInput += input * GameManager.LoadedSettings.CameraZoomMultiplier;
-
+        //Movement
         moveInput = new();
         if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
             moveInput.x = 1;
@@ -37,42 +50,48 @@ public class CameraController : MonoBehaviour
             moveInput.y = -1;
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
-        //v = s / t
-        //v = Δs / Δt
-        //s / t = Δs / Δt
-        //Δs = (Δt * s) / t
-        float deltaS = (Time.fixedDeltaTime * GameManager.LoadedSettings.CameraZoomMultiplier) / GameManager.LoadedSettings.CameraZoomTime;
-        float zoomDelta = Mathf.Clamp(zoomInput, -deltaS, deltaS);
-        zoomInput -= zoomDelta;
+        if (GUIManager.Focused) return;
 
-        zoom += zoomDelta;
+        //Zoom
+        float zoomStep;
+        if (GameManager.LoadedSettings.CameraZoomSmoothness != 0f)
+            zoomStep = 1 / Mathf.Clamp(GameManager.LoadedSettings.CameraZoomSmoothness, 0f, 10f);
+        else zoomStep = float.PositiveInfinity;
 
-        zoom = Mathf.Max(zoom, 0);
-
-        //TODO: zoom to to mouse position rather than to the center of the screen
-
+        var lastOrthographicSize = Camera.orthographicSize;
+        zoom = Mathf.Lerp(zoom, targetZoom, zoomStep);
         Camera.orthographicSize = 1 / Mathf.Pow(2, zoom);
 
-        float speed = Camera.orthographicSize * 2 * GameManager.LoadedSettings.CameraMaxSpeed;
+        //We offset the camera to make sure you zoom "into" the mouse position instead of the center of the screen
+        //To see why we calculate it like that, see Docs/ZoomIntoPosition.txt
+        Vector2 zoomOffset = zoomPosition * new Vector2(Camera.aspect, 1) *
+            (lastOrthographicSize - Camera.orthographicSize);
 
-        Vector2 velocityDelta = Vector2.ClampMagnitude(moveInput * speed - velocity, GameManager.LoadedSettings.CameraAcceleration);
+        transform.position += (Vector3)zoomOffset;
+
+        //Movement
+        float speed = Camera.orthographicSize * 2 * Mathf.Clamp01(GameManager.LoadedSettings.CameraMaxSpeed);
+
+        var acceleration = Mathf.Max(0.03f, GameManager.LoadedSettings.CameraAcceleration);
+        Vector2 velocityDelta = Vector2.ClampMagnitude(moveInput * speed - velocity,
+            acceleration);
         velocity += velocityDelta;
 
         transform.position += (Vector3)velocity * Time.fixedDeltaTime;
 
-        float bounds = GameManager.LoadedSettings.CameraPositionLimit;
         transform.position = new Vector3(
-            Mathf.Clamp(transform.position.x, -bounds, bounds),
-            Mathf.Clamp(transform.position.y, -bounds, bounds),
+            Mathf.Clamp(transform.position.x, -1, 1),
+            Mathf.Clamp(transform.position.y, -1, 1),
             transform.position.z);
     }
 
     Vector2Int lastCellPos;
     private void LateUpdate()
     {
-        Vector2Int cellPos = CalculateSelectedCell();
+        var boardPos = ScreenToWorldPos(MouseToScreenPos()) + Vector2.one / 2;
+        Vector2Int cellPos = (boardPos * Simulation.BoardSize).FloorToInt();
 
         if (focusingBack)
         {
@@ -101,41 +120,44 @@ public class CameraController : MonoBehaviour
     private void OnApplicationFocus(bool focus)
         => focusingBack = focus;
 
-    Vector2Int CalculateSelectedCell()
-    {
-        var screenPos = new Vector2(Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.height) * 2 - Vector2.one;
-        var worldPos = (Vector2)Camera.transform.position + Camera.orthographicSize * new Vector2(screenPos.x * Camera.aspect, screenPos.y);
+    Vector2 MouseToScreenPos()
+        => new Vector2(Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.height)
+            * 2 - Vector2.one;
 
-        var boardPos = worldPos + Vector2.one / 2;
-        return (boardPos * Simulation.BoardSize).FloorToInt();
-    }
+    Vector2 ScreenToWorldPos(Vector2 screenPos)
+        => (Vector2)Camera.transform.position + ScreenWorldSize * screenPos;
 
-    //Shamelessly stolen straight from the wikipedia: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm#All_cases
+    Vector2 ScreenWorldSize => Camera.orthographicSize * new Vector2(Camera.aspect, 1);
+
+    //Based on: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm#All_cases
     public void DrawLine(Vector2Int start, Vector2Int end, bool value)
     {
-        //TODO: Rewrite this in a more organised fashion
-        Vector2Int d = new(Mathf.Abs(end.x - start.x), -Mathf.Abs(end.y - start.y));
-        Vector2Int s = new(start.x < end.x ? 1 : -1, start.y < end.y ? 1 : -1);
-        int error = d.x + d.y;
+        Vector2Int Δ = new(Mathf.Abs(end.x - start.x), Mathf.Abs(end.y - start.y));
+        Vector2Int direction = new(start.x < end.x ? 1 : -1, start.y < end.y ? 1 : -1);
+        Vector2Int current = start;
+        int error = Δ.x - Δ.y; //Diffrence between Δ.x and Δ.y
         int boardSize = Simulation.BoardSize;
 
         while (true)
         {
-            if (start.x < boardSize && start.x >= 0 && start.y < boardSize && start.y >= 0)
-                Simulation.SetPixel(start, value);
-            if (start.x == end.x && start.y == end.y) break;
-            int e2 = 2 * error;
-            if (e2 >= d.y)
+            if (current.x < boardSize && current.x >= 0 && current.y < boardSize && current.y >= 0)
             {
-                if (start.x == end.x) break;
-                error += d.y;
-                start.x += s.x;
+                Simulation.SetPixel(current, value);
             }
-            if (e2 <= d.x)
+
+            if (current == end) break;
+
+            if (2 * error >= -Δ.y)
             {
-                if (start.y == end.y) break;
-                error += d.x;
-                start.y += s.y;
+                if (current.x == end.x) break;
+                current.x += direction.x;
+                error += -Δ.y;
+            }
+            if (2 * error <= Δ.x)
+            {
+                if (current.y == end.y) break;
+                current.y += direction.y;
+                error += Δ.x;
             }
         }
     }
