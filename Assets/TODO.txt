@@ -34,6 +34,7 @@ While generating a LUT, if you:
 you will draw a stripe of 
 Add increasing/ decreasing bruch size
 Use bool[] rather than int[] for defining birth/survive count
+allow zooming the camera while the ui is selected
 store the information about what is the value of outline cells and
 	the default value of the background in the lut file
 Use SpriteRenderer instead of MeshRenderer for the board

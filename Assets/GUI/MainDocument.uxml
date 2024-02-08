@@ -5,21 +5,23 @@
         <ui:Label tabindex="-1" text="Hover the mouse over different settings to see what they do!" parse-escape-sequences="true" display-tooltip-when-elided="true" style="white-space: nowrap; font-size: 8px; color: rgb(145, 145, 145); margin-left: 1px; margin-right: 1px; margin-top: 0; margin-bottom: 3px; padding-top: 1px; padding-bottom: 1px;" />
         <ui:Foldout text="Simulation" value="true" name="simulationFoldout" class="main foldout">
             <ui:VisualElement name="newSimulationContainer" style="position: absolute; width: 100%; top: -32px; height: 32px; justify-content: flex-end; align-items: flex-end; flex-direction: row;">
-                <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="newSimulation" style="align-self: center; margin-bottom: 4px; margin-top: 4px; background-image: url(&apos;project://database/Assets/GUI/Icons/Kenney/plus.png?fileID=2800000&amp;guid=785f7c8c9aca6fa42aa38e57ab6128a6&amp;type=3#plus&apos;); padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; width: 25px; height: 25px; -unity-slice-right: 1;" />
+                <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="newSimulation" style="align-self: center; margin-bottom: 4px; margin-top: 4px; background-image: none; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; width: 25px; height: 25px; -unity-background-image-tint-color: rgb(255, 255, 255); -unity-slice-right: 2;">
+                    <ui:VisualElement name="Image" style="flex-grow: 1; width: 100%; height: 100%; align-self: center; background-image: url(&apos;project://database/Assets/GUI/Icons/Google%20Icons/add_FILL0_wght700_GRAD0_opsz48.png?fileID=2800000&amp;guid=f719741a1734ce54aa23b66876088e7b&amp;type=3#add_FILL0_wght700_GRAD0_opsz48&apos;); position: absolute;" />
+                </ui:Button>
             </ui:VisualElement>
             <ui:VisualElement name="general" style="flex-grow: 1;">
                 <ui:VisualElement name="controlButtons" class="property" style="flex-direction: row; justify-content: center; right: 15px; margin-bottom: 2px;">
                     <SwitchButton focusable="true" name="play" tooltip="Play" class="controlButton" style="margin-left: 0; border-top-left-radius: 7px; border-bottom-left-radius: 7px;">
-                        <ui:VisualElement name="image" style="width: 16px; height: 16px; position: relative; margin-left: 1px; background-image: url(&apos;project://database/Assets/GUI/Icons/Kenney/Modified/play.png?fileID=2800000&amp;guid=ecc9dc5a92cefc84f93e34504d829f5a&amp;type=3#play&apos;); margin-bottom: 3px; -unity-slice-bottom: 1;" />
+                        <ui:VisualElement name="image" style="width: 16px; height: 16px; position: absolute; background-image: url(&apos;project://database/Assets/GUI/Icons/Google%20Icons/play_arrow_FILL1_wght700_GRAD0_opsz48.png?fileID=2800000&amp;guid=8da2c1925117a034e8160fa739ffad6c&amp;type=3#play_arrow_FILL1_wght700_GRAD0_opsz48&apos;); margin-bottom: 3px; margin-top: 4px; margin-left: 1px; margin-right: 1px; left: 0; top: 0; right: 0; bottom: 0;" />
                     </SwitchButton>
                     <SwitchButton focusable="true" name="pause" tooltip="Pause" class="controlButton">
-                        <ui:VisualElement name="image" style="width: 16px; height: 16px; margin-top: 1px; position: relative; margin-left: 1px; background-image: url(&apos;project://database/Assets/GUI/Icons/Kenney/pause.png?fileID=2800000&amp;guid=9dd89dc606a6c944b83bbc9003453a8c&amp;type=3#pause&apos;); margin-bottom: 3px;" />
+                        <ui:VisualElement name="image" style="width: 16px; height: 16px; margin-top: 4px; position: absolute; margin-left: 1px; background-image: url(&apos;project://database/Assets/GUI/Icons/Google%20Icons/pause_FILL1_wght700_GRAD0_opsz48.png?fileID=2800000&amp;guid=339205729e297a44b9ca0f65b5100bce&amp;type=3#pause_FILL1_wght700_GRAD0_opsz48&apos;); margin-bottom: 3px; margin-right: 1px; left: 0; top: 0; right: 0; bottom: 0;" />
                     </SwitchButton>
                     <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="next" tooltip="Next" class="controlButton">
-                        <ui:VisualElement name="image" style="width: 16px; height: 16px; background-image: url(&apos;project://database/Assets/GUI/Icons/Kenney/next.png?fileID=2800000&amp;guid=3c3583e86a89dad43a360564af788371&amp;type=3#next&apos;); align-self: center; -unity-slice-top: 1;" />
+                        <ui:VisualElement name="image" style="width: 16px; height: 16px; background-image: url(&apos;project://database/Assets/GUI/Icons/Google%20Icons/modified_skip_next_FILL1_wght700_GRAD0_opsz48.png?fileID=2800000&amp;guid=61a383696252cfe4196112fb0c32c3e5&amp;type=3#modified_skip_next_FILL1_wght700_GRAD0_opsz48&apos;); align-self: center; position: absolute; left: 0; top: 0; right: 0; bottom: 0; margin-left: 1px; margin-right: 1px; margin-top: 4px; margin-bottom: 3px;" />
                     </ui:Button>
                     <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="clear" tooltip="Clear" class="controlButton" style="border-top-right-radius: 7px; border-bottom-right-radius: 7px;">
-                        <ui:VisualElement name="image" style="width: 15px; height: 15px; background-image: url(&apos;project://database/Assets/GUI/Icons/Kenney/rewind.png?fileID=2800000&amp;guid=8be25162032063c44925f104cd4a0a5a&amp;type=3#rewind&apos;); align-self: center; margin-right: 1px;" />
+                        <ui:VisualElement name="image" style="width: 13px; height: 13px; background-image: url(&apos;project://database/Assets/GUI/Icons/Google%20Icons/replay_FILL0_wght700_GRAD0_opsz48.png?fileID=2800000&amp;guid=8216a455338502b41be828362d9ad84c&amp;type=3#replay_FILL0_wght700_GRAD0_opsz48&apos;); align-self: center; position: absolute; left: 0; right: 0; bottom: 0; margin-left: 2px; margin-right: 3px; margin-top: 5px; margin-bottom: 5px;" />
                     </ui:Button>
                 </ui:VisualElement>
                 <ui:UnsignedIntegerField label="Simulation Speed" value="10" tooltip="Determines the maximum rate at which the simulation runs, in updates per second. When set to 0, it will update the simulation every frame." name="simulationSpeed" focusable="true" class="property" />
@@ -32,7 +34,7 @@
             </ui:VisualElement>
         </ui:Foldout>
     </ui:VisualElement>
-    <Popup name="newSimulationPopup" title="New Simulation" style="display: flex;">
+    <Popup name="newSimulationPopup" title="New Simulation" style="display: none;">
         <ui:UnsignedIntegerField label="Size" value="1" name="size" class="property" style="margin-bottom: 0; margin-left: 3px; margin-right: 3px;" />
         <ui:Foldout text="Advanced" name="advancedOptions" value="false" style="margin-top: 0;">
             <ui:VisualElement name="lookupTable" class="unity-base-field property" style="flex-grow: 1; flex-direction: column;">
@@ -45,17 +47,17 @@
         </ui:Foldout>
         <ui:Button text="Create" parse-escape-sequences="true" display-tooltip-when-elided="true" name="createNew" class="button property" style="margin-top: 2px;" />
     </Popup>
-    <Popup title="New Lookup Table" name="newLUTPopup" style="display: none;">
+    <Popup title="New Lookup Table" name="newLUTPopup" style="display: flex;">
         <ui:VisualElement name="LUTinfo" style="flex-grow: 1;">
             <ui:Label tabindex="-1" text="The simulation uses lookup tables with&#10;pre-computed data to speed up calculations.&#10;You can use diffrent Lookup Table (.lut)&#10;files to simulate diffrent life-like rules." parse-escape-sequences="true" display-tooltip-when-elided="true" style="-unity-text-align: upper-left; padding-top: 0; margin-top: 2px; margin-bottom: 0; padding-bottom: 0;" />
             <ui:VisualElement style="flex-grow: 1; flex-direction: row;">
                 <ui:Label tabindex="-1" text="To learn more, see " parse-escape-sequences="true" display-tooltip-when-elided="true" style="margin-right: 0; padding-right: 0; margin-top: 0; padding-top: 0;" />
-                <ui:Button text="this" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lifeLikeInfo" style="margin-right: 0; margin-bottom: 5px; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; background-color: rgba(103, 103, 103, 0); color: rgb(0, 16, 255); -unity-font-style: normal; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; flex-direction: column-reverse; width: 22px; -unity-text-align: middle-left;">
-                    <ui:VisualElement style="position: absolute; height: 2px; bottom: 8%; border-bottom-width: 1px; border-left-color: rgb(0, 16, 255); border-right-color: rgb(0, 16, 255); border-top-color: rgb(0, 16, 255); border-bottom-color: rgb(0, 16, 255); border-top-width: 0; left: 0; right: 0;" />
+                <ui:Button text="this" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lifeLikeInfo" style="margin-right: 0; margin-bottom: 6px; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; background-color: rgba(103, 103, 103, 0); color: rgb(255, 255, 255); -unity-font-style: normal; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; flex-direction: column-reverse; width: 23px; -unity-text-align: middle-left;">
+                    <ui:VisualElement style="position: absolute; height: 2px; bottom: 8%; border-bottom-width: 1px; border-left-color: rgb(255, 255, 255); border-right-color: rgb(255, 255, 255); border-top-color: rgb(255, 255, 255); border-bottom-color: rgb(255, 255, 255); border-top-width: 0; left: 0; right: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0; border-bottom-right-radius: 0;" />
                 </ui:Button>
                 <ui:Label tabindex="-1" text=" and " parse-escape-sequences="true" display-tooltip-when-elided="true" style="margin-right: 0; padding-right: 0; margin-top: 0; padding-top: 0; padding-left: 0; margin-left: 0;" />
-                <ui:Button text="this" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lifeLikeInfo2" style="margin-right: 0; margin-bottom: 5px; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; background-color: rgba(103, 103, 103, 0); color: rgb(0, 16, 255); -unity-font-style: normal; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; flex-direction: column-reverse; width: 22px; -unity-text-align: middle-left;">
-                    <ui:VisualElement style="position: absolute; height: 2px; bottom: 8%; border-bottom-width: 1px; border-left-color: rgb(0, 16, 255); border-right-color: rgb(0, 16, 255); border-top-color: rgb(0, 16, 255); border-bottom-color: rgb(0, 16, 255); border-top-width: 0; left: 0; right: 0;" />
+                <ui:Button text="this" parse-escape-sequences="true" display-tooltip-when-elided="true" name="lifeLikeInfo2" style="margin-right: 0; margin-bottom: 6px; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; background-color: rgba(103, 103, 103, 0); color: rgb(255, 255, 255); -unity-font-style: normal; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; flex-direction: column-reverse; width: 22px; -unity-text-align: middle-left;">
+                    <ui:VisualElement style="position: absolute; height: 2px; bottom: 8%; border-bottom-width: 1px; border-left-color: rgb(255, 255, 255); border-right-color: rgb(255, 255, 255); border-top-color: rgb(255, 255, 255); border-bottom-color: rgb(255, 255, 255); border-top-width: 0; left: 0; right: 0;" />
                 </ui:Button>
             </ui:VisualElement>
         </ui:VisualElement>
@@ -63,29 +65,29 @@
             <ui:Label tabindex="-1" text="Birth Count:" parse-escape-sequences="true" display-tooltip-when-elided="true" style="padding-bottom: 0; margin-bottom: 0; -unity-text-align: upper-center;" />
             <ui:VisualElement name="birthToggles" class="countToggle" style="flex-grow: 1; flex-direction: row;">
                 <ui:VisualElement name="susAmongus" style="flex-grow: 1;" />
-                <ui:Toggle label="0" name="birth0" style="flex-direction: column;" />
-                <ui:Toggle label="1" name="birth1" style="flex-direction: column;" />
-                <ui:Toggle label="2" name="birth2" style="flex-direction: column; flex-grow: 1;" />
-                <ui:Toggle label="3" name="birth3" style="flex-direction: column;" />
-                <ui:Toggle label="4" name="birth4" style="flex-direction: column;" />
-                <ui:Toggle label="5" name="birth5" style="flex-direction: column;" />
-                <ui:Toggle label="6" name="birth6" style="flex-direction: column;" />
-                <ui:Toggle label="7" name="birth7" style="flex-direction: column;" />
-                <ui:Toggle label="8" name="birth8" style="flex-direction: column;" />
+                <ui:Toggle label="0" name="birth0" class="rulestringToggle" style="flex-direction: column;" />
+                <ui:Toggle label="1" name="birth1" class="rulestringToggle" style="flex-direction: column;" />
+                <ui:Toggle label="2" name="birth2" class="rulestringToggle" style="flex-direction: column; flex-grow: 1;" />
+                <ui:Toggle label="3" name="birth3" class="rulestringToggle" style="flex-direction: column;" />
+                <ui:Toggle label="4" name="birth4" class="rulestringToggle" style="flex-direction: column;" />
+                <ui:Toggle label="5" name="birth5" class="rulestringToggle" style="flex-direction: column;" />
+                <ui:Toggle label="6" name="birth6" class="rulestringToggle" style="flex-direction: column;" />
+                <ui:Toggle label="7" name="birth7" class="rulestringToggle" style="flex-direction: column;" />
+                <ui:Toggle label="8" name="birth8" class="rulestringToggle" style="flex-direction: column;" />
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="surviveCountElement" style="flex-grow: 1; margin-top: 5px;">
             <ui:Label tabindex="-1" text="Survive Count:" parse-escape-sequences="true" display-tooltip-when-elided="true" style="padding-bottom: 0; margin-bottom: 0; -unity-text-align: upper-center;" />
             <ui:VisualElement name="surviveToggles" class="countToggle" style="flex-grow: 1; flex-direction: row;">
-                <ui:Toggle label="0" name="survive0" style="flex-direction: column;" />
-                <ui:Toggle label="1" name="survive1" style="flex-direction: column;" />
-                <ui:Toggle label="2" name="survive2" style="flex-direction: column; flex-grow: 1;" />
-                <ui:Toggle label="3" name="survive3" style="flex-direction: column;" />
-                <ui:Toggle label="4" name="survive4" style="flex-direction: column;" />
-                <ui:Toggle label="5" name="survive5" style="flex-direction: column;" />
-                <ui:Toggle label="6" name="survive6" style="flex-direction: column;" />
-                <ui:Toggle label="7" name="survive7" style="flex-direction: column;" />
-                <ui:Toggle label="8" name="survive8" style="flex-direction: column;" />
+                <ui:Toggle label="0" name="survive0" class="rulestringToggle" style="flex-direction: column;" />
+                <ui:Toggle label="1" name="survive1" class="rulestringToggle" style="flex-direction: column;" />
+                <ui:Toggle label="2" name="survive2" class="rulestringToggle" style="flex-direction: column; flex-grow: 1;" />
+                <ui:Toggle label="3" name="survive3" class="rulestringToggle" style="flex-direction: column;" />
+                <ui:Toggle label="4" name="survive4" class="rulestringToggle" style="flex-direction: column;" />
+                <ui:Toggle label="5" name="survive5" class="rulestringToggle" style="flex-direction: column;" />
+                <ui:Toggle label="6" name="survive6" class="rulestringToggle" style="flex-direction: column;" />
+                <ui:Toggle label="7" name="survive7" class="rulestringToggle" style="flex-direction: column;" />
+                <ui:Toggle label="8" name="survive8" class="rulestringToggle" style="flex-direction: column;" />
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:Button text="Generate Lookup Table" parse-escape-sequences="true" display-tooltip-when-elided="true" name="generateLookupTable" style="margin-top: 12px;" />
@@ -95,7 +97,7 @@
         <ui:VisualElement name="info" style="flex-grow: 1; flex-direction: row; justify-content: center;">
             <ui:VisualElement style="align-self: center; flex-direction: row;">
                 <ui:VisualElement name="warning" style="flex-grow: 1; background-image: url(&apos;project://database/Assets/GUI/Icons/Kenney/warning.png?fileID=2800000&amp;guid=37005994b5cc53542aa09c380fd34232&amp;type=3#warning&apos;); width: 20px; height: 20px; align-self: center;" />
-                <ui:Label tabindex="-1" text="The app will lag a lot while the&#10;Lookup Table is being generated" parse-escape-sequences="true" display-tooltip-when-elided="true" style="margin-top: 1px;" />
+                <ui:Label tabindex="-1" text="The app might lag while the&#10;Lookup Table is being generated" parse-escape-sequences="true" display-tooltip-when-elided="true" style="margin-top: 1px;" />
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="progress" style="flex-grow: 1; flex-direction: row;">

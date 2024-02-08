@@ -290,3 +290,8 @@ Popup #content-container {
 
 #advancedOptions > #unity-content {
 }
+
+.rulestringToggle {
+    margin-left: 1px;
+    margin-right: 1px;
+}

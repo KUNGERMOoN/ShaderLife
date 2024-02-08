@@ -139,8 +139,8 @@ public class GUIManager : MonoBehaviour
             if (toggle.value == true)
             {
                 result.Add(i);
-                i++;
             }
+            i++;
         }
         return result.ToArray();
     }
