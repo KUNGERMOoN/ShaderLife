@@ -370,9 +370,7 @@ MonoBehaviour:
     Grid: {r: 0.26666668, g: 0.3019608, b: 0.5176471, a: 1}
     AliveCell: {r: 0.69803923, g: 0.8352941, b: 0.81960785, a: 1}
     Name: Cold Light
-    Description: 'Cold Light palette by @A-LAMP on Lospec
-
-      https://lospec.com/palette-list/cold-light'
+    Description: 
   Settings:
     CameraMaxSpeed: 2
     CameraAcceleration: 0.2
@@ -490,7 +488,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee28e3c4ff94dda449efb75f64e150da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ComputeShader: {fileID: 7200000, guid: b33be95b30b36914e87fa054dc3f2c83, type: 3}
+  ComputeShader: {fileID: 7200000, guid: e2a7997474cc52d428aff7a92d7a6592, type: 3}
   Renderer: {fileID: 1518814360}
   Material: {fileID: 2100000, guid: eae4068e4c3ce52428fa7d2f6af5a091, type: 2}
 --- !u!1660057539 &9223372036854775807

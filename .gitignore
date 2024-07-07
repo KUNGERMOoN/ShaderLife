@@ -70,4 +70,9 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
-Assets/Docs/~$LookupTables.xlsx
+
+# Temporary excel files
+/[Aa]ssets/~$LookupTables.xlsx
+
+# Odin inspector (optionally used for Assets Scripts/Editor/LookupTableBuilderEditor.cs)
+/[Aa]ssets/Plugins/Sirenix/*
