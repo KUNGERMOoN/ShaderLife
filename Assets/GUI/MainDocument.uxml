@@ -2,7 +2,6 @@
     <Style src="project://database/Assets/GUI/MainStyle.uss?fileID=7433441132597879392&amp;guid=952f131e41afdb94688cac5454a3c168&amp;type=3#MainStyle" />
     <Style src="project://database/Assets/GUI/Popup.uss?fileID=7433441132597879392&amp;guid=06dc969429fd57141b62a61cbb04b4a5&amp;type=3#Popup" />
     <ui:VisualElement name="options" class="container main" style="display: flex; align-self: flex-start; height: 80%; flex-grow: 0; top: 10%; background-color: rgb(56, 56, 56); width: 243px;">
-        <ui:Label tabindex="-1" text="Hover the mouse over different settings to see what they do!" parse-escape-sequences="true" display-tooltip-when-elided="true" style="white-space: nowrap; font-size: 8px; color: rgb(145, 145, 145); margin-left: 1px; margin-right: 1px; margin-top: 0; margin-bottom: 3px; padding-top: 1px; padding-bottom: 1px;" />
         <ui:Foldout text="Simulation" value="true" name="simulationFoldout" class="main foldout">
             <ui:VisualElement name="newSimulationContainer" style="position: absolute; width: 100%; top: -32px; height: 32px; justify-content: flex-end; align-items: flex-end; flex-direction: row;">
                 <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="newSimulation" style="align-self: center; margin-bottom: 4px; margin-top: 4px; background-image: none; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; width: 25px; height: 25px; -unity-background-image-tint-color: rgb(255, 255, 255); -unity-slice-right: 2;">
@@ -21,7 +20,8 @@
                         <ui:VisualElement name="image" style="width: 16px; height: 16px; background-image: url(&apos;project://database/Assets/GUI/Icons/Google%20Icons/modified_skip_next_FILL1_wght700_GRAD0_opsz48.png?fileID=2800000&amp;guid=61a383696252cfe4196112fb0c32c3e5&amp;type=3#modified_skip_next_FILL1_wght700_GRAD0_opsz48&apos;); align-self: center; position: absolute; left: 0; top: 0; right: 0; bottom: 0; margin-left: 1px; margin-right: 1px; margin-top: 4px; margin-bottom: 3px;" />
                     </ui:Button>
                     <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="clear" tooltip="Clear" class="controlButton" style="border-top-right-radius: 7px; border-bottom-right-radius: 7px;">
-                        <ui:VisualElement name="image" style="width: 13px; height: 13px; background-image: url(&apos;project://database/Assets/GUI/Icons/Google%20Icons/replay_FILL0_wght700_GRAD0_opsz48.png?fileID=2800000&amp;guid=8216a455338502b41be828362d9ad84c&amp;type=3#replay_FILL0_wght700_GRAD0_opsz48&apos;); align-self: center; position: absolute; left: 0; right: 0; bottom: 0; margin-left: 2px; margin-right: 3px; margin-top: 5px; margin-bottom: 5px;" />
+                        <ui:VisualElement name="image" style="width: 13px; height: 13px; background-image: url(&apos;project://database/Assets/GUI/Icons/Google%20Icons/replay_FILL0_wght700_GRAD0_opsz48.png?fileID=2800000&amp;guid=8216a455338502b41be828362d9ad84c&amp;type=3#replay_FILL0_wght700_GRAD0_opsz48&apos;); align-self: center; position: absolute; left: 0; right: 0; bottom: 0; margin-left: 2px; margin-right: 3px; margin-top: 5px; margin-bottom: 5px; display: none;" />
+                        <ui:VisualElement name="image" style="width: 14px; height: 14px; background-image: url(&apos;project://database/Assets/GUI/Icons/Google%20Icons/modified_delete_forever_FILL1_wght700_GRAD0_opsz48.png?fileID=2800000&amp;guid=2022cbdb382a88f438b0b3b9f98371a2&amp;type=3#modified_delete_forever_FILL1_wght700_GRAD0_opsz48&apos;); align-self: center; position: absolute; left: 0; top: 0; right: 0; bottom: 0; margin-left: 2px; margin-right: 2px; margin-top: 5px; margin-bottom: 4px; display: flex;" />
                     </ui:Button>
                 </ui:VisualElement>
                 <ui:UnsignedIntegerField label="Simulation Speed" value="10" tooltip="Determines the maximum rate at which the simulation runs, in updates per second. When set to 0, it will update the simulation every frame." name="simulationSpeed" focusable="true" class="property" />
@@ -34,20 +34,21 @@
             </ui:VisualElement>
         </ui:Foldout>
     </ui:VisualElement>
-    <Popup name="newSimulationPopup" title="New Simulation" style="display: none;">
+    <Popup name="newSimulationPopup" title="New Simulation" style="display: none; top: 0; right: 0; left: 0; bottom: 1px;">
         <ui:UnsignedIntegerField label="Size" value="1" name="size" class="property" style="margin-bottom: 0; margin-left: 3px; margin-right: 3px;" />
+        <ui:Label tabindex="-1" text="0x0 cells" parse-escape-sequences="true" display-tooltip-when-elided="true" name="expectedSize" style="-unity-text-align: lower-left; margin-left: 6px; margin-right: 0; margin-top: 0; margin-bottom: 0; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; font-size: 9px; height: 7px;" />
         <ui:Foldout text="Advanced" name="advancedOptions" value="false" style="margin-top: 0;">
             <ui:VisualElement name="lookupTable" class="unity-base-field property" style="flex-grow: 1; flex-direction: column;">
                 <ui:Label tabindex="-1" text="Lookup Table File:" parse-escape-sequences="true" display-tooltip-when-elided="true" focusable="true" class="unity-text-element unity-base-field__label" style="margin-top: 0;" />
                 <ui:TextField picking-mode="Ignore" label="Text Field" value="GameOfLife.lut" name="lutPath" class="property" style="margin-bottom: 0;">
-                    <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="loadLUTFromFile" style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; margin-bottom: 0; background-image: url(&apos;project://database/Assets/GUI/Icons/Kenney/import.png?fileID=2800000&amp;guid=ad5018da87eb8714d99f7474a6c9aedf&amp;type=3#import&apos;); height: 23px; align-self: center; width: 23px; background-color: rgba(88, 88, 88, 0);" />
-                    <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="newLUT" style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; margin-bottom: 0; background-image: url(&apos;project://database/Assets/GUI/Icons/Kenney/plus.png?fileID=2800000&amp;guid=785f7c8c9aca6fa42aa38e57ab6128a6&amp;type=3#plus&apos;); height: 23px; align-self: center; width: 23px; background-color: rgba(88, 88, 88, 0);" />
+                    <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="loadLUTFromFile" style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; margin-bottom: 0; background-image: url(&apos;project://database/Assets/GUI/Icons/Google%20Icons/upload_file_FILL1_wght700_GRAD0_opsz48.png?fileID=2800000&amp;guid=763f6004eaa92254a8acd2f4c5f73cd5&amp;type=3#upload_file_FILL1_wght700_GRAD0_opsz48&apos;); height: 23px; align-self: center; width: 23px; background-color: rgba(88, 88, 88, 0); -unity-slice-left: 3; -unity-slice-top: 3; -unity-slice-right: 3; -unity-slice-bottom: 3;" />
+                    <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="newLUT" style="padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; border-left-width: 0; border-right-width: 0; border-top-width: 0; border-bottom-width: 0; margin-bottom: 0; background-image: url(&apos;project://database/Assets/GUI/Icons/Google%20Icons/add_FILL0_wght700_GRAD0_opsz48.png?fileID=2800000&amp;guid=f719741a1734ce54aa23b66876088e7b&amp;type=3#add_FILL0_wght700_GRAD0_opsz48&apos;); height: 23px; align-self: center; width: 23px; background-color: rgba(88, 88, 88, 0);" />
                 </ui:TextField>
             </ui:VisualElement>
         </ui:Foldout>
         <ui:Button text="Create" parse-escape-sequences="true" display-tooltip-when-elided="true" name="createNew" class="button property" style="margin-top: 2px;" />
     </Popup>
-    <Popup title="New Lookup Table" name="newLUTPopup" style="display: flex;">
+    <Popup title="New Lookup Table" name="newLUTPopup" style="display: none;">
         <ui:VisualElement name="LUTinfo" style="flex-grow: 1;">
             <ui:Label tabindex="-1" text="The simulation uses lookup tables with&#10;pre-computed data to speed up calculations.&#10;You can use diffrent Lookup Table (.lut)&#10;files to simulate diffrent life-like rules." parse-escape-sequences="true" display-tooltip-when-elided="true" style="-unity-text-align: upper-left; padding-top: 0; margin-top: 2px; margin-bottom: 0; padding-bottom: 0;" />
             <ui:VisualElement style="flex-grow: 1; flex-direction: row;">
@@ -62,13 +63,12 @@
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="birthCountElement" style="flex-grow: 1;">
-            <ui:Label tabindex="-1" text="Birth Count:" parse-escape-sequences="true" display-tooltip-when-elided="true" style="padding-bottom: 0; margin-bottom: 0; -unity-text-align: upper-center;" />
+            <ui:Label tabindex="-1" text="Birth Count: How many alive neighbours&#10;a cell needs to have to become alive" parse-escape-sequences="true" display-tooltip-when-elided="true" style="padding-bottom: 0; margin-bottom: 0; -unity-text-align: upper-center;" />
             <ui:VisualElement name="birthToggles" class="countToggle" style="flex-grow: 1; flex-direction: row;">
-                <ui:VisualElement name="susAmongus" style="flex-grow: 1;" />
                 <ui:Toggle label="0" name="birth0" class="rulestringToggle" style="flex-direction: column;" />
                 <ui:Toggle label="1" name="birth1" class="rulestringToggle" style="flex-direction: column;" />
                 <ui:Toggle label="2" name="birth2" class="rulestringToggle" style="flex-direction: column; flex-grow: 1;" />
-                <ui:Toggle label="3" name="birth3" class="rulestringToggle" style="flex-direction: column;" />
+                <ui:Toggle label="3" name="birth3" value="true" class="rulestringToggle" style="flex-direction: column;" />
                 <ui:Toggle label="4" name="birth4" class="rulestringToggle" style="flex-direction: column;" />
                 <ui:Toggle label="5" name="birth5" class="rulestringToggle" style="flex-direction: column;" />
                 <ui:Toggle label="6" name="birth6" class="rulestringToggle" style="flex-direction: column;" />
@@ -77,12 +77,12 @@
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="surviveCountElement" style="flex-grow: 1; margin-top: 5px;">
-            <ui:Label tabindex="-1" text="Survive Count:" parse-escape-sequences="true" display-tooltip-when-elided="true" style="padding-bottom: 0; margin-bottom: 0; -unity-text-align: upper-center;" />
+            <ui:Label tabindex="-1" text="Survive Count: How many alive neighbours&#10;a cell needs to have to keep living" parse-escape-sequences="true" display-tooltip-when-elided="true" style="padding-bottom: 0; margin-bottom: 0; -unity-text-align: upper-center;" />
             <ui:VisualElement name="surviveToggles" class="countToggle" style="flex-grow: 1; flex-direction: row;">
                 <ui:Toggle label="0" name="survive0" class="rulestringToggle" style="flex-direction: column;" />
                 <ui:Toggle label="1" name="survive1" class="rulestringToggle" style="flex-direction: column;" />
-                <ui:Toggle label="2" name="survive2" class="rulestringToggle" style="flex-direction: column; flex-grow: 1;" />
-                <ui:Toggle label="3" name="survive3" class="rulestringToggle" style="flex-direction: column;" />
+                <ui:Toggle label="2" name="survive2" value="true" class="rulestringToggle" style="flex-direction: column; flex-grow: 1;" />
+                <ui:Toggle label="3" name="survive3" value="true" class="rulestringToggle" style="flex-direction: column;" />
                 <ui:Toggle label="4" name="survive4" class="rulestringToggle" style="flex-direction: column;" />
                 <ui:Toggle label="5" name="survive5" class="rulestringToggle" style="flex-direction: column;" />
                 <ui:Toggle label="6" name="survive6" class="rulestringToggle" style="flex-direction: column;" />
@@ -90,20 +90,30 @@
                 <ui:Toggle label="8" name="survive8" class="rulestringToggle" style="flex-direction: column;" />
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:VisualElement name="rulestringContainer" style="flex-grow: 1; flex-direction: row; margin-top: 4px;">
+            <ui:Label tabindex="-1" text="Rulestring: B3/S23" parse-escape-sequences="true" display-tooltip-when-elided="true" name="rulestring" />
+        </ui:VisualElement>
         <ui:Button text="Generate Lookup Table" parse-escape-sequences="true" display-tooltip-when-elided="true" name="generateLookupTable" style="margin-top: 12px;" />
     </Popup>
-    <Popup name="generatingLUT" title="Generating Lookup Table" closeable="false" draggable="false" style="top: 0; right: 1px; left: 0; bottom: 0; display: none;">
-        <ui:Label tabindex="-1" text="You deleted all the Lookup Tables, and&#10;we need at least one to start the app&#10;¯\_(ツ)_/¯" parse-escape-sequences="true" display-tooltip-when-elided="true" name="additionalLUTGenerationInfo" enable-rich-text="false" style="-unity-text-align: upper-center; display: none; margin-top: 0; padding-top: 2px; margin-bottom: 0;" />
-        <ui:VisualElement name="info" style="flex-grow: 1; flex-direction: row; justify-content: center;">
-            <ui:VisualElement style="align-self: center; flex-direction: row;">
-                <ui:VisualElement name="warning" style="flex-grow: 1; background-image: url(&apos;project://database/Assets/GUI/Icons/Kenney/warning.png?fileID=2800000&amp;guid=37005994b5cc53542aa09c380fd34232&amp;type=3#warning&apos;); width: 20px; height: 20px; align-self: center;" />
-                <ui:Label tabindex="-1" text="The app might lag while the&#10;Lookup Table is being generated" parse-escape-sequences="true" display-tooltip-when-elided="true" style="margin-top: 1px;" />
-            </ui:VisualElement>
-        </ui:VisualElement>
-        <ui:VisualElement name="progress" style="flex-grow: 1; flex-direction: row;">
+    <Popup name="generatingLUT" title="Generating Lookup Table" closeable="false" draggable="true" style="top: 0; right: 1px; left: 0; bottom: 0; display: none;">
+        <ui:Label tabindex="-1" text="You deleted all the Lookup Tables, and&#10;we need at least one to start the program&#10;¯\_(ツ)_/¯" parse-escape-sequences="true" display-tooltip-when-elided="true" name="additionalLUTGenerationInfo" enable-rich-text="false" style="-unity-text-align: upper-center; display: none; margin-top: 0; padding-top: 2px; margin-bottom: 0;" />
+        <ui:VisualElement name="progress" style="flex-direction: row;">
             <ui:ProgressBar value="0.4" high-value="1" name="LUTprogressBar" style="margin-left: 10px; flex-grow: 1; align-self: flex-end; margin-bottom: 2px;" />
             <ui:Label tabindex="-1" text="0%" parse-escape-sequences="true" display-tooltip-when-elided="true" name="LUTprogressPrecentage" style="margin-top: 0; padding-top: 1px; margin-bottom: 0; padding-bottom: 0; max-height: 20px;" />
         </ui:VisualElement>
         <ui:Label tabindex="-1" text="Generating..." parse-escape-sequences="true" display-tooltip-when-elided="true" name="LUTProgressStage" style="margin-top: 2px; padding-top: 0; -unity-text-align: upper-center; font-size: 11px;" />
+    </Popup>
+    <ui:VisualElement name="fpsCounter" style="flex-grow: 1; position: absolute; right: 0; top: 0; width: 163px; height: 134px; margin-right: 5px; margin-top: 5px;">
+        <ui:Label tabindex="-1" text="0 FPS" parse-escape-sequences="true" display-tooltip-when-elided="true" name="fps" style="font-size: 40px; -unity-text-align: upper-right; padding-bottom: 0; margin-bottom: 0; margin-top: 0; padding-top: 0;" />
+        <ui:Label tabindex="-1" text="0 SPS" parse-escape-sequences="true" display-tooltip-when-elided="true" name="sps" style="font-size: 40px; -unity-text-align: upper-right; margin-top: 0; padding-top: 0;" />
+        <ui:Label tabindex="-1" parse-escape-sequences="true" display-tooltip-when-elided="true" name="spsInfo" text="simulation steps per frame,&#10;limited by the FPS and&#10;&quot;simulation speed&quot; option" style="-unity-text-align: upper-right; margin-top: 0; padding-top: 0;" />
+    </ui:VisualElement>
+    <Popup name="startWarning" title="Warning!" closeable="true" draggable="true" style="top: 0; right: 1px; left: 0; bottom: 0; display: flex;">
+        <ui:VisualElement name="info" style="flex-grow: 1; flex-direction: row; justify-content: center; display: flex;">
+            <ui:VisualElement style="align-self: center; flex-direction: row;">
+                <ui:VisualElement name="warning" style="flex-grow: 1; background-image: url(&apos;project://database/Assets/GUI/Icons/Google%20Icons/modified_warning_FILL1_wght700_GRAD0_opsz48.png?fileID=2800000&amp;guid=19b2e55f5ea81e74ea90e6a9f560b931&amp;type=3#modified_warning_FILL1_wght700_GRAD0_opsz48&apos;); width: 20px; height: 20px; align-self: center; -unity-background-image-tint-color: rgb(255, 213, 0); margin-left: 4px; margin-right: 4px; margin-top: 4px; margin-bottom: 4px;" />
+                <ui:Label tabindex="-1" text="Running large simulations will significantly&#10;increase GPU usage, which might cause&#10;some devices (e.g. laptops) to overheat." parse-escape-sequences="true" display-tooltip-when-elided="true" enable-rich-text="false" style="margin-top: 1px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
     </Popup>
 </ui:UXML>

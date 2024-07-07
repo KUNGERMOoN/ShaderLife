@@ -1,61 +1,57 @@
-﻿TODO (the real one):
+﻿Note: this is less of an actual project's roadmap and more of a sketchbook of things I'd like to add one day
+some of this stuff is likely obstolete, and
+most of it (except for bugfixes) likely won't be implemented in an near future
+
+TODO 1 (aka. hopefully soon):
+Fix switching the focus between ui an camera movement
 Figure out what eats 40% of the GPU as soon as we start the game (with "Update in realtime" disabled!)
 	it should't be the drawing shader because it also runs when the game is paused (GPU is fine then)
 	and it shouldn't be the simulation compute shader, because "Update in realtime" is disabled
 	(and debugging shows that Simulation.UpdateBoard wasn't run)
-	EDIT 1: It moving the camera when game is paused (or in editor) also causes this problem.
+	EDIT 1: Moving the camera when game is paused (or in editor) also causes this problem.
 	Possibly it's just drawing shader being unoptimized
 	Edit 2: Nope, it also happens in a clear new scene with default background.
-	So it seems like it's just some strange unity thing
-	EDIT 2: Seems like (based on what others are saying) that it might be only a problem int the editor.
-Fill the board with some example data on the start (maybe a glider in the middle of the board?)
+	So it seems like it's just some strange unity issue
+	EDIT 2: Seems like (based on what others with this problem are saying) that it might be an editor-only problem.
 UI
-	+ the restart button should return to the original configuration rather than just clearing
-	+ add warning popup at the start about high GPU usage
-	+ clean up and review the code (namespaces etc.)
-	+ show expected board size in the "New Simulation" popup
-	+ custom LUT Selection under "Advanced" settings
-	+ Board update rate: "Limited to FPS and the \"Simulation Speed\" option"
-	+ write a tooltip system
-	+ add a number input to the chance slider
-	+ (maybe) Add controls to update multiple times in one frame
+	+ (maybe) Add controls to update multiple times in one frame (currently simulation speed is capped to the FPS)
 	+ fps counter (and board update rate counter - with the text "limited by the FPS and "simulation speed" option")
 Add validation for:
 	+ loading and saving LUTs (incorrect files / file paths)
 	+ palettes (incorrect files / file paths)
 	+ incorrect new simulation size (0)
-	+ lookup table generation popup: label "to speed up the generation, the app might become very laggy"
+?	+ lookup table generation popup: label "to speed up the generation, the app might become very laggy"
 	  and make it non-draggable and non-closable
 Remove test visual element from newLUTPopup/birthCountElement/birthToggles
+prevent zooming the camera when a popup is opened
 While generating a LUT, if you:
 	- click on the popup
 	- open other window
 	- open back the app
-you will draw a stripe of 
+you will draw a stripe of cells
+
+update the unit test for new lut file format
+clean up and review the code (namespaces etc.)
 Add increasing/ decreasing bruch size
-Use bool[] rather than int[] for defining birth/survive count
 allow zooming the camera while the ui is selected
+set the default value of the lut path text field to the found lut
 store the information about what is the value of outline cells and
 	the default value of the background in the lut file
 Use SpriteRenderer instead of MeshRenderer for the board
 importing/exporting to popular game of life file formats
-
-TODO for video: 
 Documentation
-Make the actual video about it
 Clean up the Excel sheet
 Get rid of Odin and make custom editors
 make a benchmark vs old simulation
 allow to swap the old and new simulation compute shader
-decide if we actually need the cpu-side board (and if yes, check if it works)
 
-TODO sometime maybe:
-make the grid zoom calculation work in 3d (maybe, if yes use the code by bgolus)
+TODO 2 (aka. sometime maybe):
 anti-aliasing in the drawing shader code
 make a heatmap shader
 async data redback to CPU
 use hex literals in shaders and excel sheets for readability
-kernel for editing multiple (at least 8x8) cells (basically SetPixel but with [numthreads(8, 8, 1)])
+compute kernel for editing multiple (at least 8x8) cells when drawing
+(basically SetPixel but with [numthreads(8, 8, 1)])
 	+ use it when needed for better performance
 add customizable colors to heatmap shader
-	+ ability to round the current heatmap color to highest/lowest color (maybe for things like OTCA metapixel)
+	+ ability to snap the current heatmap color to highest/lowest color (maybe for things like OTCA metapixel)

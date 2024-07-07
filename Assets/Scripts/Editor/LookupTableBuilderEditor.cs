@@ -1,4 +1,8 @@
-#if UNITY_EDITOR
+//Editor utility for generating lookup tables (.lut) for other life-like celluar automata
+//Currently requires Odin Inspector to be added to the project
+//Alternatively, you can use the runtime lookup table builder
+#if ODIN_INSPECTOR
+using GameOfLife;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using System.Collections;
@@ -14,24 +18,21 @@ public class LookupTableBuilderEditor : OdinEditorWindow
         GetWindow<LookupTableBuilderEditor>("LookupTextureBuilder");
     }
 
-
     [InfoBox("If the cell was not alive in previous iteration, it will be born in this iteration " +
         "if the amount of his alive neighbours is included in this list")]
-    [ListDrawerSettings(DefaultExpandedState = true)]
-    public int[] BirthCount = LookupTable.DefaultBirthCount;
+    [ListDrawerSettings(DefaultExpandedState = true, IsReadOnly = true, ShowIndexLabels = true)]
+    public bool[] BirthCount = LookupTable.DefaultBirthCount;
 
     [Space]
     [InfoBox("If the cell was alive in previous iteration, it will survive in this iteration " +
         "if the amount of his alive neighbours is included in this list")]
-    [ListDrawerSettings(DefaultExpandedState = true)]
-    public int[] SurviveCount = LookupTable.DefaultSurviveCount;
+    [ListDrawerSettings(DefaultExpandedState = true, IsReadOnly = true, ShowIndexLabels = true)]
+    public bool[] SurviveCount = LookupTable.DefaultSurviveCount;
 
     [PropertySpace, Button]
     public void BuildLookupTable()
     {
-        string suggestedFileName =
-            $"B{string.Join("", BirthCount)}" +
-            $"S{string.Join("", SurviveCount)}";
+        string suggestedFileName = LookupTable.GenerateRulestring(BirthCount, SurviveCount);
 
         string path = EditorUtility.SaveFilePanel(
             "Generate Lookup Table", LookupTable.LUTsPath, suggestedFileName, LookupTable.FileExtension);

@@ -1,155 +1,165 @@
 using System;
 using UnityEngine;
 
-public class Simulation : IDisposable
+namespace GameOfLife
 {
-    public readonly ComputeShader ComputeShader;
-    public readonly LookupTable LookupTable;
-
-    Material material;
-    public Material Material
+    public class Simulation : IDisposable
     {
-        get => material;
-        set
+        public readonly ComputeShader ComputeShader;
+        public readonly LookupTable LookupTable;
+
+        Material material;
+        public Material Material
         {
-            Material newMaterial = value;
-            if (material != null)
+            get => material;
+            set
             {
-                material.SetBuffer("chunksA", (ComputeBuffer)null);
-                material.SetBuffer("chunksB", (ComputeBuffer)null);
+                Material newMaterial = value;
+                if (material != null)
+                {
+                    material.SetBuffer("chunksA", (ComputeBuffer)null);
+                    material.SetBuffer("chunksB", (ComputeBuffer)null);
+                }
+                if (newMaterial != null)
+                {
+                    newMaterial.SetBuffer("chunksA", boardBufferA);
+                    newMaterial.SetBuffer("chunksB", boardBufferB);
+                    newMaterial.SetInteger("_BoardSize", Cells.x);
+                    if (bufferFlipped) newMaterial.EnableKeyword("FLIP_BUFFER");
+                    else newMaterial.DisableKeyword("FLIP_BUFFER");
+                }
+
+                material = newMaterial;
             }
-            if (newMaterial != null)
+        }
+
+        public readonly int SizeLevel;
+        public readonly int Size;
+
+        public static int EstimateSize(ComputeShader simulationShader, int sizeLevel)
+        {
+            simulationShader.GetKernelThreadGroupSizes(0, out uint groupSize, out _, out _);
+            return (int)groupSize * sizeLevel * 4;
+        }
+
+        //Implementation of double-buffering the board
+        //For more info, see Shaders/GameOfLifeSimulation.compute
+        readonly ComputeBuffer boardBufferA;
+        readonly ComputeBuffer boardBufferB;
+        bool bufferFlipped = false;
+
+        readonly ComputeBuffer lookupBuffer;
+
+        public Simulation(ComputeShader simulation, int sizeLevel, LookupTable lut)
+        {
+            if (simulation == null) throw new ArgumentNullException(nameof(simulation));
+            if (sizeLevel < 1) throw new ArgumentException($"{nameof(sizeLevel)} cannot be smaller than 1", nameof(sizeLevel));
+
+            ComputeShader = simulation;
+            LookupTable = lut;
+            SizeLevel = sizeLevel;
+
+            Size = EstimateSize(simulation, sizeLevel);
+
+            var bufferSize = (Size + 2) * (Size + 2);
+            boardBufferA = new ComputeBuffer(bufferSize, sizeof(int) * 2);
+            boardBufferB = new ComputeBuffer(bufferSize, sizeof(int) * 2);
+
+            ComputeShader.SetInts("Size", Chunks.x, Chunks.y);
+            FlipBuffer();
+
+            lookupBuffer = new ComputeBuffer(LookupTable.packedLength, sizeof(byte) * 4);
+            lookupBuffer.SetData(LookupTable.PackedContents);
+
+            //Link Buffers to the shader
+            foreach (ComputeKernel kernel in AllKernels)
             {
-                newMaterial.SetBuffer("chunksA", boardBufferA);
-                newMaterial.SetBuffer("chunksB", boardBufferB);
-                newMaterial.SetInteger("_BoardSize", Cells.x);
-                if (bufferFlipped) newMaterial.EnableKeyword("FLIP_BUFFER");
-                else newMaterial.DisableKeyword("FLIP_BUFFER");
+                ComputeShader.SetBuffer((int)kernel, "chunksA", boardBufferA);
+                ComputeShader.SetBuffer((int)kernel, "chunksB", boardBufferB);
+                ComputeShader.SetBuffer((int)kernel, "LookupTable", lookupBuffer);
             }
-
-            material = newMaterial;
         }
-    }
 
-    public readonly int SizeLevel;
-    public int Size
-        => ThreadGroupSize.x * SizeLevel * 4;
-
-    //Implementation of double-buffering the board
-    //For more info, see Shaders/GameOfLifeSimulation.compute
-    readonly ComputeBuffer boardBufferA;
-    readonly ComputeBuffer boardBufferB;
-    bool bufferFlipped = false;
-
-    readonly ComputeBuffer lookupBuffer;
-
-    public Simulation(ComputeShader simulation, int sizeLevel, LookupTable lut)
-    {
-        if (simulation == null) throw new ArgumentNullException(nameof(simulation));
-        if (sizeLevel < 1) throw new ArgumentException($"{nameof(sizeLevel)} cannot be smaller than 1", nameof(sizeLevel));
-
-        ComputeShader = simulation;
-        LookupTable = lut;
-        SizeLevel = sizeLevel;
-
-        var bufferSize = (Size + 2) * (Size + 2);
-        boardBufferA = new ComputeBuffer(bufferSize, sizeof(int) * 2);
-        boardBufferB = new ComputeBuffer(bufferSize, sizeof(int) * 2);
-
-        ComputeShader.SetInts("Size", Chunks.x, Chunks.y);
-        FlipBuffer();
-
-        lookupBuffer = new ComputeBuffer(LookupTable.packedLength, sizeof(byte) * 4);
-        lookupBuffer.SetData(LookupTable.PackedContents);
-
-        //Link Buffers to the shader
-        foreach (ComputeKernel kernel in AllKernels)
+        public void Dispose()
         {
-            ComputeShader.SetBuffer((int)kernel, "chunksA", boardBufferA);
-            ComputeShader.SetBuffer((int)kernel, "chunksB", boardBufferB);
-            ComputeShader.SetBuffer((int)kernel, "LookupTable", lookupBuffer);
+            boardBufferA?.Release();
+            boardBufferB?.Release();
+            lookupBuffer?.Release();
         }
-    }
 
-    public void Dispose()
-    {
-        boardBufferA?.Release();
-        boardBufferB?.Release();
-        lookupBuffer?.Release();
-    }
-
-    public void UpdateBoard()
-    {
-        FlipBuffer();
-        ComputeShader.Dispatch((int)ComputeKernel.Update, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
-    }
-
-    public void Randomise(int seed, float chance)
-    {
-        FlipBuffer();
-        ComputeShader.SetInt("Seed", seed);
-        ComputeShader.SetFloat("Chance", Mathf.Clamp01(chance));
-        ComputeShader.Dispatch((int)ComputeKernel.Randomise, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
-    }
-
-    public void Clear()
-    {
-        FlipBuffer();
-        ComputeShader.Dispatch((int)ComputeKernel.Clear, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
-    }
-
-    public void SetPixel(Vector2Int position, bool value)
-    {
-        if (Mathf.Max(position.x, position.y) > Size - 1)
-            throw new ArgumentException($"Parameter {nameof(position)} is too big. " +
-                $"It cannot be bigger than {nameof(Simulation)}.{nameof(Size)} - 1.", nameof(position));
-
-        ComputeShader.SetBool("TargetValue", value);
-        ComputeShader.SetInts("TargetPixel", position.x, position.y);
-
-        ComputeShader.Dispatch((int)ComputeKernel.SetPixel, 1, 1, 1);
-    }
-
-    void FlipBuffer()
-    {
-        bufferFlipped = !bufferFlipped;
-        if (bufferFlipped)
+        public void UpdateBoard()
         {
-            ComputeShader.EnableKeyword("FLIP_BUFFER");
-            if (Material != null) Material.EnableKeyword("FLIP_BUFFER");
+            FlipBuffer();
+            ComputeShader.Dispatch((int)ComputeKernel.Update, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
         }
-        else
+
+        public void Randomise(int seed, float chance)
         {
-            ComputeShader.DisableKeyword("FLIP_BUFFER");
-            if (Material != null) Material.DisableKeyword("FLIP_BUFFER");
+            FlipBuffer();
+            ComputeShader.SetInt("Seed", seed);
+            ComputeShader.SetFloat("Chance", Mathf.Clamp01(chance));
+            ComputeShader.Dispatch((int)ComputeKernel.Randomise, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
         }
-    }
 
-    enum ComputeKernel
-    {
-        Update = 0,
-        Randomise = 1,
-        Clear = 2,
-        SetPixel = 3
-    }
-    static readonly ComputeKernel[] AllKernels
-        = (ComputeKernel[])Enum.GetValues(typeof(ComputeKernel));
-
-    public Vector3Int ThreadGroupSize
-    {
-        get
+        public void Clear()
         {
-            ComputeShader.GetKernelThreadGroupSizes(0, out uint groupSizeX, out uint groupSizeY, out uint groupSizeZ);
-            return new Vector3Int((int)groupSizeX, (int)groupSizeY, (int)groupSizeZ);
+            FlipBuffer();
+            ComputeShader.Dispatch((int)ComputeKernel.Clear, ThreadGroups.x, ThreadGroups.y, ThreadGroups.z);
         }
+
+        public void SetPixel(Vector2Int position, bool value)
+        {
+            if (Mathf.Max(position.x, position.y) > Size - 1)
+                throw new ArgumentException($"Parameter {nameof(position)} is too big. " +
+                    $"It cannot be bigger than {nameof(Simulation)}.{nameof(Size)} - 1.", nameof(position));
+
+            ComputeShader.SetBool("TargetValue", value);
+            ComputeShader.SetInts("TargetPixel", position.x, position.y);
+
+            ComputeShader.Dispatch((int)ComputeKernel.SetPixel, 1, 1, 1);
+        }
+
+        void FlipBuffer()
+        {
+            bufferFlipped = !bufferFlipped;
+            if (bufferFlipped)
+            {
+                ComputeShader.EnableKeyword("FLIP_BUFFER");
+                if (Material != null) Material.EnableKeyword("FLIP_BUFFER");
+            }
+            else
+            {
+                ComputeShader.DisableKeyword("FLIP_BUFFER");
+                if (Material != null) Material.DisableKeyword("FLIP_BUFFER");
+            }
+        }
+
+        enum ComputeKernel
+        {
+            Update = 0,
+            Randomise = 1,
+            Clear = 2,
+            SetPixel = 3
+        }
+        static readonly ComputeKernel[] AllKernels
+            = (ComputeKernel[])Enum.GetValues(typeof(ComputeKernel));
+
+        public Vector3Int ThreadGroupSize
+        {
+            get
+            {
+                ComputeShader.GetKernelThreadGroupSizes(0, out uint groupSizeX, out uint groupSizeY, out uint groupSizeZ);
+                return new Vector3Int((int)groupSizeX, (int)groupSizeY, (int)groupSizeZ);
+            }
+        }
+
+        public Vector3Int ThreadGroups
+            => new(SizeLevel, SizeLevel * 2, 1);
+
+        public Vector2Int Chunks
+            => new(ThreadGroupSize.x * ThreadGroups.x, ThreadGroupSize.y * ThreadGroups.y);
+
+        public Vector2Int Cells
+            => new(Size, Size); //Same as: new(Chunks.x * 4, Chunks.y * 2)
     }
-
-    public Vector3Int ThreadGroups
-        => new(SizeLevel, SizeLevel * 2, 1);
-
-    public Vector2Int Chunks
-        => new(ThreadGroupSize.x * ThreadGroups.x, ThreadGroupSize.y * ThreadGroups.y);
-
-    public Vector2Int Cells
-        => new(Chunks.x * 4, Chunks.y * 2); //Same as: new(Size, Size)
 }

@@ -331,7 +331,6 @@ MonoBehaviour:
   Camera: {fileID: 963194227}
   Simulation: {fileID: 1518814363}
   GUIManager: {fileID: 423357963}
-  Test: 3
 --- !u!1 &1424205208
 GameObject:
   m_ObjectHideFlags: 0
@@ -374,6 +373,12 @@ MonoBehaviour:
     Description: 'Cold Light palette by @A-LAMP on Lospec
 
       https://lospec.com/palette-list/cold-light'
+  Settings:
+    CameraMaxSpeed: 2
+    CameraAcceleration: 0.2
+    CameraZoomMultiplier: 0.15
+    CameraZoomSmoothness: 3
+    FPSCounterRefreshRate: 0.5
 --- !u!4 &1424205210
 Transform:
   m_ObjectHideFlags: 0

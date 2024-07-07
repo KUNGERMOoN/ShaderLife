@@ -1,9 +1,11 @@
-using MiniBinding;
+using GameOfLife;
+using GameOfLife.DataBinding;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class SimulationRunner : MonoBehaviour
@@ -16,40 +18,53 @@ public class SimulationRunner : MonoBehaviour
 
     private Simulation Simulation;
 
-    public readonly Bindable<int> Seed = new(1337);
-    public readonly Bindable<float> Chance = new(0.2f);
+    public readonly BindableProperty<int> Seed = new(1337);
+    public readonly BindableProperty<float> Chance = new(0.2f);
 
-    public readonly Bindable<bool> UpdateInRealtime = new(false);
-    public readonly Bindable<uint> BoardUpdateRate = new(10);
+    public readonly BindableProperty<bool> UpdateInRealtime = new(false);
+    public readonly BindableProperty<uint> BoardUpdateRate = new(10);
 
     public enum LUTGenerationCause { NoLutsFound, NewSimulation }
     public event Action<LUTGenerationCause> LUTGenerationStarted;
     public event Action<(float progress, bool writingToFile)> LUTGenerationProgress;
     public event Action LUTGenerationFinished;
 
-    IEnumerator LUTGenerationEnumerator;
+    public readonly BindableProperty<float> FPS = new();
+    public readonly BindableProperty<float> SPS = new();
 
-    private void Awake()
+    public string StartingLUT { get; private set; }
+
+    float generationProgress;
+
+    private void OnEnable()
     {
+        void CreateStartingSimulation(string lutPath)
+        {
+            CreateSimulation(1, lutPath);
+            var gliderStart = new Vector2Int((BoardSize - 4) / 2, (BoardSize - 4) / 2);
+            SetPixel(gliderStart + new Vector2Int(0, 0), true);
+            SetPixel(gliderStart + new Vector2Int(1, 0), true);
+            SetPixel(gliderStart + new Vector2Int(2, 0), true);
+            SetPixel(gliderStart + new Vector2Int(2, 1), true);
+            SetPixel(gliderStart + new Vector2Int(1, 2), true);
+        }
+
         var LUTs = Directory.GetFiles(LookupTable.LUTsPath, $"*.{LookupTable.FileExtension}");
         if (LUTs.Length > 0)
         {
             var defaultLut = Path.Combine(LookupTable.LUTsPath, LookupTable.DefaultLUT);
             if (LUTs.Contains(defaultLut))
-                CreateSimulation(1, defaultLut);
-            else CreateSimulation(1, LUTs[0]);
+                StartingLUT = defaultLut;
+            else StartingLUT = LUTs[0];
+            CreateStartingSimulation(StartingLUT);
         }
         else
         {
             string path = Path.Combine(LookupTable.LUTsPath, LookupTable.DefaultLUT);
-            StartLUTGeneration(LookupTable.DefaultBirthCount, LookupTable.DefaultSurviveCount, path,
+            StartingLUT = path;
+            GenerateLUT(LookupTable.DefaultBirthCount, LookupTable.DefaultSurviveCount, path,
+                () => { CreateStartingSimulation(path); },
                 LUTGenerationCause.NoLutsFound);
-            LUTGenerationFinished += OnDone;
-            void OnDone()
-            {
-                LUTGenerationFinished -= OnDone;
-                CreateSimulation(1, path);
-            }
         }
     }
 
@@ -59,35 +74,52 @@ public class SimulationRunner : MonoBehaviour
         {
             Simulation.Dispose();
             Simulation = null;
+            lutGenerationCancellationSource.Cancel();
         }
     }
 
-    float timeSinceUpdate;
+    float time;
+    float updates;
+    float simulationTime;
+    float simulationUpdates;
+    float progressOnLastInvoke = float.NegativeInfinity;
     private void Update()
     {
-        if (LUTGenerationEnumerator != null)
+        if (generationProgress - progressOnLastInvoke >= 0.01f)
         {
-            bool finished = !LUTGenerationEnumerator.MoveNext();
-            if (finished)
-            {
-                LUTGenerationEnumerator = null;
-            }
+            LUTGenerationProgress?.Invoke((generationProgress, false));
+            progressOnLastInvoke = generationProgress;
         }
-        else if (UpdateInRealtime)
+        if (UpdateInRealtime)
         {
             if (BoardUpdateRate == 0)
             {
                 Simulation.UpdateBoard();
+                simulationUpdates++;
             }
             else
             {
-                if (timeSinceUpdate >= 1f / BoardUpdateRate)
+                if (simulationTime >= 1f / BoardUpdateRate)
                 {
                     Simulation.UpdateBoard();
-                    timeSinceUpdate = 0;
+                    simulationUpdates++;
+                    simulationTime = 0;
                 }
-                timeSinceUpdate += Time.deltaTime;
+                simulationTime += Time.deltaTime;
             }
+        }
+
+        updates++;
+        time += Time.deltaTime;
+        if (time >= GameManager.LoadedSettings.FPSCounterRefreshRate)
+        {
+
+            FPS.Value = updates / time;
+            SPS.Value = simulationUpdates / time;
+
+            time = 0;
+            updates = 0;
+            simulationUpdates = 0;
         }
     }
 
@@ -118,39 +150,30 @@ public class SimulationRunner : MonoBehaviour
 
     public void SetPixel(Vector2Int position, bool value) => Simulation?.SetPixel(position, value);
 
-    public void StartLUTGeneration(int[] birthCount, int[] surviveCount, string path, LUTGenerationCause cause = LUTGenerationCause.NewSimulation)
-    {
-        if (string.IsNullOrEmpty(path)) return;
 
-        if (LUTGenerationEnumerator != null) return;
-
-        LUTGenerationEnumerator = GenerateLUT(birthCount, surviveCount, path, cause);
-    }
-
-    IEnumerator<float> GenerateLUT(int[] birthCount, int[] surviveCount, string path, LUTGenerationCause cause)
+    readonly CancellationTokenSource lutGenerationCancellationSource = new();
+    public async void GenerateLUT(bool[] birthCount, bool[] surviveCount, string path, Action finished = null, LUTGenerationCause cause = LUTGenerationCause.NewSimulation)
     {
         LookupTable builder = new(birthCount, surviveCount);
         IEnumerator enumerator = builder.Generate();
 
         LUTGenerationStarted?.Invoke(cause);
 
-        float lastProgress = 0f;
-        while (enumerator.MoveNext())
+        CancellationToken token = lutGenerationCancellationSource.Token;
+        await Task.Run(() =>
         {
-            float progress = (float)builder.GeneratedPacks / LookupTable.packedLength;
-            progress *= 0.9f; //So we end the generation at 90% and the last 10% are for writing to file
-            if (progress - lastProgress >= 0.01f)
+            while (enumerator.MoveNext())
             {
-                lastProgress = MathF.Floor(progress * 100) / 100;
-                LUTGenerationProgress?.Invoke((progress, false));
-                yield return progress;
+                if (lutGenerationCancellationSource.IsCancellationRequested) return;
+                generationProgress = (float)builder.GeneratedPacks / LookupTable.packedLength;
             }
-        }
+        }, token);
 
         LUTGenerationProgress?.Invoke((0.9f, true));
 
         builder.WriteToFile(path);
+
+        finished?.Invoke();
         LUTGenerationFinished?.Invoke();
-        yield return 1f;
     }
 }

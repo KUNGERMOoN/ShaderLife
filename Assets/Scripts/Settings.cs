@@ -1,4 +1,3 @@
-using MiniBinding;
 using System;
 using UnityEngine;
 
@@ -6,8 +5,11 @@ using UnityEngine;
 public class Settings
 {
     [Header("Camera")]
-    public Bindable<float> CameraMaxSpeed = new(2f);
-    public Bindable<float> CameraAcceleration = new(0.10f);
-    public Bindable<float> CameraZoomMultiplier = new(0.15f);
-    public Bindable<float> CameraZoomSmoothness = new(3f);
+    public float CameraMaxSpeed = 2f;
+    public float CameraAcceleration = 0.10f;
+    public float CameraZoomMultiplier = 0.15f;
+    public float CameraZoomSmoothness = 3f;
+
+    [Header("FPS Counter")]
+    public float FPSCounterRefreshRate = 0.5f;
 }

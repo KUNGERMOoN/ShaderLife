@@ -195,22 +195,6 @@ Button:active {
     margin-bottom: -1px;
 }
 
-#play > #image {
-    background-image: url('project://database/Assets/GUI/Icons/Old/d_PlayButton@2x.png?fileID=2800000&guid=43c48efe0c9fb5245a0a76da81583bf2&type=3#d_PlayButton@2x');
-}
-
-#pause > #image {
-    background-image: url('project://database/Assets/GUI/Icons/Old/d_PauseButton@2x.png?fileID=2800000&guid=942bef6c5810ad64387636c07b70bc03&type=3#d_PauseButton@2x');
-}
-
-#play:checked > #image {
-    background-image: url('project://database/Assets/GUI/Icons/Old/d_PlayButton%20On@2x.png?fileID=2800000&guid=6ddc16e9c05345648bd767e1d6a4f355&type=3#d_PlayButton On@2x');
-}
-
-#pause:checked > #image {
-    background-image: url('project://database/Assets/GUI/Icons/Old/d_PauseButton%20On@2x.png?fileID=2800000&guid=d5b12e73ffefe3f42b95284023e869f7&type=3#d_PauseButton On@2x');
-}
-
 #randomSeed {
     background-color: rgb(103, 103, 103);
     border-left-color: rgb(48, 48, 48);
@@ -294,4 +278,8 @@ Popup #content-container {
 .rulestringToggle {
     margin-left: 1px;
     margin-right: 1px;
+}
+
+#generatingLUT #content-container {
+    min-height: 50px;
 }

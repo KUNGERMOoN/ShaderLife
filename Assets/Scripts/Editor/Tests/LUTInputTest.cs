@@ -1,3 +1,4 @@
+using GameOfLife;
 using NUnit.Framework;
 
 /// <summary>

@@ -1,3 +1,4 @@
+using GameOfLife.GUI;
 using System;
 using UnityEngine.UIElements;
 
