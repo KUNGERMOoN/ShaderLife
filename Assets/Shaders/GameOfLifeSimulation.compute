@@ -3,18 +3,18 @@
 #pragma kernel Clear
 #pragma kernel SetPixel
 
+#pragma enable_d3d11_debug_symbols
 #pragma multi_compile __ FLIP_BUFFER
 
-//Implementation of double buffering (read more here: https://gameprogrammingpatterns.com/double-buffer.html)
-RWStructuredBuffer<int> chunksA;
-RWStructuredBuffer<int> chunksB;
+#define RANDOM_WRITE //Use RWStructuredBuffer rather than StructuredBuffer
+#include "Shared.cginc"
 
 //Size of the board, in chunks
 int2 Size;
 int Seed;
 float Chance;
 
-Buffer<int> LookupTable;
+StructuredBuffer<int> LookupTable;
 
 // Hash function from H. Schechter & R. Bridson, goo.gl/RXiKaH
 uint hash(uint s)
@@ -42,54 +42,6 @@ int randomConfiguration(uint seed)
 uint index(in uint x, in uint y)
 {
     return (x + 1) * (Size.y + 2) + y + 1;
-}
-
-int GetPrevious(int i)
-{
-    if (FLIP_BUFFER)
-    {
-        return chunksA[i];
-    }
-    else
-    {
-        return chunksB[i];
-    }
-}
-
-void SetPrevious(int i, int value)
-{
-    if (FLIP_BUFFER)
-    {
-        chunksA[i] = value;
-    }
-    else
-    {
-        chunksB[i] = value;
-    }
-}
-
-int GetNext(int i)
-{
-    if (FLIP_BUFFER)
-    {
-        return chunksB[i];
-    }
-    else
-    {
-        return chunksA[i];
-    }
-}
-
-void SetNext(int i, int value)
-{
-    if (FLIP_BUFFER)
-    {
-        chunksB[i] = value;
-    }
-    else
-    {
-        chunksA[i] = value;
-    }
 }
 
 int Lookup(uint index)
@@ -128,7 +80,7 @@ void Update(uint3 id : SV_DispatchThreadID)
 		((x << 9) & 122880) +
 		((x << 7) & 1920);
     
-    SetNext(i, Lookup(input));
+    SetCurrent(i, GetByte(LookupTable, input));
 }
 
 [numthreads(8, 8, 1)]
@@ -136,7 +88,7 @@ void Randomise(uint3 id : SV_DispatchThreadID)
 {
     int i = index(id.x, id.y);
     
-    SetNext(i, randomConfiguration(i ^ Seed));
+    SetCurrent(i, randomConfiguration(i ^ Seed));
 }
 
 [numthreads(8, 8, 1)]
@@ -144,7 +96,7 @@ void Clear(uint3 id : SV_DispatchThreadID)
 {
     int i = index(id.x, id.y);
     
-    SetNext(i, 0);
+    SetCurrent(i, 0);
 }
 
 int2 TargetPixel = int2(0, 0);
@@ -154,7 +106,7 @@ void SetPixel(uint3 id : SV_DispatchThreadID)
 {
     int i = index(TargetPixel.x / 4u, TargetPixel.y / 2u);
     
-    int chunk = GetNext(i);
+    int chunk = GetCurrent(i);
 
     //Which bit in the chunk we want to update
     int localIndex = 7 - ((TargetPixel.x % 4u) + 4 * (TargetPixel.y % 2u));
@@ -164,5 +116,5 @@ void SetPixel(uint3 id : SV_DispatchThreadID)
     //... and set it to our desired value
     chunk |= TargetValue << localIndex;
 
-    SetNext(i, chunk);
+    SetCurrent(i, chunk);
 }

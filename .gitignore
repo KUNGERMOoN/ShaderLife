@@ -72,7 +72,11 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 # Temporary excel files
-/[Aa]ssets/~$LookupTables.xlsx
+/[Aa]ssets/~$*.xlsx
 
 # Odin inspector (optionally used for Assets Scripts/Editor/LookupTableBuilderEditor.cs)
 /[Aa]ssets/Plugins/Sirenix/*
+
+#Some things I'm working on that are not ready to be published yet...
+/[Aa]ssets/Scripts/RenderDocTools
+/[Aa]ssets/Shaders/__EDIT__GameOfLifeDrawer*

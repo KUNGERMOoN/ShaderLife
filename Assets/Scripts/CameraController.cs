@@ -16,9 +16,9 @@ namespace GameOfLife
         float targetZoom;
         float zoom = 0.9f;
 
-        Vector2 zoomPosition;
+        Vector2 zoomMousePosition;
 
-        bool focusingBack;
+        bool wasWindowFocused = true;
 
         private void Start()
         {
@@ -27,57 +27,71 @@ namespace GameOfLife
 
         private void Update()
         {
-            if (focusingBack || GUIManager.Focused) return;
+            //Prevent all movement if a popup is opened
+            if (Popup.OpenedPopups.Count > 0) return;
 
             //Zoom
-            float input = Input.mouseScrollDelta.y;
-            if (input != 0)
-                zoomPosition = MouseToScreenPos();
-            if (Input.GetKeyDown(KeyCode.PageUp) || Input.GetKeyDown(KeyCode.E))
-                input = 1;
-            else if (Input.GetKeyDown(KeyCode.PageDown) || Input.GetKeyDown(KeyCode.Q))
-                input = -1;
+            //Prevent sudden zoom jumps after opening other windows and using scroll wheel
+            if (wasWindowFocused)
+            {
+                float input = Input.mouseScrollDelta.y;
+                if (input != 0)
+                    zoomMousePosition = MouseToScreenPos();
 
-            targetZoom += input * GameManager.LoadedSettings.CameraZoomMultiplier;
-            targetZoom = Mathf.Max(targetZoom, 0);
+                if (Input.GetKeyDown(KeyCode.PageUp) || Input.GetKeyDown(KeyCode.E))
+                {
+                    input = 1;
+                    zoomMousePosition = Vector2.zero;
+                }
+                else if (Input.GetKeyDown(KeyCode.PageDown) || Input.GetKeyDown(KeyCode.Q))
+                {
+                    input = -1;
+                    zoomMousePosition = Vector2.zero;
+                }
+
+                targetZoom += input * GameManager.Settings.CameraZoomMultiplier;
+                targetZoom = Mathf.Max(targetZoom, 0);
+            }
 
             //Movement
-            moveInput = new();
-            if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
-                moveInput.x = 1;
-            if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
-                moveInput.x = -1;
-            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
-                moveInput.y = 1;
-            if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
-                moveInput.y = -1;
+            //Avoid typing characters into text boxes and moving the camera at the same time
+            if (GUIManager.Focused == false)
+            {
+                moveInput = new();
+                if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
+                    moveInput.x = 1;
+                if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
+                    moveInput.x = -1;
+                if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
+                    moveInput.y = 1;
+                if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
+                    moveInput.y = -1;
+            }
         }
 
         private void FixedUpdate()
         {
-            if (GUIManager.Focused) return;
-
             //Zoom
             float zoomStep;
-            if (GameManager.LoadedSettings.CameraZoomSmoothness != 0f)
-                zoomStep = 1 / Mathf.Clamp(GameManager.LoadedSettings.CameraZoomSmoothness, 0f, 10f);
+            if (GameManager.Settings.CameraZoomSmoothness != 0f)
+                zoomStep = 1 / Mathf.Clamp(GameManager.Settings.CameraZoomSmoothness, 0f, 10f);
             else zoomStep = float.PositiveInfinity;
 
             var lastOrthographicSize = Camera.orthographicSize;
             zoom = Mathf.Lerp(zoom, targetZoom, zoomStep);
             Camera.orthographicSize = 1 / Mathf.Pow(2, zoom);
 
-            //We offset the camera to make sure you zoom "into" the mouse position instead of the center of the screen
-            //To see why we calculate it like that, see Docs/ZoomIntoPosition.txt
-            Vector2 zoomOffset = zoomPosition * new Vector2(Camera.aspect, 1) *
+            //We offset the camera to make sure you "zoom into" the mouse position instead of the center of the screen
+            //The math behind all of this is explained in Docs/ZoomIntoPosition.txt
+            Vector2 zoomOffset = zoomMousePosition * new Vector2(Camera.aspect, 1) *
                 (lastOrthographicSize - Camera.orthographicSize);
 
             transform.position += (Vector3)zoomOffset;
 
             //Movement
-            float speed = Camera.orthographicSize * 2 * Mathf.Clamp01(GameManager.LoadedSettings.CameraMaxSpeed);
+            float speed = Camera.orthographicSize * 2 * Mathf.Clamp01(GameManager.Settings.CameraMaxSpeed);
 
-            var acceleration = Mathf.Max(0.03f, GameManager.LoadedSettings.CameraAcceleration);
+            var acceleration = Camera.orthographicSize * 2 * Mathf.Max(0.03f, GameManager.Settings.CameraAcceleration);
             Vector2 velocityDelta = Vector2.ClampMagnitude(moveInput * speed - velocity,
                 acceleration);
             velocity += velocityDelta;
@@ -91,17 +105,25 @@ namespace GameOfLife
         }
 
         Vector2Int lastCellPos;
+        bool wasDrawFocused = false;
         private void LateUpdate()
         {
+            //Drawing
             var boardPos = ScreenToWorldPos(MouseToScreenPos()) + Vector2.one / 2;
             Vector2Int cellPos = Vector2Int.FloorToInt(boardPos * Simulation.BoardSize);
 
-            if (focusingBack)
+            bool isDrawFocused =
+                Popup.OpenedPopups.Count == 0 &&
+                !GUIManager.Focused;
+
+            //To avoid accidentally drawing long stripes of cells when switching windows
+            if (wasWindowFocused == false)
             {
                 lastCellPos = cellPos;
             }
 
-            if (GUIManager.Focused == false)
+            //Make sure both this and a previous frame were elgible to draw on the board
+            if (isDrawFocused && wasDrawFocused)
             {
                 int mouseState = 0;
 
@@ -117,11 +139,17 @@ namespace GameOfLife
             }
 
             lastCellPos = cellPos;
-            focusingBack = false;
+            wasDrawFocused = isDrawFocused;
+
+            //At the end of the frame, reset the wasWindowFocused value
+            wasWindowFocused = true;
         }
 
         private void OnApplicationFocus(bool focus)
-            => focusingBack = focus;
+        {
+            if (focus)
+                wasWindowFocused = false;
+        }
 
         Vector2 MouseToScreenPos()
             => new Vector2(Input.mousePosition.x / Screen.width, Input.mousePosition.y / Screen.height)

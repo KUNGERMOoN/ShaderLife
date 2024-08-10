@@ -1,7 +1,9 @@
 using AnotherFileBrowser.Windows;
 using GameOfLife.DataBinding;
+using System;
 using System.IO;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -27,7 +29,7 @@ namespace GameOfLife.GUI
                     cause == SimulationRunner.LUTGenerationCause.NoLutsFound
                     ? DisplayStyle.Flex : DisplayStyle.None;
             };
-            Simulation.LUTGenerationProgress += ctx =>
+            Simulation.LUTGenerationUpdate += ctx =>
             {
                 Q<ProgressBar>("LUTprogressBar").value = ctx.progress;
                 Q<Label>("LUTprogressPrecentage").text = $"{Mathf.Round(ctx.progress * 100)}%";
@@ -45,7 +47,7 @@ namespace GameOfLife.GUI
             Q<Button>("next").Bind(Simulation.UpdateBoard);
             Q<Button>("clear").Bind(Simulation.ClearBoard);
 
-            Q<UnsignedIntegerField>("simulationSpeed").Bind(Simulation.BoardUpdateRate);
+            Q<UnsignedIntegerField>("simulationRate").Bind(Simulation.BoardUpdateRate);
 
             Q<IntegerField>("seed").Bind(Simulation.Seed);
             Q<Slider>("chance").Bind(Simulation.Chance);
@@ -71,8 +73,36 @@ namespace GameOfLife.GUI
             BindToggles(birthCountToggles);
             BindToggles(surviveCountToggles);
 
+            Q<Button>("computeShadersUnsupportedExit").Bind(GameManager.Quit);
+
+            Q<Button>("startWarningClose").Bind(Q<Popup>("startWarning").Close);
+            Q<Button>("startWarningExit").Bind(GameManager.Quit);
+
+            Q<Button>("quitPopupCancel").Bind(Q<Popup>("quitPopup").Close);
+            Q<Button>("quitPopupQuit").Bind(GameManager.Quit);
+
             Simulation.FPS.Bind(fps => Q<Label>("fps").text = $"{Mathf.Round(fps)} FPS");
-            Simulation.SPS.Bind(sps => Q<Label>("sps").text = $"{Mathf.Round(sps)} SPS");
+            Simulation.SPS.Bind(sps => Q<Label>("sps").text = $"{Mathf.Round(sps)} ticks/sec");
+
+            if (SystemInfo.supportsComputeShaders == false)
+                Q<Popup>("computeShadersUnsupportedPopup").Open();
+            else Q<Popup>("startWarning").Open();
+        }
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                var popup = Popup.OpenedPopups.LastOrDefault();
+                if (popup != null)
+                {
+                    if (popup.Closeable == true)
+                        popup.Close();
+                }
+                else
+                    Q<Popup>("quitPopup").Open();
+            }
+
         }
 
         readonly Toggle[] birthCountToggles = new Toggle[9];
@@ -119,25 +149,16 @@ namespace GameOfLife.GUI
                 if (!string.IsNullOrEmpty(path) && File.Exists(path))
                     Q<TextField>("lutPath").value = Path.GetRelativePath(LookupTable.LUTsPath, path);
                 else
-                    throw new System.NotImplementedException("TODO: display an incorrect file warning");
+                    throw new NotImplementedException("TODO: display an incorrect file warning");
             });
         }
 
         void NewSizeValueChanged(ChangeEvent<uint> ctx)
-        {
-            if (ctx.newValue > 0)
-            {
-                UpdateHintBoardSize((int)ctx.newValue);
-            }
-            else
-            {
-                (ctx.target as UnsignedIntegerField).value = 1;
-            }
-        }
+            => UpdateHintBoardSize((int)ctx.newValue);
 
         void UpdateHintBoardSize(int sizeLevel)
         {
-            var size = GameOfLife.Simulation.EstimateSize(Simulation.ComputeShader, sizeLevel);
+            var size = GameOfLife.Simulation.CalculateBoardDimension(sizeLevel);
             Q<Label>("expectedSize").text = $"{size}x{size} cells";
         }
 
@@ -157,7 +178,7 @@ namespace GameOfLife.GUI
         {
             var birthCount = birthCountToggles.Select(toggle => toggle.value).ToArray();
             var surviveCount = surviveCountToggles.Select(toggle => toggle.value).ToArray();
-            string suggestedFileName = LookupTable.GenerateRulestring(birthCount, surviveCount);
+            string suggestedFileName = LookupTable.GenerateRulestring(birthCount, surviveCount).Replace('/', ' ');
 
             new FileBrowser().SaveFileBrowser(new BrowserProperties()
             {

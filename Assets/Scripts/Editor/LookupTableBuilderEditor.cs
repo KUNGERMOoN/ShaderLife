@@ -1,7 +1,7 @@
 //Editor utility for generating lookup tables (.lut) for other life-like celluar automata
 //Currently requires Odin Inspector to be added to the project
 //Alternatively, you can use the runtime lookup table builder
-#if ODIN_INSPECTOR
+#if ODIN_INSPECTOR && UNITY_EDITOR
 using GameOfLife;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;

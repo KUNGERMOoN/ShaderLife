@@ -2,7 +2,8 @@
     "name": "GameOfLife",
     "rootNamespace": "",
     "references": [
-        "GUID:a11ff146d38b27a44af87b4b4d9c4ecb"
+        "GUID:a11ff146d38b27a44af87b4b4d9c4ecb",
+        "GUID:478a2357cc57436488a56e564b08d223"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

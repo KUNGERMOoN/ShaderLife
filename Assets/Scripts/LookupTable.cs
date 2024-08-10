@@ -29,7 +29,7 @@ namespace GameOfLife
 
 
         public static string FileExtension => "lut";
-        public static string LUTsPath => Path.Combine(Application.dataPath, "Resources", "Lookup Tables");
+        public static string LUTsPath => Path.Combine(Application.streamingAssetsPath, "Lookup Tables");
         public static string DefaultLUT => "GameOfLife.lut";
         public static bool[] DefaultBirthCount => defaultBirthCount.ToArray();
 

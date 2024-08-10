@@ -1,5 +1,7 @@
 using GameOfLife.GUI;
 using System;
+using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 public class Popup : VisualElement
@@ -75,8 +77,6 @@ public class Popup : VisualElement
         }
     }
 
-    public event Action Opened, Closed;
-
     private readonly Draggable dragManipulator;
     public bool Draggable
     {
@@ -91,25 +91,35 @@ public class Popup : VisualElement
         }
     }
 
-    public bool IsOpened { get; private set; }
+    public static IReadOnlyList<Popup> OpenedPopups => openedPopups;
+    static readonly List<Popup> openedPopups = new();
+
+    public event Action Opened, Closed;
+    public bool IsOpened { get; private set; } = false;
 
     public void Open()
     {
+        if (IsOpened) return;
+
         style.display = DisplayStyle.Flex;
         IsOpened = true;
+        openedPopups.Add(this);
         Opened?.Invoke();
     }
 
     public void Close()
     {
+        if (!IsOpened) return;
+
         style.display = DisplayStyle.None;
         IsOpened = false;
+        openedPopups.Remove(this);
         Closed?.Invoke();
     }
 
     public Popup() : this(defaultTitle) { }
 
-    public Popup(string title, bool closeable = true, bool draggable = true)
+    public Popup(string title, bool closeable = true, bool draggable = true) : base()
     {
         RegisterCallback<ClickEvent>(ctx =>
         {
@@ -148,7 +158,7 @@ public class Popup : VisualElement
         headerLabel.AddManipulator(dragManipulator);
         headerLabel.AddToClassList(headerLabelUssClassName);
         headerLabel.style.flexGrow = 1;
-        headerLabel.style.unityTextAlign = UnityEngine.TextAnchor.MiddleCenter;
+        headerLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
         header.Add(headerLabel);
 
         headerClose = new() { name = nameof(headerClose) };
@@ -170,5 +180,12 @@ public class Popup : VisualElement
 
         Closeable = closeable;
         Draggable = draggable;
+
+        RegisterCallback<AttachToPanelEvent>(OnAttachToPanel);
+        void OnAttachToPanel(AttachToPanelEvent ctx)
+        {
+            if (resolvedStyle.display != DisplayStyle.None && Application.isPlaying) Open();
+            UnregisterCallback<AttachToPanelEvent>(OnAttachToPanel);
+        }
     }
 }

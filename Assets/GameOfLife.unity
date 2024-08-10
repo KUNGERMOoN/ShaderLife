@@ -360,7 +360,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a284167cd6fa5fb4498361a21f550e5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CameraController: {fileID: 963194229}
   Board: {fileID: 2100000, guid: eae4068e4c3ce52428fa7d2f6af5a091, type: 2}
   Skybox: {fileID: 2100000, guid: 95b7cbaea06c47b4895a8e3ae0ea0b63, type: 2}
   DefaultPalette_Source: D:/Programowanie/Unity/Editor/Shaders/Assets/Resources/Palettes/Cold

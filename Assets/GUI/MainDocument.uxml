@@ -1,10 +1,10 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/GUI/MainStyle.uss?fileID=7433441132597879392&amp;guid=952f131e41afdb94688cac5454a3c168&amp;type=3#MainStyle" />
     <Style src="project://database/Assets/GUI/Popup.uss?fileID=7433441132597879392&amp;guid=06dc969429fd57141b62a61cbb04b4a5&amp;type=3#Popup" />
-    <ui:VisualElement name="options" class="container main" style="display: flex; align-self: flex-start; height: 80%; flex-grow: 0; top: 10%; background-color: rgb(56, 56, 56); width: 243px;">
-        <ui:Foldout text="Simulation" value="true" name="simulationFoldout" class="main foldout">
-            <ui:VisualElement name="newSimulationContainer" style="position: absolute; width: 100%; top: -32px; height: 32px; justify-content: flex-end; align-items: flex-end; flex-direction: row;">
-                <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="newSimulation" style="align-self: center; margin-bottom: 4px; margin-top: 4px; background-image: none; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; width: 25px; height: 25px; -unity-background-image-tint-color: rgb(255, 255, 255); -unity-slice-right: 2;">
+    <ui:VisualElement name="optionsContainer" style="flex-grow: 1; position: absolute; left: 0; top: 0; right: 0; bottom: 0;">
+        <ui:Foldout text="Options" value="true" name="optionsFoldout" class="main foldout" style="flex-grow: 0; width: 243px; align-self: flex-start; bottom: 5px; position: absolute; left: 5px;">
+            <ui:VisualElement name="foldoutHeader" style="position: absolute; width: 25px; top: -30px; height: 30px; justify-content: flex-end; align-items: flex-end; flex-direction: row; align-self: flex-end; margin-top: 0; margin-bottom: 0;">
+                <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="newSimulation" style="align-self: center; background-image: none; padding-left: 0; padding-right: 0; padding-top: 0; padding-bottom: 0; width: 25px; height: 25px; -unity-background-image-tint-color: rgb(255, 255, 255); -unity-slice-right: 2; margin-bottom: 0;">
                     <ui:VisualElement name="Image" style="flex-grow: 1; width: 100%; height: 100%; align-self: center; background-image: url(&apos;project://database/Assets/GUI/Icons/Google%20Icons/add_FILL0_wght700_GRAD0_opsz48.png?fileID=2800000&amp;guid=f719741a1734ce54aa23b66876088e7b&amp;type=3#add_FILL0_wght700_GRAD0_opsz48&apos;); position: absolute;" />
                 </ui:Button>
             </ui:VisualElement>
@@ -24,7 +24,7 @@
                         <ui:VisualElement name="image" style="width: 14px; height: 14px; background-image: url(&apos;project://database/Assets/GUI/Icons/Google%20Icons/modified_delete_forever_FILL1_wght700_GRAD0_opsz48.png?fileID=2800000&amp;guid=2022cbdb382a88f438b0b3b9f98371a2&amp;type=3#modified_delete_forever_FILL1_wght700_GRAD0_opsz48&apos;); align-self: center; position: absolute; left: 0; top: 0; right: 0; bottom: 0; margin-left: 2px; margin-right: 2px; margin-top: 5px; margin-bottom: 4px; display: flex;" />
                     </ui:Button>
                 </ui:VisualElement>
-                <ui:UnsignedIntegerField label="Simulation Speed" value="10" tooltip="Determines the maximum rate at which the simulation runs, in updates per second. When set to 0, it will update the simulation every frame." name="simulationSpeed" focusable="true" class="property" />
+                <ui:UnsignedIntegerField label="Simulation Rate" value="0" tooltip="Determines the maximum rate at which the simulation runs, in updates per second. When set to 0, it will update the simulation every frame." name="simulationRate" focusable="true" class="property" />
             </ui:VisualElement>
             <ui:VisualElement name="space" style="flex-grow: 1; height: 15px;" />
             <ui:VisualElement name="randomization" style="flex-grow: 1;">
@@ -33,6 +33,9 @@
                 <ui:Button text="Randomize" parse-escape-sequences="true" display-tooltip-when-elided="true" name="randomize" tooltip="Randomizes the all the cells on the board, with the given seed and chance for the cells to be alive." class="property" />
             </ui:VisualElement>
         </ui:Foldout>
+    </ui:VisualElement>
+    <ui:VisualElement name="__OLD__options" class="container main" style="display: none; align-self: flex-start; height: 80%; flex-grow: 0; top: 10%; background-color: rgb(56, 56, 56); width: 243px;">
+        <ui:Foldout text="Settings" name="settingsFoldout" class="main" style="display: none;" />
     </ui:VisualElement>
     <Popup name="newSimulationPopup" title="New Simulation" style="display: none; top: 0; right: 0; left: 0; bottom: 1px;">
         <ui:UnsignedIntegerField label="Size" value="1" name="size" class="property" style="margin-bottom: 0; margin-left: 3px; margin-right: 3px;" />
@@ -103,17 +106,34 @@
         </ui:VisualElement>
         <ui:Label tabindex="-1" text="Generating..." parse-escape-sequences="true" display-tooltip-when-elided="true" name="LUTProgressStage" style="margin-top: 2px; padding-top: 0; -unity-text-align: upper-center; font-size: 11px;" />
     </Popup>
-    <ui:VisualElement name="fpsCounter" style="flex-grow: 1; position: absolute; right: 0; top: 0; width: 163px; height: 134px; margin-right: 5px; margin-top: 5px;">
-        <ui:Label tabindex="-1" text="0 FPS" parse-escape-sequences="true" display-tooltip-when-elided="true" name="fps" style="font-size: 40px; -unity-text-align: upper-right; padding-bottom: 0; margin-bottom: 0; margin-top: 0; padding-top: 0;" />
-        <ui:Label tabindex="-1" text="0 SPS" parse-escape-sequences="true" display-tooltip-when-elided="true" name="sps" style="font-size: 40px; -unity-text-align: upper-right; margin-top: 0; padding-top: 0;" />
-        <ui:Label tabindex="-1" parse-escape-sequences="true" display-tooltip-when-elided="true" name="spsInfo" text="simulation steps per frame,&#10;limited by the FPS and&#10;&quot;simulation speed&quot; option" style="-unity-text-align: upper-right; margin-top: 0; padding-top: 0;" />
+    <ui:VisualElement name="fpsCounter" style="flex-grow: 1; position: absolute; right: 5px; top: 5px; width: 163px; bottom: 2px;">
+        <ui:Label tabindex="-1" text="0 ticks/sec" parse-escape-sequences="true" display-tooltip-when-elided="true" name="sps" style="font-size: 40px; -unity-text-align: upper-right; margin-top: 0; padding-top: 0;" />
+        <ui:Label tabindex="-1" text="0 FPS" parse-escape-sequences="true" display-tooltip-when-elided="true" name="fps" style="font-size: 40px; -unity-text-align: upper-right; padding-bottom: 0; margin-bottom: 0; margin-top: 0; padding-top: 0; justify-content: flex-end;" />
     </ui:VisualElement>
-    <Popup name="startWarning" title="Warning!" closeable="true" draggable="true" style="top: 0; right: 1px; left: 0; bottom: 0; display: flex;">
-        <ui:VisualElement name="info" style="flex-grow: 1; flex-direction: row; justify-content: center; display: flex;">
+    <Popup name="startWarning" title="Warning!" closeable="true" draggable="true" style="top: 13px; right: -28px; left: 28px; bottom: -13px; display: none;">
+        <ui:VisualElement name="info" style="flex-grow: 1; flex-direction: column; justify-content: center; display: flex; padding-right: 5px; padding-left: 5px; padding-bottom: 5px;">
             <ui:VisualElement style="align-self: center; flex-direction: row;">
                 <ui:VisualElement name="warning" style="flex-grow: 1; background-image: url(&apos;project://database/Assets/GUI/Icons/Google%20Icons/modified_warning_FILL1_wght700_GRAD0_opsz48.png?fileID=2800000&amp;guid=19b2e55f5ea81e74ea90e6a9f560b931&amp;type=3#modified_warning_FILL1_wght700_GRAD0_opsz48&apos;); width: 20px; height: 20px; align-self: center; -unity-background-image-tint-color: rgb(255, 213, 0); margin-left: 4px; margin-right: 4px; margin-top: 4px; margin-bottom: 4px;" />
                 <ui:Label tabindex="-1" text="Running large simulations will significantly&#10;increase GPU usage, which might cause&#10;some devices (e.g. laptops) to overheat." parse-escape-sequences="true" display-tooltip-when-elided="true" enable-rich-text="false" style="margin-top: 1px;" />
             </ui:VisualElement>
+            <ui:VisualElement name="buttons" style="flex-grow: 1; flex-direction: row;">
+                <ui:Button text="Close" parse-escape-sequences="true" display-tooltip-when-elided="true" name="startWarningClose" style="flex-grow: 1; margin-right: 6px; margin-left: 4px;" />
+                <ui:Button text="Exit" parse-escape-sequences="true" display-tooltip-when-elided="true" name="startWarningExit" style="flex-grow: 1; margin-left: 6px; margin-right: 4px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </Popup>
+    <Popup focusable="true" title="Device unsupported" name="computeShadersUnsupportedPopup" closeable="false" style="display: none;">
+        <ui:VisualElement style="align-self: center; flex-direction: row;">
+            <ui:VisualElement name="warning" style="flex-grow: 1; background-image: url(&apos;project://database/Assets/GUI/Icons/Google%20Icons/report_24dp_E8EAED_FILL1_wght700_GRAD0_opsz48.png?fileID=2800000&amp;guid=209741727985546468c93e7726807e1f&amp;type=3#report_24dp_E8EAED_FILL1_wght700_GRAD0_opsz48&apos;); width: 26px; height: 26px; align-self: center; -unity-background-image-tint-color: rgb(255, 40, 18); margin-left: 1px; margin-right: 1px; margin-top: 1px; margin-bottom: 1px;" />
+            <ui:Label tabindex="-1" text="This device doesn&apos;t support&#10;compute shaders which&#10;are required by this application" parse-escape-sequences="true" display-tooltip-when-elided="true" enable-rich-text="false" style="margin-top: 1px;" />
+        </ui:VisualElement>
+        <ui:Button text="Exit" parse-escape-sequences="true" display-tooltip-when-elided="true" name="computeShadersUnsupportedExit" style="margin-right: 15px; margin-left: 15px; margin-bottom: 5px; margin-top: 2px; width: 70%; align-self: center;" />
+    </Popup>
+    <Popup focusable="true" title="Quit" name="quitPopup" style="display: none;">
+        <ui:Label tabindex="-1" text="Are you sure you want to quit?" parse-escape-sequences="true" display-tooltip-when-elided="true" style="margin-top: 0; -unity-text-align: upper-center;" />
+        <ui:VisualElement name="buttons" style="flex-grow: 1; flex-direction: row;">
+            <ui:Button text="Cancel" parse-escape-sequences="true" display-tooltip-when-elided="true" name="quitPopupCancel" style="flex-grow: 1; margin-right: 6px; margin-left: 4px; width: 40%;" />
+            <ui:Button text="Quit" parse-escape-sequences="true" display-tooltip-when-elided="true" name="quitPopupQuit" style="flex-grow: 1; margin-left: 6px; margin-right: 4px; width: 40%;" />
         </ui:VisualElement>
     </Popup>
 </ui:UXML>

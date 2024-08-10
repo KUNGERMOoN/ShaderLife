@@ -24,12 +24,16 @@ Shader "Game Of Life/GameOfLifeDrawer"
 		Pass
 		{
 			CGPROGRAM
+			//#pragma target 5.0
 			#pragma vertex vert
 			#pragma fragment frag
 			
 			#pragma multi_compile __ FLIP_BUFFER
 
+			#pragma enable_d3d11_debug_symbols
+
 			#include "UnityCG.cginc"
+			#include "Shared.cginc"
 
 			struct appdata
 			{
@@ -42,12 +46,7 @@ Shader "Game Of Life/GameOfLifeDrawer"
 				float4 vertex : SV_POSITION;
 				float2 uv : TEXCOORD0;
 			};
-
-			//Implementation of double-buffering the board
-			//For more info, see Shaders/GameOfLifeSimulation.compute
-			StructuredBuffer<int> chunksA;
-			StructuredBuffer<int> chunksB;
-
+			
 			int _BoardSize;
 			float4 _AliveCol;
 			float4 _DeadCol;
@@ -70,6 +69,7 @@ Shader "Game Of Life/GameOfLifeDrawer"
 						(uv.y * _BoardSize) % gridScale);
 
 				float distanceFromGrid = min(min(distance.x, distance.y), gridScale - max(distance.x, distance.y));
+				
 				float AAstep = zoom * _AAScale * _BoardSize / 8192;
 
 
@@ -99,22 +99,16 @@ Shader "Game Of Life/GameOfLifeDrawer"
 				float boardSizeExtraGridEdge = _BoardSize + 2 * gridWidth;
 				i.uv = i.uv * boardSizeExtraGridEdge / _BoardSize - gridWidth / _BoardSize;
 
+				float2 boardPos = i.uv * _BoardSize;
+
 				//CELLS:
-				uint2 globalPos = floor(float2(i.uv.x * _BoardSize, i.uv.y * _BoardSize));
-				uint2 chunkPos = floor(float2(globalPos.x / 4, globalPos.y / 2));
-				uint2 localPos = int2(globalPos.x % 4, globalPos.y % 2);
+				uint2 cellPos = floor(boardPos);
+				uint2 chunkPos = floor(float2(cellPos.x / 4, cellPos.y / 2));
+				uint2 localPos = int2(cellPos.x % 4, cellPos.y % 2);
 
 				int chunkIndex = (chunkPos.x + 1) * ((uint)_BoardSize / 2 + 2) + chunkPos.y + 1;
 
-				int chunkData;
-				if (FLIP_BUFFER)
-				{
-					chunkData = chunksB[chunkIndex];
-				}
-				else
-				{
-					chunkData = chunksA[chunkIndex];
-				}
+				int chunkData = GetCurrent(chunkIndex);
 
 				bool alive = (chunkData >> (7 - localPos.x - 4 * localPos.y)) & 1;
 				float4 cellCol = alive ? _AliveCol : _DeadCol;

@@ -1,0 +1,12 @@
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWByteAddressBuffer rawBuffer;
+
+[numthreads(64, 1, 1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    uint4 data = uint4(1, 2, 3, 4);
+    rawBuffer.Store2(id.x * 4 * 2, uint2(99, 10));
+}

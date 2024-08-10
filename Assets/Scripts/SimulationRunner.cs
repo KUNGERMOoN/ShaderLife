@@ -2,6 +2,7 @@ using GameOfLife;
 using GameOfLife.DataBinding;
 using System;
 using System.Collections;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -22,11 +23,11 @@ public class SimulationRunner : MonoBehaviour
     public readonly BindableProperty<float> Chance = new(0.2f);
 
     public readonly BindableProperty<bool> UpdateInRealtime = new(false);
-    public readonly BindableProperty<uint> BoardUpdateRate = new(10);
+    public readonly BindableProperty<uint> BoardUpdateRate = new(0);
 
     public enum LUTGenerationCause { NoLutsFound, NewSimulation }
     public event Action<LUTGenerationCause> LUTGenerationStarted;
-    public event Action<(float progress, bool writingToFile)> LUTGenerationProgress;
+    public event Action<(float progress, bool writingToFile)> LUTGenerationUpdate;
     public event Action LUTGenerationFinished;
 
     public readonly BindableProperty<float> FPS = new();
@@ -78,40 +79,53 @@ public class SimulationRunner : MonoBehaviour
         }
     }
 
-    float time;
-    float updates;
-    float simulationTime;
-    float simulationUpdates;
-    float progressOnLastInvoke = float.NegativeInfinity;
     private void Update()
     {
-        if (generationProgress - progressOnLastInvoke >= 0.01f)
+        UpdateLutGeneration();
+        UpdateSimulation();
+        UpdateStats();
+    }
+
+    float lastGenerationProgress = float.NegativeInfinity;
+    void UpdateLutGeneration()
+    {
+        if (generationProgress - lastGenerationProgress >= 0.01f)
         {
-            LUTGenerationProgress?.Invoke((generationProgress, false));
-            progressOnLastInvoke = generationProgress;
+            LUTGenerationUpdate?.Invoke((generationProgress, false));
+            lastGenerationProgress = generationProgress;
         }
-        if (UpdateInRealtime)
+    }
+
+    float simulationTime;
+    void UpdateSimulation()
+    {
+        if (!UpdateInRealtime) return;
+
+        if (BoardUpdateRate == 0)
         {
-            if (BoardUpdateRate == 0)
+            Simulation.UpdateBoard();
+            simulationUpdates++;
+        }
+        else
+        {
+            if (simulationTime >= 1f / BoardUpdateRate)
             {
                 Simulation.UpdateBoard();
                 simulationUpdates++;
+                simulationTime = 0;
             }
-            else
-            {
-                if (simulationTime >= 1f / BoardUpdateRate)
-                {
-                    Simulation.UpdateBoard();
-                    simulationUpdates++;
-                    simulationTime = 0;
-                }
-                simulationTime += Time.deltaTime;
-            }
+            simulationTime += Time.deltaTime;
         }
+    }
 
+    float time;
+    float updates;
+    float simulationUpdates;
+    void UpdateStats()
+    {
         updates++;
         time += Time.deltaTime;
-        if (time >= GameManager.LoadedSettings.FPSCounterRefreshRate)
+        if (time >= GameManager.Settings.FPSCounterRefreshRate)
         {
 
             FPS.Value = updates / time;
@@ -129,14 +143,19 @@ public class SimulationRunner : MonoBehaviour
 
         var lookupTable = LookupTable.ReadFromFile(lookupTablePath);
 
-        Simulation = new(ComputeShader, sizelevel, lookupTable)
+        Simulation = new(ComputeShader, Mathf.Max(sizelevel, 1), lookupTable)
         {
             Material = Material
         };
     }
 
+    public void Test()
+    {
+        Simulation?.Dispose();
+    }
 
-    public int BoardSize => Simulation != null ? Simulation.Size : 1;
+
+    public int BoardSize => Simulation != null ? Simulation.CellsDimension : 1;
 
     public void UpdateBoard() => Simulation?.UpdateBoard();
 
@@ -160,6 +179,7 @@ public class SimulationRunner : MonoBehaviour
         LUTGenerationStarted?.Invoke(cause);
 
         CancellationToken token = lutGenerationCancellationSource.Token;
+
         await Task.Run(() =>
         {
             while (enumerator.MoveNext())
@@ -169,7 +189,7 @@ public class SimulationRunner : MonoBehaviour
             }
         }, token);
 
-        LUTGenerationProgress?.Invoke((0.9f, true));
+        LUTGenerationUpdate?.Invoke((0.9f, true));
 
         builder.WriteToFile(path);
 

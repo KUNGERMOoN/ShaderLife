@@ -4,6 +4,6 @@ Rasterization algorithm for mouse drawing (CameraController.DrawLine) based on:
 https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm#All_cases
 
 Color palettes:
-https://lospec.com/palette-list/blackwhitered
-https://lospec.com/palette-list/cold-light
+https://lospec.com/palette-list/chocolate-ichor
 https://lospec.com/palette-list/titanstone
+https://lospec.com/palette-list/cold-light
