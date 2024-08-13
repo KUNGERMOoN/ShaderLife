@@ -183,8 +183,8 @@ namespace GameOfLife.GUI
             new FileBrowser().SaveFileBrowser(new BrowserProperties()
             {
                 title = "Generate Lookup Table",
-                filter = fileBrowserProperties.filter,
-                restoreDirectory = true
+                initialDir = LookupTable.LUTsPath,
+                filter = fileBrowserProperties.filter
             },
             suggestedFileName, LookupTable.FileExtension,
             path =>

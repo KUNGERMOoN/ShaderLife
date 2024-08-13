@@ -362,20 +362,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Board: {fileID: 2100000, guid: eae4068e4c3ce52428fa7d2f6af5a091, type: 2}
   Skybox: {fileID: 2100000, guid: 95b7cbaea06c47b4895a8e3ae0ea0b63, type: 2}
-  DefaultPalette_Source: D:/Programowanie/Unity/Editor/Shaders/Assets/Resources/Palettes/Cold
-    Light.png
-  DefaultPalette:
-    DeadCell: {r: 0.03137255, g: 0, b: 0.12156863, a: 1}
-    Grid: {r: 0.26666668, g: 0.3019608, b: 0.5176471, a: 1}
-    AliveCell: {r: 0.69803923, g: 0.8352941, b: 0.81960785, a: 1}
-    Name: Cold Light
-    Description: 
-  Settings:
-    CameraMaxSpeed: 2
-    CameraAcceleration: 0.2
-    CameraZoomMultiplier: 0.15
-    CameraZoomSmoothness: 3
-    FPSCounterRefreshRate: 0.5
 --- !u!4 &1424205210
 Transform:
   m_ObjectHideFlags: 0
