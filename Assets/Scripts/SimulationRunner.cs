@@ -176,6 +176,8 @@ public class SimulationRunner : MonoBehaviour
         LookupTable builder = new(birthCount, surviveCount);
         IEnumerator enumerator = builder.Generate();
 
+        lastGenerationProgress = 0;
+        generationProgress = 0;
         LUTGenerationStarted?.Invoke(cause);
 
         CancellationToken token = lutGenerationCancellationSource.Token;
@@ -188,6 +190,8 @@ public class SimulationRunner : MonoBehaviour
                 generationProgress = (float)builder.GeneratedPacks / LookupTable.packedLength;
             }
         }, token);
+
+        if (lutGenerationCancellationSource.IsCancellationRequested) return;
 
         LUTGenerationUpdate?.Invoke((0.9f, true));
 

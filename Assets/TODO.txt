@@ -2,6 +2,10 @@
 some of this stuff is likely obstolete, and
 most of it (except for bugfixes) likely won't be implemented in an near future
 
+TODO 0 (aka. ASAP)
+Add UI for switching color palettes
+Add a system for running multiple simulation ticks in a single frame
+
 TODO 1 (aka. hopefully soon):
 Fix switching the focus between ui an camera movement
 Figure out what eats 40% of the GPU as soon as we start the game (with "Update in realtime" disabled!)

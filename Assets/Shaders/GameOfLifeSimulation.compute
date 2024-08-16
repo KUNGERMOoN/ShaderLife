@@ -66,6 +66,7 @@ void Update(uint3 id : SV_DispatchThreadID)
     uint g = GetPrevious(i + 1);
     uint h = GetPrevious(i + Size.y + 3);
     
+    //Docs/LookupTables.xlsx shows how those magic numbers are actually obtained
     uint input =
         ((a << 23) & 8388608) +
 		((b << 19) & 7864320) +

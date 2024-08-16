@@ -28,6 +28,10 @@ namespace GameOfLife.GUI
                 Q<Label>("additionalLUTGenerationInfo").style.display =
                     cause == SimulationRunner.LUTGenerationCause.NoLutsFound
                     ? DisplayStyle.Flex : DisplayStyle.None;
+
+                Q<ProgressBar>("LUTprogressBar").value = 0;
+                Q<Label>("LUTprogressPrecentage").text = "0%";
+                Q<Label>("LUTProgressStage").text = "Generating...";
             };
             Simulation.LUTGenerationUpdate += ctx =>
             {
