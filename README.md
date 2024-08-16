@@ -50,9 +50,9 @@ Note: Mac and Linux are currently not supported
 This program uses a lookup table based approach, inspired by some of the answers I found [here](https://stackoverflow.com/questions/40485/optimizing-conways-game-of-life)
 
 The simulation space (or "board") is split into rectangular chunks, each 4 cells wide and 2 cells tall. Because every chunk contains exactly 8 cells, any "state" (or "configuration") of a chunk can be represented as 8 booleans, or a single byte (number).
-Since there's a limited amount of possible chunk states, and simulating a chunk with the same state will always yield the same results, we can create a lookup table which will function as a sort of "cheat sheet" for our simulation. As input, it'll take the state of the current chunk, and it's neighboring cells and will return the future state of that chunk as output. Since both of these are numerical values, we can implement the lookup table as a byte array, where the input (current state) is the index of the element in the array and the output (next state) is the data at that index (eg. `byte newState = LookupTable[oldState]`)
+Since there's a limited amount of possible chunk states, and simulating a chunk with the same state will always yield the same results, we can create a lookup table which will function as a sort of "cheat sheet" for our simulation. As input, it'll take the state of the current chunk, and it's neighboring cells and will return the future state of that chunk as output. Since both of these are numerical values, we can implement the lookup table as a byte array, where the input (current state) is the index of the element in the array and the output (next state) is the data at that index. (eg. `byte newState = LookupTable[oldState]`)
 
-, when the simulation runs, each thread:
+As a result, when the simulation runs, each thread:
 - gets the value of it's the corresponding chunk
 - combines it with the values of the neighboring cells from the chunks around it
 - uses that as an input index in the lookup table
