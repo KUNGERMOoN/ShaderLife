@@ -2,7 +2,7 @@
 
 # ShaderLife
 ShaderLife is a shader-powered cellular automata engine capable of running any [Life-Like](https://conwaylife.com/wiki/List_of_Life-like_rules) rule, including Conway's Game Of Life.
-To maximize performance, ShaderLife uses a custom, lookup table based algorithm (see [below](https://github.com/KUNGERMOoN/ShaderLife#the-algorithm))
+To maximize performance, ShaderLife uses a custom, lookup table based algorithm (see [below](#the-algorithm))
 
 # How fast is it?
 On my Radeon HD 8950 a 9600x9600 simulation (92 160 000 cells in total) runs in stable 60 FPS
@@ -30,7 +30,7 @@ Note: Mac and Linux are currently not supported
 ### General
 | Name       | Action                                                                     |
 | ---------- | -------------------------------------------------------------------------- |
-| New Simulation (`+` sign) | Opens the ["New Simulation"](https://github.com/KUNGERMOoN/ShaderLife#new-simulation-popup) Popup |
+| New Simulation (`+` sign) | Opens the ["New Simulation"](#new-simulation-popup) Popup |
 | Play/Pause | Control whether the simulation should run in real time. Paused by default. |
 | Next       | Manually triggers the next tick of the simulation.                         |
 | Clear      | Resets the state of the simulation.                                        |
